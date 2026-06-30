@@ -37,7 +37,9 @@ Generated apps keep page flow in `view/*.skin`, but UI implementation belongs in
 `.scales` components under `ui_components/l1`, `ui_components/l2`, and
 `ui_components/l3`. The starter renderer supports escaped variables with
 `{{ name }}`, trusted raw slots with `{!! content !!}`, and Blade-like Scale tags
-with explicit props, such as `<s-l3.example :title="page_title" label="Save" />`.
+with same-name passover, such as `<s-l3.dashboard-page :passover=[user_email] />`.
+Explicit props remain available for aliases or literals, such as
+`<s-l3.example :title="page_title" label="Save" />`.
 In this model, `.scales` components attach to `.skin` view files.
 
 The generated app includes:

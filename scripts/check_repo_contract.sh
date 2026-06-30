@@ -118,21 +118,23 @@ grep -q "COPY view ./view" templates/default/Dockerfile
 grep -q "COPY ui_components ./ui_components" templates/default/Dockerfile
 grep -q "{{ title }}" templates/default/view/layout.skin
 grep -q '<s-l1.base-styles />' templates/default/view/layout.skin
-grep -q '<s-l2.page-shell :content="content" />' templates/default/view/layout.skin
+grep -Fq '<s-l2.page-shell :passover=[content] />' templates/default/view/layout.skin
 grep -q "{!! content !!}" templates/default/ui_components/l2/page_shell.scales
-grep -q '<s-l3.home-page :app-name="app_name" />' templates/default/view/home.skin
-grep -q '<s-l3.login-page :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' templates/default/view/login.skin
-grep -q '<s-l3.register-page :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' templates/default/view/register.skin
-grep -q '<s-l3.dashboard-page :user-email="user_email" />' templates/default/view/dashboard.skin
+grep -Fq '<s-l3.home-page :passover=[app_name] />' templates/default/view/home.skin
+grep -Fq '<s-l3.login-page :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/view/login.skin
+grep -Fq '<s-l3.register-page :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/view/register.skin
+grep -Fq '<s-l3.dashboard-page :passover=[user_email] />' templates/default/view/dashboard.skin
 grep -q '<s-l3.not-found-page />' templates/default/view/not_found.skin
 grep -q "{{ user_email }}" templates/default/ui_components/l3/dashboard_page.scales
-grep -q '<s-l2.auth-form :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' templates/default/ui_components/l3/login_page.scales
-grep -q '<s-l2.auth-form :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' templates/default/ui_components/l3/register_page.scales
+grep -Fq '<s-l2.auth-form :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/ui_components/l3/login_page.scales
+grep -Fq '<s-l2.auth-form :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/ui_components/l3/register_page.scales
 ! grep -R "{% component" templates/default/view templates/default/ui_components README.md docs >/dev/null
+! grep -R ':auth-title=' templates/default/view templates/default/ui_components/l3 >/dev/null
 grep -q "render_template_text" templates/default/src/main.c
 grep -q "respond_view" templates/default/src/main.c
 grep -q "view/%s.skin" templates/default/src/main.c
 grep -q "view/layout.skin" templates/default/src/main.c
+grep -q "parse_passover_props" templates/default/src/main.c
 ! grep -q "view/%s.html" templates/default/src/main.c
 grep -q "ui_components/%s.scales" templates/default/src/main.c
 ! grep -q "<style>" templates/default/src/main.c

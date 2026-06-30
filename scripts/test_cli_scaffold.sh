@@ -59,6 +59,7 @@ grep -q "render_template_text" "$tmp_dir/demo/src/main.c"
 grep -q "respond_view" "$tmp_dir/demo/src/main.c"
 grep -q "view/%s.skin" "$tmp_dir/demo/src/main.c"
 grep -q "view/layout.skin" "$tmp_dir/demo/src/main.c"
+grep -q "parse_passover_props" "$tmp_dir/demo/src/main.c"
 ! grep -q "view/%s.html" "$tmp_dir/demo/src/main.c"
 grep -q "ui_components/%s.scales" "$tmp_dir/demo/src/main.c"
 grep -q "listening inside container" "$tmp_dir/demo/src/main.c"
@@ -66,17 +67,18 @@ grep -q "listening inside container" "$tmp_dir/demo/src/main.c"
 ! grep -R "<style>" "$tmp_dir/demo/view" >/dev/null
 grep -q "{{ title }}" "$tmp_dir/demo/view/layout.skin"
 grep -q '<s-l1.base-styles />' "$tmp_dir/demo/view/layout.skin"
-grep -q '<s-l2.page-shell :content="content" />' "$tmp_dir/demo/view/layout.skin"
+grep -Fq '<s-l2.page-shell :passover=[content] />' "$tmp_dir/demo/view/layout.skin"
 grep -q "{!! content !!}" "$tmp_dir/demo/ui_components/l2/page_shell.scales"
-grep -q '<s-l3.home-page :app-name="app_name" />' "$tmp_dir/demo/view/home.skin"
-grep -q '<s-l3.login-page :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' "$tmp_dir/demo/view/login.skin"
-grep -q '<s-l3.register-page :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' "$tmp_dir/demo/view/register.skin"
-grep -q '<s-l3.dashboard-page :user-email="user_email" />' "$tmp_dir/demo/view/dashboard.skin"
+grep -Fq '<s-l3.home-page :passover=[app_name] />' "$tmp_dir/demo/view/home.skin"
+grep -Fq '<s-l3.login-page :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' "$tmp_dir/demo/view/login.skin"
+grep -Fq '<s-l3.register-page :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' "$tmp_dir/demo/view/register.skin"
+grep -Fq '<s-l3.dashboard-page :passover=[user_email] />' "$tmp_dir/demo/view/dashboard.skin"
 grep -q '<s-l3.not-found-page />' "$tmp_dir/demo/view/not_found.skin"
 grep -q "{{ user_email }}" "$tmp_dir/demo/ui_components/l3/dashboard_page.scales"
-grep -q '<s-l2.auth-form :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' "$tmp_dir/demo/ui_components/l3/login_page.scales"
-grep -q '<s-l2.auth-form :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' "$tmp_dir/demo/ui_components/l3/register_page.scales"
+grep -Fq '<s-l2.auth-form :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' "$tmp_dir/demo/ui_components/l3/login_page.scales"
+grep -Fq '<s-l2.auth-form :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' "$tmp_dir/demo/ui_components/l3/register_page.scales"
 ! grep -R "{% component" "$tmp_dir/demo/view" "$tmp_dir/demo/ui_components" >/dev/null
+! grep -R ':auth-title=' "$tmp_dir/demo/view" "$tmp_dir/demo/ui_components/l3" >/dev/null
 ! find "$tmp_dir/demo/view" -name '*.html' -print -quit | grep -q .
 ! find "$tmp_dir/demo/ui_components" -name '*.html' -print -quit | grep -q .
 ! grep -R "views/" "$tmp_dir/demo" >/dev/null

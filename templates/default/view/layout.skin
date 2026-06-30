@@ -7,6 +7,6 @@
     <s-l1.base-styles />
   </head>
   <body>
-    <s-l2.page-shell :content="content" />
+      <s-l2.page-shell :passover=[content] />
   </body>
 </html>

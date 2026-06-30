@@ -1,1 +1,1 @@
-<s-l3.home-page :app-name="app_name" />
+<s-l3.home-page :passover=[app_name] />

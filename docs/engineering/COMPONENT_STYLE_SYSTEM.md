@@ -43,13 +43,17 @@ ui_components/
 `.skin` views import `.scales` components and pass data through variables:
 
 ```html
-<s-l3.dashboard-page :user-email="user_email" />
+<s-l3.dashboard-page :passover=[user_email] />
 ```
 
+Use `:passover=[...]` when the component prop names match the variable names
+already in scope. Use explicit props only for aliases or literals, such as
+`<s-l3.example :title="page_title" label="Save" />`.
+
 Components receive only props passed by their caller. If an L3 component uses an
-L2 component, it must forward the required props explicitly. Dotted component
-names map to `.scales` paths, so `s-l3.dashboard-page` resolves to
-`ui_components/l3/dashboard_page.scales`.
+L2 component, it must forward the required props through `:passover=[...]` or
+explicit props. Dotted component names map to `.scales` paths, so
+`s-l3.dashboard-page` resolves to `ui_components/l3/dashboard_page.scales`.
 
 Components can attach a style specification to rendered markup:
 

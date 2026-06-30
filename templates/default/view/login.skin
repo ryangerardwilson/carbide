@@ -1,1 +1,1 @@
-<s-l3.login-page :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />
+<s-l3.login-page :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />

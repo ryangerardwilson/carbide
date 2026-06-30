@@ -139,11 +139,13 @@ Generated apps use an MVC starter layout. `model/` owns Postgres state,
 `controller/` owns request flow, and `view/` owns thin templates that import
 components. UI implementation lives in `.scales` files under
 `ui_components/l1`, `ui_components/l2`, and `ui_components/l3`. Views pass
-props into components with a Blade-like Scale tag syntax:
-`<s-l3.example :title="page_title" label="Save" />`. Components receive only
-the props passed by the caller. The tag `s-l3.dashboard-page` maps to
-`ui_components/l3/dashboard_page.scales`. The starter renderer supports escaped
-variables with `{{ name }}` and trusted raw slots with `{!! content !!}`.
+same-named variables into components with a Blade-like Scale tag syntax:
+`<s-l3.dashboard-page :passover=[user_email] />`. Use explicit props only for
+aliases or literals, such as `<s-l3.example :title="page_title" label="Save" />`.
+Components receive only the props passed by the caller. The tag
+`s-l3.dashboard-page` maps to `ui_components/l3/dashboard_page.scales`. The
+starter renderer supports escaped variables with `{{ name }}` and trusted raw
+slots with `{!! content !!}`.
 
 ## Roadmap
 

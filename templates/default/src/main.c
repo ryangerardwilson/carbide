@@ -236,6 +236,85 @@ static bool copy_prop_name(char *out, size_t out_len, const char *start, size_t 
   return prop_name_is_safe(out);
 }
 
+static bool add_component_prop(
+  const ViewVar *source_vars,
+  size_t source_var_count,
+  ViewVar *props,
+  size_t *prop_count,
+  char prop_names[MAX_COMPONENT_PROPS][MAX_PROP_NAME],
+  const char *name_start,
+  size_t name_len
+) {
+  if (*prop_count >= MAX_COMPONENT_PROPS) return false;
+  char source_name[MAX_PROP_NAME];
+  const char *value = NULL;
+  if (!copy_prop_name(source_name, sizeof(source_name), name_start, name_len)) return false;
+  if (!find_view_var(source_vars, source_var_count, source_name, &value)) return false;
+  memcpy(prop_names[*prop_count], source_name, strlen(source_name) + 1);
+  props[*prop_count] = (ViewVar){prop_names[*prop_count], value};
+  (*prop_count)++;
+  return true;
+}
+
+static bool parse_passover_props(
+  const char **cursor,
+  const ViewVar *source_vars,
+  size_t source_var_count,
+  ViewVar *props,
+  size_t *prop_count,
+  char prop_names[MAX_COMPONENT_PROPS][MAX_PROP_NAME]
+) {
+  const char *p = *cursor;
+  bool quoted = false;
+  if (*p == '"') {
+    quoted = true;
+    p++;
+  }
+  if (*p != '[') return false;
+  p++;
+
+  for (;;) {
+    while (*p && isspace((unsigned char)*p)) p++;
+    if (*p == ']') {
+      p++;
+      break;
+    }
+
+    const char *name_start = p;
+    while (*p && (isalnum((unsigned char)*p) || *p == '_' || *p == '-')) p++;
+    size_t name_len = (size_t)(p - name_start);
+    if (!add_component_prop(
+      source_vars,
+      source_var_count,
+      props,
+      prop_count,
+      prop_names,
+      name_start,
+      name_len
+    )) {
+      return false;
+    }
+
+    while (*p && isspace((unsigned char)*p)) p++;
+    if (*p == ',') {
+      p++;
+      continue;
+    }
+    if (*p == ']') {
+      p++;
+      break;
+    }
+    return false;
+  }
+
+  if (quoted) {
+    if (*p != '"') return false;
+    p++;
+  }
+  *cursor = p;
+  return true;
+}
+
 static bool parse_component_import(
   const char *start,
   const ViewVar *source_vars,
@@ -278,6 +357,20 @@ static bool parse_component_import(
     if (*p != '=') return false;
     p++;
     while (*p && isspace((unsigned char)*p)) p++;
+
+    if (bind_variable && strcmp(prop_names[*prop_count], "passover") == 0) {
+      if (!parse_passover_props(
+        &p,
+        source_vars,
+        source_var_count,
+        props,
+        prop_count,
+        prop_names
+      )) {
+        return false;
+      }
+      continue;
+    }
 
     const char *value = NULL;
     if (*p != '"') return false;

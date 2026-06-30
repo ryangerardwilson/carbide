@@ -1,1 +1,1 @@
-<s-l3.dashboard-page :user-email="user_email" />
+<s-l3.dashboard-page :passover=[user_email] />
