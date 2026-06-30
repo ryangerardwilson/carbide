@@ -161,8 +161,9 @@ grep -q "frontend proxies API calls" templates/default/src/main.c
 grep -q "compose.supports(\"--watch\")" cmd/sealion/main.go
 grep -q "newRenderer" cmd/sealion/main.go
 grep -q "runDevStreams" cmd/sealion/main.go
-grep -q "RunProgress" cmd/sealion/main.go
-grep -q "progressBarFrame" cmd/sealion/main.go
+grep -q "RunServiceProgress" cmd/sealion/main.go
+grep -q "serviceProgressFrame" cmd/sealion/main.go
+grep -q "composeServiceStatuses" cmd/sealion/main.go
 grep -q "streamLogOutput" cmd/sealion/main.go
 grep -q "parseComposeLogLine" cmd/sealion/main.go
 grep -q "composeLogsArgs" cmd/sealion/main.go

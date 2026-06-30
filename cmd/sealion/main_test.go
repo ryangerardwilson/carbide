@@ -83,18 +83,38 @@ func TestRendererIndentsMultilineValues(t *testing.T) {
 	}
 }
 
-func TestProgressBarFrame(t *testing.T) {
-	tests := map[float64]string{
-		-1:   "[----------]",
-		0:    "[----------]",
-		0.01: "[#---------]",
-		0.5:  "[#####-----]",
-		1:    "[##########]",
-		2:    "[##########]",
+func TestServiceProgressFrame(t *testing.T) {
+	tests := []struct {
+		state string
+		step  int
+		want  string
+	}{
+		{"starting", 0, "[C.........]"},
+		{"starting", 1, "[ c........]"},
+		{"ready", 0, "[##########]"},
+		{"failed", 0, "[!!!!!!!!!!]"},
 	}
-	for progress, want := range tests {
-		if got := progressBarFrame(10, progress); got != want {
-			t.Fatalf("progressBarFrame(10, %v) = %q, want %q", progress, got, want)
+	for _, test := range tests {
+		if got := serviceProgressFrame(10, test.step, test.state); got != test.want {
+			t.Fatalf("serviceProgressFrame(10, %d, %q) = %q, want %q", test.step, test.state, got, test.want)
+		}
+	}
+}
+
+func TestServiceProgressState(t *testing.T) {
+	tests := []struct {
+		status composeServiceStatus
+		want   string
+	}{
+		{composeServiceStatus{state: "running"}, "ready"},
+		{composeServiceStatus{state: "running", health: "healthy"}, "ready"},
+		{composeServiceStatus{state: "running", health: "starting"}, "starting"},
+		{composeServiceStatus{state: "exited"}, "failed"},
+		{composeServiceStatus{}, "starting"},
+	}
+	for _, test := range tests {
+		if got := serviceProgressState(test.status); got != test.want {
+			t.Fatalf("serviceProgressState(%#v) = %q, want %q", test.status, got, test.want)
 		}
 	}
 }
@@ -106,9 +126,12 @@ func TestStreamWatchOutputFiltersNoise(t *testing.T) {
 	streamWatchOutput(strings.NewReader("Watch enabled\n\nrebuilt backend\n"), newRenderer(&out), nil, "stdout", &wg)
 	wg.Wait()
 
-	want := "watch      rebuilt backend\n"
-	if out.String() != want {
-		t.Fatalf("watch output = %q, want %q", out.String(), want)
+	got := out.String()
+	if !strings.Contains(got, "watch      rebuilt backend\n") {
+		t.Fatalf("watch output = %q", got)
+	}
+	if len(strings.Fields(got)[0]) != len("15:04:05") {
+		t.Fatalf("watch output missing timestamp: %q", got)
 	}
 }
 
@@ -125,9 +148,15 @@ func TestStreamLogOutputParsesComposeServices(t *testing.T) {
 	)
 	wg.Wait()
 
-	want := "backend    GET /health\nfrontend   listening\ndb         ready\n"
-	if out.String() != want {
-		t.Fatalf("log output = %q, want %q", out.String(), want)
+	got := out.String()
+	for _, want := range []string{
+		"backend    GET /health",
+		"frontend   listening",
+		"db         ready",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("log output = %q, missing %q", got, want)
+		}
 	}
 }
 
@@ -171,6 +200,34 @@ func TestParseLogQuery(t *testing.T) {
 	}
 	if query.service != "backend" || query.contains != "health" || query.limit != 5 || !query.json {
 		t.Fatalf("query = %#v", query)
+	}
+}
+
+func TestParseComposeServiceStatuses(t *testing.T) {
+	statuses, err := parseComposeServiceStatuses(`[
+{"Service":"frontend","State":"running","Health":""},
+{"Service":"backend","State":"running","Health":"healthy"},
+{"Service":"db","State":"created","Health":"starting"}
+]`)
+	if err != nil {
+		t.Fatalf("parseComposeServiceStatuses returned %v", err)
+	}
+	if serviceProgressState(statuses["frontend"]) != "ready" {
+		t.Fatalf("frontend status = %#v", statuses["frontend"])
+	}
+	if serviceProgressState(statuses["backend"]) != "ready" {
+		t.Fatalf("backend status = %#v", statuses["backend"])
+	}
+	if serviceProgressState(statuses["db"]) != "starting" {
+		t.Fatalf("db status = %#v", statuses["db"])
+	}
+
+	statuses, err = parseComposeServiceStatuses(`{"Service":"backend","State":"exited","Health":""}`)
+	if err != nil {
+		t.Fatalf("parseComposeServiceStatuses line mode returned %v", err)
+	}
+	if serviceProgressState(statuses["backend"]) != "failed" {
+		t.Fatalf("backend status = %#v", statuses["backend"])
 	}
 }
 

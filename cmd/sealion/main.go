@@ -114,6 +114,12 @@ type logQuery struct {
 	json     bool
 }
 
+type composeServiceStatus struct {
+	service string
+	state   string
+	health  string
+}
+
 func main() {
 	home, err := resolveHome()
 	if err != nil {
@@ -370,9 +376,16 @@ func (a app) commandRunDev() error {
 	r := newRenderer(a.stdout)
 	a.printDevHeader(r, port)
 	logSink.Write("sealion", "lifecycle", "cli", "starting containers")
-	if err := r.RunProgress("containers", func() error {
-		return composeUpDetached(compose, env)
-	}); err != nil {
+	services := composeServices(compose, env)
+	if err := r.RunServiceProgress(
+		services,
+		func() map[string]composeServiceStatus {
+			return composeServiceStatuses(compose, env)
+		},
+		func() error {
+			return composeUpDetached(compose, env)
+		},
+	); err != nil {
 		logSink.Write("sealion", "lifecycle", "cli", err.Error())
 		return err
 	}
@@ -626,22 +639,45 @@ func (r renderer) writeSingleLine(row outputRow, width int) {
 }
 
 func (r renderer) Log(service string, message string) {
+	r.LogAt(time.Now(), service, message)
+}
+
+func (r renderer) LogEntry(entry structuredLogEntry) {
+	r.LogAt(entryTimestamp(entry), entry.Service, entry.Message)
+}
+
+func (r renderer) LogAt(timestamp time.Time, service string, message string) {
 	label := service
 	if label == "" {
 		label = "log"
 	}
+	if timestamp.IsZero() {
+		timestamp = time.Now()
+	}
+	stamp := timestamp.Local().Format("15:04:05")
 	width := 9
 	if len(label) > width {
 		width = len(label)
 	}
 	if r.styled {
-		fmt.Fprintf(r.out, "%s%s  %s\n", r.formatService(label), strings.Repeat(" ", width-len(label)), message)
+		fmt.Fprintf(
+			r.out,
+			"%s  %s%s  %s\n",
+			r.paint("2;38;5;245", stamp),
+			r.formatService(label),
+			strings.Repeat(" ", width-len(label)),
+			message,
+		)
 		return
 	}
-	fmt.Fprintf(r.out, "%-*s  %s\n", width, label, message)
+	fmt.Fprintf(r.out, "%s  %-*s  %s\n", stamp, width, label, message)
 }
 
-func (r renderer) RunProgress(label string, work func() error) error {
+func (r renderer) RunServiceProgress(
+	services []string,
+	poll func() map[string]composeServiceStatus,
+	work func() error,
+) error {
 	if !r.styled {
 		return work()
 	}
@@ -651,59 +687,130 @@ func (r renderer) RunProgress(label string, work func() error) error {
 		done <- work()
 	}()
 
-	progress := 0.08
-	r.writeProgress(label, progress, "starting")
-	ticker := time.NewTicker(120 * time.Millisecond)
+	if len(services) == 0 {
+		services = []string{"containers"}
+	}
+	statuses := map[string]composeServiceStatus{}
+	step := 0
+	r.writeServiceProgress(services, statuses, step)
+	ticker := time.NewTicker(140 * time.Millisecond)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case err := <-done:
 			if err != nil {
-				r.writeProgress(label, progress, "failed")
-				fmt.Fprintln(r.out)
+				for _, service := range services {
+					statuses[service] = composeServiceStatus{service: service, state: "failed"}
+				}
+				r.rewriteServiceProgress(services, statuses, step)
 				return err
 			}
-			r.writeProgress(label, 1, "ready")
-			fmt.Fprintln(r.out)
+			for _, service := range services {
+				statuses[service] = composeServiceStatus{service: service, state: "running", health: "healthy"}
+			}
+			r.rewriteServiceProgress(services, statuses, step)
 			return nil
 		case <-ticker.C:
-			if progress < 0.92 {
-				progress += 0.035
+			step++
+			if current := poll(); len(current) > 0 {
+				statuses = current
 			}
-			r.writeProgress(label, progress, "starting")
+			r.rewriteServiceProgress(services, statuses, step)
 		}
 	}
 }
 
-func (r renderer) writeProgress(label string, progress float64, state string) {
-	fmt.Fprintf(
-		r.out,
-		"\r%s  %s %s\033[K",
-		r.formatKey(label),
-		r.paint("38;5;81", progressBarFrame(22, progress)),
-		r.paint("2;38;5;245", state),
-	)
+func (r renderer) rewriteServiceProgress(services []string, statuses map[string]composeServiceStatus, step int) {
+	fmt.Fprintf(r.out, "\033[%dA", len(services))
+	r.writeServiceProgress(services, statuses, step)
 }
 
-func progressBarFrame(width int, progress float64) string {
+func (r renderer) writeServiceProgress(services []string, statuses map[string]composeServiceStatus, step int) {
+	width := rowTextWidth(services)
+	for index, service := range services {
+		status := statuses[service]
+		state := serviceProgressState(status)
+		frame := serviceProgressFrame(18, step+index, state)
+		fmt.Fprintf(
+			r.out,
+			"\r%s%s  %s %s\033[K\n",
+			r.formatService(service),
+			strings.Repeat(" ", width-len(service)),
+			r.paint(serviceProgressColor(state), frame),
+			r.paint("2;38;5;245", state),
+		)
+	}
+}
+
+func serviceProgressFrame(width int, step int, state string) string {
 	if width < 1 {
 		width = 1
 	}
-	if progress < 0 {
-		progress = 0
+	switch state {
+	case "ready":
+		return "[" + strings.Repeat("#", width) + "]"
+	case "failed":
+		return "[" + strings.Repeat("!", width) + "]"
+	default:
+		position := step % width
+		if position < 0 {
+			position = 0
+		}
+		var b strings.Builder
+		b.WriteByte('[')
+		for i := 0; i < width; i++ {
+			if i == position {
+				if step%2 == 0 {
+					b.WriteByte('C')
+				} else {
+					b.WriteByte('c')
+				}
+			} else if i < position {
+				b.WriteByte(' ')
+			} else {
+				b.WriteByte('.')
+			}
+		}
+		b.WriteByte(']')
+		return b.String()
 	}
-	if progress > 1 {
-		progress = 1
+}
+
+func serviceProgressState(status composeServiceStatus) string {
+	state := strings.ToLower(status.state)
+	health := strings.ToLower(status.health)
+	if state == "failed" || state == "exited" || state == "dead" {
+		return "failed"
 	}
-	filled := int(progress * float64(width))
-	if progress > 0 && filled == 0 {
-		filled = 1
+	if state == "running" && (health == "" || health == "healthy") {
+		return "ready"
 	}
-	if progress == 1 {
-		filled = width
+	if health == "healthy" {
+		return "ready"
 	}
-	return "[" + strings.Repeat("#", filled) + strings.Repeat("-", width-filled) + "]"
+	return "starting"
+}
+
+func serviceProgressColor(state string) string {
+	switch state {
+	case "ready":
+		return "38;5;114"
+	case "failed":
+		return "38;5;203"
+	default:
+		return "38;5;81"
+	}
+}
+
+func rowTextWidth(values []string) int {
+	width := 0
+	for _, value := range values {
+		if len(value) > width {
+			width = len(value)
+		}
+	}
+	return width
 }
 
 func (r renderer) formatKey(key string) string {
@@ -765,8 +872,9 @@ func streamWatchOutput(input io.Reader, r renderer, logSink *devLogSink, stream 
 		if line == "" || line == "Watch enabled" {
 			continue
 		}
-		logSink.Write("compose-watch", stream, "watch", line)
-		r.Log("watch", line)
+		entry := newStructuredLogEntry("compose-watch", stream, "watch", line)
+		logSink.WriteEntry(entry)
+		r.LogEntry(entry)
 	}
 }
 
@@ -780,8 +888,19 @@ func streamLogOutput(input io.Reader, r renderer, logSink *devLogSink, stream st
 			continue
 		}
 		service, message := parseComposeLogLine(line)
-		logSink.Write("compose-log", stream, service, message)
-		r.Log(service, message)
+		entry := newStructuredLogEntry("compose-log", stream, service, message)
+		logSink.WriteEntry(entry)
+		r.LogEntry(entry)
+	}
+}
+
+func newStructuredLogEntry(source string, stream string, service string, message string) structuredLogEntry {
+	return structuredLogEntry{
+		Time:    time.Now().UTC().Format(time.RFC3339Nano),
+		Source:  source,
+		Stream:  stream,
+		Service: service,
+		Message: message,
 	}
 }
 
@@ -804,15 +923,12 @@ func (s *devLogSink) Close() error {
 }
 
 func (s *devLogSink) Write(source string, stream string, service string, message string) {
-	if s == nil || s.encoder == nil || strings.TrimSpace(message) == "" {
+	s.WriteEntry(newStructuredLogEntry(source, stream, service, message))
+}
+
+func (s *devLogSink) WriteEntry(entry structuredLogEntry) {
+	if s == nil || s.encoder == nil || strings.TrimSpace(entry.Message) == "" {
 		return
-	}
-	entry := structuredLogEntry{
-		Time:    time.Now().UTC().Format(time.RFC3339Nano),
-		Source:  source,
-		Stream:  stream,
-		Service: service,
-		Message: message,
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -849,9 +965,17 @@ func (a app) commandLogs(args []string) error {
 
 	r := newRenderer(a.stdout)
 	for _, entry := range entries {
-		r.Log(entry.Service, entry.Message)
+		r.LogEntry(entry)
 	}
 	return nil
+}
+
+func entryTimestamp(entry structuredLogEntry) time.Time {
+	timestamp, err := time.Parse(time.RFC3339Nano, entry.Time)
+	if err != nil {
+		return time.Now()
+	}
+	return timestamp
 }
 
 func parseLogQuery(args []string) (logQuery, error) {
@@ -1093,6 +1217,90 @@ func (c composeCommand) supports(option string) bool {
 
 func (c composeCommand) logsSupports(option string) bool {
 	return strings.Contains(c.logHelp, option)
+}
+
+func composeServices(compose composeCommand, env []string) []string {
+	output, err := runComposeCaptured(compose, env, "config", "--services")
+	if err != nil {
+		return defaultComposeServices()
+	}
+	seen := map[string]bool{}
+	var services []string
+	scanner := bufio.NewScanner(strings.NewReader(output))
+	for scanner.Scan() {
+		service := strings.TrimSpace(scanner.Text())
+		if service == "" || seen[service] {
+			continue
+		}
+		seen[service] = true
+		services = append(services, service)
+	}
+	if len(services) == 0 {
+		return defaultComposeServices()
+	}
+	return services
+}
+
+func defaultComposeServices() []string {
+	return []string{"frontend", "backend", "db"}
+}
+
+func composeServiceStatuses(compose composeCommand, env []string) map[string]composeServiceStatus {
+	output, err := runComposeCaptured(compose, env, "ps", "--format", "json")
+	if err != nil {
+		return nil
+	}
+	statuses, err := parseComposeServiceStatuses(output)
+	if err != nil {
+		return nil
+	}
+	return statuses
+}
+
+func parseComposeServiceStatuses(output string) (map[string]composeServiceStatus, error) {
+	type psRecord struct {
+		Service string
+		State   string
+		Health  string
+	}
+
+	parseRecords := func(records []psRecord) map[string]composeServiceStatus {
+		statuses := map[string]composeServiceStatus{}
+		for _, record := range records {
+			service := strings.TrimSpace(record.Service)
+			if service == "" {
+				continue
+			}
+			statuses[service] = composeServiceStatus{
+				service: service,
+				state:   strings.TrimSpace(record.State),
+				health:  strings.TrimSpace(record.Health),
+			}
+		}
+		return statuses
+	}
+
+	var records []psRecord
+	if err := json.Unmarshal([]byte(output), &records); err == nil {
+		return parseRecords(records), nil
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(output))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+		var record psRecord
+		if err := json.Unmarshal([]byte(line), &record); err != nil {
+			return nil, err
+		}
+		records = append(records, record)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return parseRecords(records), nil
 }
 
 func composeLogsArgs(compose composeCommand) []string {

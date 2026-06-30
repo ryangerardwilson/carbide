@@ -157,11 +157,13 @@ package/config files, or `Dockerfile` rebuild and replace the relevant
 container.
 
 CLI output is rendered through a small Go output layer: headings, aligned labels,
-TTY-only color, a terminal-only startup progress bar, and plain text when piped
-or captured by scripts. `sealion run dev` prints only the working app/API URLs
-before the log stream. Every streamed frontend, backend, database, and watch
-event is also written as JSONL to `.sealion/log/dev.jsonl` so humans, scripts,
-and AI agents can inspect or query the whole local system from one command.
+TTY-only color, terminal-only per-container startup animation, timestamped log
+rows, and plain text when piped or captured by scripts. `sealion run dev` prints
+only the working app/API URLs before the startup animation and log stream. Logs
+begin only after Compose reports the stack ready. Every streamed frontend,
+backend, database, and watch event is also written as JSONL to
+`.sealion/log/dev.jsonl` so humans, scripts, and AI agents can inspect or query
+the whole local system from one command.
 
 Generated apps use an MVC shape. `view/web/` owns the Bun server, Tailwind
 build, browser UI, and same-origin `/api` calls. `model/` owns
