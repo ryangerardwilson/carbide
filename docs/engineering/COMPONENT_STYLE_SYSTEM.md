@@ -43,11 +43,13 @@ ui_components/
 Views import components and pass data through variables:
 
 ```html
-{% component "l3/dashboard_page" user_email=user_email %}
+<s-l3.dashboard-page :user-email="user_email" />
 ```
 
 Components receive only props passed by their caller. If an L3 component uses an
-L2 component, it must forward the required props explicitly.
+L2 component, it must forward the required props explicitly. Dotted component
+names map to `.scales` paths, so `s-l3.dashboard-page` resolves to
+`ui_components/l3/dashboard_page.scales`.
 
 Components can attach a style specification to rendered markup:
 

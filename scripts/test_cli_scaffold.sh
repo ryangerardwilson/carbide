@@ -62,17 +62,18 @@ grep -q "listening inside container" "$tmp_dir/demo/src/main.c"
 ! grep -q "<style>" "$tmp_dir/demo/src/main.c"
 ! grep -R "<style>" "$tmp_dir/demo/view" >/dev/null
 grep -q "{{ title }}" "$tmp_dir/demo/view/layout.html"
-grep -q '{% component "l1/base_styles" %}' "$tmp_dir/demo/view/layout.html"
-grep -q '{% component "l2/page_shell" content=content %}' "$tmp_dir/demo/view/layout.html"
+grep -q '<s-l1.base-styles />' "$tmp_dir/demo/view/layout.html"
+grep -q '<s-l2.page-shell :content="content" />' "$tmp_dir/demo/view/layout.html"
 grep -q "{!! content !!}" "$tmp_dir/demo/ui_components/l2/page_shell.scales"
-grep -q '{% component "l3/home_page" app_name=app_name %}' "$tmp_dir/demo/view/home.html"
-grep -q '{% component "l3/login_page" auth_title=auth_title auth_action=auth_action email_value=email_value password_autocomplete=password_autocomplete submit_label=submit_label error=error auth_footer=auth_footer %}' "$tmp_dir/demo/view/login.html"
-grep -q '{% component "l3/register_page" auth_title=auth_title auth_action=auth_action email_value=email_value password_autocomplete=password_autocomplete submit_label=submit_label error=error auth_footer=auth_footer %}' "$tmp_dir/demo/view/register.html"
-grep -q '{% component "l3/dashboard_page" user_email=user_email %}' "$tmp_dir/demo/view/dashboard.html"
-grep -q '{% component "l3/not_found_page" %}' "$tmp_dir/demo/view/not_found.html"
+grep -q '<s-l3.home-page :app-name="app_name" />' "$tmp_dir/demo/view/home.html"
+grep -q '<s-l3.login-page :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' "$tmp_dir/demo/view/login.html"
+grep -q '<s-l3.register-page :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' "$tmp_dir/demo/view/register.html"
+grep -q '<s-l3.dashboard-page :user-email="user_email" />' "$tmp_dir/demo/view/dashboard.html"
+grep -q '<s-l3.not-found-page />' "$tmp_dir/demo/view/not_found.html"
 grep -q "{{ user_email }}" "$tmp_dir/demo/ui_components/l3/dashboard_page.scales"
-grep -q '{% component "l2/auth_form" auth_title=auth_title auth_action=auth_action email_value=email_value password_autocomplete=password_autocomplete submit_label=submit_label error=error auth_footer=auth_footer %}' "$tmp_dir/demo/ui_components/l3/login_page.scales"
-grep -q '{% component "l2/auth_form" auth_title=auth_title auth_action=auth_action email_value=email_value password_autocomplete=password_autocomplete submit_label=submit_label error=error auth_footer=auth_footer %}' "$tmp_dir/demo/ui_components/l3/register_page.scales"
+grep -q '<s-l2.auth-form :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' "$tmp_dir/demo/ui_components/l3/login_page.scales"
+grep -q '<s-l2.auth-form :auth-title="auth_title" :auth-action="auth_action" :email-value="email_value" :password-autocomplete="password_autocomplete" :submit-label="submit_label" :error="error" :auth-footer="auth_footer" />' "$tmp_dir/demo/ui_components/l3/register_page.scales"
+! grep -R "{% component" "$tmp_dir/demo/view" "$tmp_dir/demo/ui_components" >/dev/null
 ! find "$tmp_dir/demo/ui_components" -name '*.html' -print -quit | grep -q .
 ! grep -R "views/" "$tmp_dir/demo" >/dev/null
 ! grep -R "__PROJECT_" "$tmp_dir/demo" >/dev/null

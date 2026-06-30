@@ -36,9 +36,8 @@ Compose watch enabled. Edits under `src/`, `model/`, `controller/`, `view/`,
 Generated apps keep page flow in `view/*.html`, but UI implementation belongs in
 `.scales` components under `ui_components/l1`, `ui_components/l2`, and
 `ui_components/l3`. The starter renderer supports escaped variables with
-`{{ name }}`, trusted raw slots with `{!! content !!}`, and Blade-like component
-imports with explicit props, such as
-`{% component "l3/example" title=page_title label="Save" %}`.
+`{{ name }}`, trusted raw slots with `{!! content !!}`, and Blade-like Scale tags
+with explicit props, such as `<s-l3.example :title="page_title" label="Save" />`.
 
 The generated app includes:
 

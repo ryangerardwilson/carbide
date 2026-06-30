@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ title }} | {{ app_name }}</title>
-    {% component "l1/base_styles" %}
+    <s-l1.base-styles />
   </head>
   <body>
-    {% component "l2/page_shell" content=content %}
+    <s-l2.page-shell :content="content" />
   </body>
 </html>

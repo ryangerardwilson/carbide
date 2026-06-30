@@ -40,10 +40,10 @@ Generated apps start with an MVC shape:
 
 Edit component markup in `ui_components/**/*.scales`. View files in `view/`
 should only import components and pass props, for example
-`{% component "l3/example" title=page_title label="Save" %}`. Components receive
-only the props passed by their caller. Sealion renders escaped variables with
-`{{ name }}`, trusted raw slots with `{!! content !!}`, and component imports
-from `.scales` files.
+`<s-l3.example :title="page_title" label="Save" />`. Components receive only the
+props passed by their caller. `s-l3.dashboard-page` maps to
+`ui_components/l3/dashboard_page.scales`. Sealion renders escaped variables with
+`{{ name }}` and trusted raw slots with `{!! content !!}`.
 
 Demo login:
 

@@ -172,7 +172,7 @@ static bool read_template_file(const char *path, char *out, size_t out_len) {
 }
 
 static const char *first_token(const char *cursor, const char **component, const char **raw, const char **escaped) {
-  *component = strstr(cursor, "{% component");
+  *component = strstr(cursor, "<s-");
   *raw = strstr(cursor, "{!!");
   *escaped = strstr(cursor, "{{");
   const char *first = NULL;
@@ -185,7 +185,7 @@ static const char *first_token(const char *cursor, const char **component, const
 static bool component_name_is_safe(const char *name) {
   if (!name[0] || name[0] == '/' || strstr(name, "..")) return false;
   for (const char *p = name; *p; p++) {
-    if (!(isalnum((unsigned char)*p) || *p == '_' || *p == '-' || *p == '/')) {
+    if (!(isalnum((unsigned char)*p) || *p == '_' || *p == '/')) {
       return false;
     }
   }
@@ -202,6 +202,40 @@ static bool prop_name_is_safe(const char *name) {
   return true;
 }
 
+static bool copy_component_path(char *out, size_t out_len, const char *start, size_t len) {
+  if (len == 0 || len >= out_len) return false;
+  for (size_t i = 0; i < len; i++) {
+    char c = start[i];
+    if (c == '.') {
+      out[i] = '/';
+    } else if (c == '-') {
+      out[i] = '_';
+    } else if (isalnum((unsigned char)c) || c == '_') {
+      out[i] = c;
+    } else {
+      return false;
+    }
+  }
+  out[len] = '\0';
+  return component_name_is_safe(out);
+}
+
+static bool copy_prop_name(char *out, size_t out_len, const char *start, size_t len) {
+  if (len == 0 || len >= out_len) return false;
+  for (size_t i = 0; i < len; i++) {
+    char c = start[i];
+    if (c == '-') {
+      out[i] = '_';
+    } else if (isalnum((unsigned char)c) || c == '_') {
+      out[i] = c;
+    } else {
+      return false;
+    }
+  }
+  out[len] = '\0';
+  return prop_name_is_safe(out);
+}
+
 static bool parse_component_import(
   const char *start,
   const ViewVar *source_vars,
@@ -214,36 +248,31 @@ static bool parse_component_import(
   char prop_literals[MAX_COMPONENT_PROPS][MAX_PROP_VALUE],
   const char **end_out
 ) {
-  const char *p = start + strlen("{% component");
+  const char *p = start + strlen("<s-");
   *prop_count = 0;
-  while (*p && isspace((unsigned char)*p)) p++;
-  if (*p != '"') return false;
-  p++;
   const char *name_start = p;
-  while (*p && *p != '"') p++;
-  if (*p != '"') return false;
+  while (*p && !isspace((unsigned char)*p) && *p != '/' && *p != '>') p++;
   size_t len = (size_t)(p - name_start);
-  if (len >= component_name_len) return false;
-  memcpy(component_name, name_start, len);
-  component_name[len] = '\0';
-  p++;
-  if (!component_name_is_safe(component_name)) return false;
+  if (!copy_component_path(component_name, component_name_len, name_start, len)) return false;
 
   for (;;) {
     while (*p && isspace((unsigned char)*p)) p++;
-    if (p[0] == '%' && p[1] == '}') {
+    if (p[0] == '/' && p[1] == '>') {
       *end_out = p + 2;
       return true;
     }
     if (*prop_count >= MAX_COMPONENT_PROPS) return false;
 
+    bool bind_variable = false;
+    if (*p == ':') {
+      bind_variable = true;
+      p++;
+    }
+
     const char *name_start = p;
-    while (*p && (isalnum((unsigned char)*p) || *p == '_')) p++;
+    while (*p && (isalnum((unsigned char)*p) || *p == '_' || *p == '-')) p++;
     size_t prop_name_len = (size_t)(p - name_start);
-    if (prop_name_len == 0 || prop_name_len >= MAX_PROP_NAME) return false;
-    memcpy(prop_names[*prop_count], name_start, prop_name_len);
-    prop_names[*prop_count][prop_name_len] = '\0';
-    if (!prop_name_is_safe(prop_names[*prop_count])) return false;
+    if (!copy_prop_name(prop_names[*prop_count], MAX_PROP_NAME, name_start, prop_name_len)) return false;
 
     while (*p && isspace((unsigned char)*p)) p++;
     if (*p != '=') return false;
@@ -251,27 +280,25 @@ static bool parse_component_import(
     while (*p && isspace((unsigned char)*p)) p++;
 
     const char *value = NULL;
-    if (*p == '"') {
-      p++;
-      const char *literal_start = p;
-      while (*p && *p != '"') p++;
-      if (*p != '"') return false;
-      size_t literal_len = (size_t)(p - literal_start);
+    if (*p != '"') return false;
+    p++;
+    const char *value_start = p;
+    while (*p && *p != '"') p++;
+    if (*p != '"') return false;
+    size_t value_len = (size_t)(p - value_start);
+
+    if (bind_variable) {
+      char source_name[MAX_PROP_NAME];
+      if (!copy_prop_name(source_name, sizeof(source_name), value_start, value_len)) return false;
+      if (!find_view_var(source_vars, source_var_count, source_name, &value)) return false;
+    } else {
+      size_t literal_len = value_len;
       if (literal_len >= MAX_PROP_VALUE) return false;
-      memcpy(prop_literals[*prop_count], literal_start, literal_len);
+      memcpy(prop_literals[*prop_count], value_start, literal_len);
       prop_literals[*prop_count][literal_len] = '\0';
       value = prop_literals[*prop_count];
-      p++;
-    } else {
-      char source_name[MAX_PROP_NAME];
-      const char *source_start = p;
-      while (*p && (isalnum((unsigned char)*p) || *p == '_')) p++;
-      size_t source_len = (size_t)(p - source_start);
-      if (source_len == 0 || source_len >= sizeof(source_name)) return false;
-      memcpy(source_name, source_start, source_len);
-      source_name[source_len] = '\0';
-      if (!find_view_var(source_vars, source_var_count, source_name, &value)) return false;
     }
+    p++;
 
     props[*prop_count] = (ViewVar){prop_names[*prop_count], value};
     (*prop_count)++;
