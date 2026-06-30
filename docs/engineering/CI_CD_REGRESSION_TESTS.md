@@ -115,8 +115,8 @@ Future checks:
 - health checks converge;
 - generated backend logs the external frontend URL used for API proxying;
 - demo login through `/api/login` sets a cookie and returns JSON;
-- generated Compose config declares file-watch rebuilds for frontend source,
-  frontend package/config files, backend source, model, controller, and
+- generated Compose config declares file-watch rebuilds for `view/web` source,
+  view web package/config files, backend source, model, controller, and
   Dockerfile changes;
 - generated apps include a Bun/React/Tailwind frontend container, C
   backend/API container, and Postgres database container;

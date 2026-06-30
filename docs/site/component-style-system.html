@@ -25,16 +25,17 @@
 
       <section>
         <h2>Generated Frontend</h2>
-        <pre><code>frontend/
-|-- Dockerfile
-|-- bun.lock
-|-- index.html
-|-- package.json
-`-- src/
-    |-- main.jsx
-    |-- server.jsx
-    `-- styles.css</code></pre>
-        <p>React owns page flow, forms, and dashboard rendering. The C backend owns JSON responses, HttpOnly cookies, sessions, validation, and Postgres access.</p>
+        <pre><code>view/
+`-- web/
+    |-- Dockerfile
+    |-- bun.lock
+    |-- index.html
+    |-- package.json
+    `-- src/
+        |-- main.jsx
+        |-- server.jsx
+        `-- styles.css</code></pre>
+        <p>The web app lives inside <code>view/web</code>. React owns page flow, forms, and dashboard rendering. The C backend owns JSON responses, HttpOnly cookies, sessions, validation, and Postgres access.</p>
       </section>
 
       <section>

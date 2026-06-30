@@ -142,12 +142,12 @@ explicitly.
 installed CLI when a newer GitHub commit is available.
 
 When Docker Compose supports file watch, `sealion run dev` starts the stack with
-Compose watch enabled. Edits under `frontend/src/`, `src/`, `model/`,
-`controller/`, frontend package/config files, or `Dockerfile` rebuild and
+Compose watch enabled. Edits under `view/web/src/`, `src/`, `model/`,
+`controller/`, view package/config files, or `Dockerfile` rebuild and
 replace the relevant container.
 
-Generated apps use a React-plus-C shape. `frontend/` owns the Bun server,
-Tailwind build, browser UI, and same-origin `/api` calls. `model/` owns
+Generated apps use an MVC shape. `view/web/` owns the Bun server, Tailwind
+build, browser UI, and same-origin `/api` calls. `model/` owns
 Postgres state, `controller/` owns request flow and JSON responses, and `src/`
 owns the C HTTP/API server.
 

@@ -32,16 +32,20 @@ backend so browser requests stay same-origin.
 Generated apps start with:
 
 ```text
-frontend/
-|-- Dockerfile
-|-- bun.lock
-|-- index.html
-|-- package.json
-`-- src/
-    |-- main.jsx
-    |-- server.jsx
-    `-- styles.css
+view/
+`-- web/
+    |-- Dockerfile
+    |-- bun.lock
+    |-- index.html
+    |-- package.json
+    `-- src/
+        |-- main.jsx
+        |-- server.jsx
+        `-- styles.css
 ```
+
+Generated apps place the web app under `view/web/` so the project keeps the
+MVC directory shape: `model/`, `view/`, and `controller/`.
 
 The default UI is deliberately small: register, login, logout, and dashboard.
 React components call same-origin `/api` endpoints with `credentials: "include"`

@@ -31,7 +31,7 @@ the C backend over the Compose network, so cookies work without CORS setup.
 
 ## Where Code Lives
 
-- `frontend/src/` owns the Bun frontend server, React screens, forms,
+- `view/web/src/` owns the Bun frontend server, React screens, forms,
   dashboard UI, and Tailwind CSS input.
 - `src/` owns the C HTTP/API server.
 - `controller/` owns API request handlers.
@@ -40,7 +40,7 @@ the C backend over the Compose network, so cookies work without CORS setup.
 - `docker-compose.yml` owns the local infrastructure contract.
 
 `sealion run dev` starts Docker Compose watch when your Compose version supports
-it. Edits under `frontend/src/`, `src/`, `model/`, `controller/`, frontend
+it. Edits under `view/web/src/`, `src/`, `model/`, `controller/`, view web
 package/config files, or `Dockerfile` rebuild and replace the relevant
 container.
 

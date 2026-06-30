@@ -46,15 +46,6 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |       |-- controller/
 |       |   |-- auth_controller.c
 |       |   `-- page_controller.c
-|       |-- frontend/
-|       |   |-- Dockerfile
-|       |   |-- bun.lock
-|       |   |-- index.html
-|       |   |-- package.json
-|       |   `-- src/
-|       |       |-- main.jsx
-|       |       |-- server.jsx
-|       |       `-- styles.css
 |       |-- migrations/
 |       |   `-- 001_auth.sql
 |       |-- model/
@@ -64,6 +55,16 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |       |-- src/
 |       |   |-- app.h
 |       |   `-- main.c
+|       `-- view/
+|           `-- web/
+|               |-- Dockerfile
+|               |-- bun.lock
+|               |-- index.html
+|               |-- package.json
+|               `-- src/
+|                   |-- main.jsx
+|                   |-- server.jsx
+|                   `-- styles.css
 |-- tests/
 |   |-- fixtures/
 |   |-- integration/
@@ -90,11 +91,11 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
   generation.
 - `templates/default/`: generated starter app used by `sealion new` and
   `sealion init`.
-- `templates/default/frontend/`: generated Bun/React/Tailwind frontend
-  container, browser UI, and same-origin API proxy.
 - `templates/default/model/`: generated Postgres-backed model code.
 - `templates/default/controller/`: generated request-flow handlers.
 - `templates/default/src/`: generated C HTTP/API server.
+- `templates/default/view/web/`: generated Bun/React/Tailwind web app,
+  frontend container source, browser UI, and same-origin API proxy.
 - `tests/fixtures/`: shared test fixtures.
 - `tests/integration/`: tests that use Postgres or containers.
 - `tests/regression/`: tests created after a bug or broken contract.

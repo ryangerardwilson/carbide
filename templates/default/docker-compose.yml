@@ -3,7 +3,7 @@ name: __PROJECT_SLUG__
 services:
   frontend:
     build:
-      context: ./frontend
+      context: ./view/web
     environment:
       BACKEND_URL: http://backend:8080
     ports:
@@ -14,15 +14,15 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./frontend/src
+          path: ./view/web/src
         - action: rebuild
-          path: ./frontend/index.html
+          path: ./view/web/index.html
         - action: rebuild
-          path: ./frontend/package.json
+          path: ./view/web/package.json
         - action: rebuild
-          path: ./frontend/bun.lock
+          path: ./view/web/bun.lock
         - action: rebuild
-          path: ./frontend/Dockerfile
+          path: ./view/web/Dockerfile
 
   backend:
     build:

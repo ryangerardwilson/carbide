@@ -24,13 +24,13 @@ required_files=(
   "scripts/test_starter_docker_flow.sh"
   "templates/default/Dockerfile"
   "templates/default/docker-compose.yml"
-  "templates/default/frontend/Dockerfile"
-  "templates/default/frontend/index.html"
-  "templates/default/frontend/package.json"
-  "templates/default/frontend/bun.lock"
-  "templates/default/frontend/src/main.jsx"
-  "templates/default/frontend/src/server.jsx"
-  "templates/default/frontend/src/styles.css"
+  "templates/default/view/web/Dockerfile"
+  "templates/default/view/web/index.html"
+  "templates/default/view/web/package.json"
+  "templates/default/view/web/bun.lock"
+  "templates/default/view/web/src/main.jsx"
+  "templates/default/view/web/src/server.jsx"
+  "templates/default/view/web/src/styles.css"
   "templates/default/sealion.toml"
   "templates/default/src/app.h"
   "templates/default/src/main.c"
@@ -54,8 +54,9 @@ required_dirs=(
   "infra/compose"
   "infra/schemas"
   "templates/default"
-  "templates/default/frontend"
-  "templates/default/frontend/src"
+  "templates/default/view"
+  "templates/default/view/web"
+  "templates/default/view/web/src"
   "templates/default/src"
   "templates/default/model"
   "templates/default/controller"
@@ -100,9 +101,10 @@ grep -q 'PUBLIC_URL: "http://localhost:${SEALION_HTTP_PORT:-8080}"' templates/de
 grep -q "develop:" templates/default/docker-compose.yml
 grep -q "watch:" templates/default/docker-compose.yml
 grep -q "action: rebuild" templates/default/docker-compose.yml
-grep -q "path: ./frontend/src" templates/default/docker-compose.yml
-grep -q "path: ./frontend/package.json" templates/default/docker-compose.yml
-grep -q "path: ./frontend/bun.lock" templates/default/docker-compose.yml
+grep -q "context: ./view/web" templates/default/docker-compose.yml
+grep -q "path: ./view/web/src" templates/default/docker-compose.yml
+grep -q "path: ./view/web/package.json" templates/default/docker-compose.yml
+grep -q "path: ./view/web/bun.lock" templates/default/docker-compose.yml
 grep -q "path: ./src" templates/default/docker-compose.yml
 grep -q "path: ./model" templates/default/docker-compose.yml
 grep -q "path: ./controller" templates/default/docker-compose.yml
@@ -111,19 +113,20 @@ grep -q "COPY model ./model" templates/default/Dockerfile
 grep -q "COPY controller ./controller" templates/default/Dockerfile
 ! grep -q "COPY view ./view" templates/default/Dockerfile
 ! grep -q "COPY ui_components ./ui_components" templates/default/Dockerfile
-! test -f templates/default/frontend/package-lock.json
-! test -f templates/default/frontend/vite.config.js
-grep -q "oven/bun:1.3.14-debian" templates/default/frontend/Dockerfile
-grep -q "bun install --frozen-lockfile" templates/default/frontend/Dockerfile
-grep -q '"@tailwindcss/cli": "4.3.2"' templates/default/frontend/package.json
-grep -q '"tailwindcss": "4.3.2"' templates/default/frontend/package.json
-grep -q '"react": "19.2.7"' templates/default/frontend/package.json
-grep -q "Bun.serve" templates/default/frontend/src/server.jsx
-grep -q "proxying /api and /health" templates/default/frontend/src/server.jsx
-grep -q '@import "tailwindcss";' templates/default/frontend/src/styles.css
-grep -q '/api/${mode}' templates/default/frontend/src/main.jsx
-grep -q "Bun frontend + C API + Postgres" templates/default/frontend/src/main.jsx
-grep -q "React + Bun container" templates/default/frontend/src/main.jsx
+! test -d templates/default/frontend
+! test -f templates/default/view/web/package-lock.json
+! test -f templates/default/view/web/vite.config.js
+grep -q "oven/bun:1.3.14-debian" templates/default/view/web/Dockerfile
+grep -q "bun install --frozen-lockfile" templates/default/view/web/Dockerfile
+grep -q '"@tailwindcss/cli": "4.3.2"' templates/default/view/web/package.json
+grep -q '"tailwindcss": "4.3.2"' templates/default/view/web/package.json
+grep -q '"react": "19.2.7"' templates/default/view/web/package.json
+grep -q "Bun.serve" templates/default/view/web/src/server.jsx
+grep -q "proxying /api and /health" templates/default/view/web/src/server.jsx
+grep -q '@import "tailwindcss";' templates/default/view/web/src/styles.css
+grep -q '/api/${mode}' templates/default/view/web/src/main.jsx
+grep -q "Bun frontend + C API + Postgres" templates/default/view/web/src/main.jsx
+grep -q "React + Bun container" templates/default/view/web/src/main.jsx
 grep -q "respond_json" templates/default/src/main.c
 grep -q "/api/login" templates/default/src/main.c
 grep -q "/api/me" templates/default/src/main.c
@@ -131,7 +134,6 @@ grep -q "handle_api_dashboard" templates/default/src/main.c
 ! grep -q "render_template_text" templates/default/src/main.c
 ! grep -q "respond_view" templates/default/src/main.c
 ! grep -q "<style>" templates/default/src/main.c
-! find templates/default -path '*/view/*' -print -quit | grep -q .
 ! find templates/default -path '*/ui_components/*' -print -quit | grep -q .
 ! grep -R "views/" templates/default README.md docs >/dev/null
 grep -q "API listening inside backend container" templates/default/src/main.c

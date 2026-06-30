@@ -31,13 +31,13 @@ The frontend listens on port 8080 inside its container. The browser URL is the
 host URL printed by the CLI. API calls use the same origin under `/api`.
 
 When Docker Compose supports file watch, `sealion run dev` starts the stack with
-Compose watch enabled. Edits under `frontend/src/`, `src/`, `model/`,
-`controller/`, frontend package/config files, or to `Dockerfile` rebuild and
+Compose watch enabled. Edits under `view/web/src/`, `src/`, `model/`,
+`controller/`, view web package/config files, or to `Dockerfile` rebuild and
 replace the relevant container.
 
-Generated apps keep browser UI in `frontend/src/`. Bun owns the frontend server
-and API proxy, Tailwind owns styling, and React owns page flow, forms, and
-dashboard rendering. The C backend owns `/api` routes, auth, sessions,
+Generated apps keep browser UI in `view/web/src/`. Bun owns the frontend
+server and API proxy, Tailwind owns styling, and React owns page flow, forms,
+and dashboard rendering. The C backend owns `/api` routes, auth, sessions,
 validation, and Postgres access. The frontend proxies `/api` and `/health` to
 the backend so cookies remain same-origin.
 
