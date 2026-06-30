@@ -9,17 +9,22 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |   `-- workflows/
 |       |-- ci.yml
 |       `-- pages.yml
+|-- bin/
+|   `-- sealion
 |-- docs/
 |   |-- engineering/
 |   |   |-- COMPONENT_STYLE_SYSTEM.md
 |   |   |-- CI_CD_REGRESSION_TESTS.md
-|   |   `-- DIRECTORY_STRUCTURE.md
+|   |   |-- DIRECTORY_STRUCTURE.md
+|   |   `-- INITIAL_USER_EXPERIENCE.md
 |   `-- site/
 |       |-- CNAME
 |       |-- assets/
 |       |   `-- styles.css
 |       |-- ci-cd-regression-tests.html
+|       |-- component-style-system.html
 |       |-- index.html
+|       |-- initial-user-experience.html
 |       `-- repo-structure.html
 |-- examples/
 |   `-- hello/
@@ -30,20 +35,32 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |   |-- compose/
 |   `-- schemas/
 |-- scripts/
-|   `-- check_repo_contract.sh
+|   |-- check_repo_contract.sh
+|   `-- test_cli_scaffold.sh
 |-- src/
 |   `-- ui/
+|-- templates/
+|   `-- default/
+|       |-- Dockerfile
+|       |-- docker-compose.yml
+|       |-- migrations/
+|       |   `-- 001_auth.sql
+|       |-- sealion.toml
+|       `-- src/
+|           `-- main.c
 |-- tests/
 |   |-- fixtures/
 |   |-- integration/
 |   |-- regression/
 |   `-- unit/
+|-- install.sh
 `-- README.md
 ```
 
 ## Ownership
 
 - `.github/workflows/`: CI and documentation deployment.
+- `bin/sealion`: installable CLI entry point.
 - `docs/engineering/`: source-of-truth engineering plans.
 - `docs/site/`: static GitHub Pages artifact.
 - `examples/`: generated or hand-written sample apps.
@@ -55,10 +72,13 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 - `src/`: framework implementation.
 - `src/ui/`: component rendering, utility parsing, token resolution, and CSS
   generation.
+- `templates/default/`: generated starter app used by `sealion new` and
+  `sealion init`.
 - `tests/fixtures/`: shared test fixtures.
 - `tests/integration/`: tests that use Postgres or containers.
 - `tests/regression/`: tests created after a bug or broken contract.
 - `tests/unit/`: small deterministic C tests.
+- `install.sh`: GitHub URL installer that places `sealion` on the user's PATH.
 
 ## First Implementation Rule
 

@@ -30,10 +30,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check shell syntax
-        run: bash -n scripts/*.sh
+        run: bash -n scripts/*.sh bin/sealion install.sh
 
       - name: Check repository contract
         run: bash scripts/check_repo_contract.sh
+
+      - name: Test CLI scaffold
+        run: bash scripts/test_cli_scaffold.sh
 
   deploy:
     name: Deploy GitHub Pages
@@ -57,4 +60,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-

@@ -112,6 +112,20 @@ The planned repo layout lives in `docs/engineering/DIRECTORY_STRUCTURE.md`.
 The component styling contract lives in
 `docs/engineering/COMPONENT_STYLE_SYSTEM.md`.
 
+## Install And Start
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/sealion/main/install.sh | bash
+sealion new demo
+cd demo
+sealion run dev
+```
+
+`sealion new <project-name>` creates a new project directory. `sealion init`
+initializes the current directory only when it is empty. `sealion run dev`
+starts the generated app and Postgres containers with register, login, logout,
+and dashboard routes already wired.
+
 ## Roadmap
 
 ### Phase 0: Project Contract
@@ -124,6 +138,8 @@ The component styling contract lives in
 - Choose compiler, libc, build system, formatter, and test runner.
 - Create the canonical app directory layout.
 - Define the request, response, app, and service lifecycle contracts.
+- Define the install URL, `sealion new`, `sealion init`, and `sealion run dev`
+  command contracts.
 - Publish a minimal "hello route" sample app.
 
 ### Phase 1: HTTP Core
@@ -164,6 +180,8 @@ The component styling contract lives in
 
 ### Phase 5: Web App Essentials
 
+- Ship the default generated auth experience: register, login, logout, and
+  dashboard.
 - Add signed cookies and encrypted session storage.
 - Add CSRF protection.
 - Add validation primitives.

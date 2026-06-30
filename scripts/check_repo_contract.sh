@@ -5,17 +5,27 @@ domain="sealion.ryangerardwilson.com"
 
 required_files=(
   "README.md"
+  "install.sh"
+  "bin/sealion"
   ".github/workflows/ci.yml"
   ".github/workflows/pages.yml"
   "docs/engineering/CI_CD_REGRESSION_TESTS.md"
   "docs/engineering/COMPONENT_STYLE_SYSTEM.md"
   "docs/engineering/DIRECTORY_STRUCTURE.md"
+  "docs/engineering/INITIAL_USER_EXPERIENCE.md"
   "docs/site/CNAME"
   "docs/site/index.html"
   "docs/site/component-style-system.html"
+  "docs/site/initial-user-experience.html"
   "docs/site/ci-cd-regression-tests.html"
   "docs/site/repo-structure.html"
   "docs/site/assets/styles.css"
+  "scripts/test_cli_scaffold.sh"
+  "templates/default/Dockerfile"
+  "templates/default/docker-compose.yml"
+  "templates/default/sealion.toml"
+  "templates/default/src/main.c"
+  "templates/default/migrations/001_auth.sql"
 )
 
 required_dirs=(
@@ -30,6 +40,9 @@ required_dirs=(
   "examples/hello"
   "infra/compose"
   "infra/schemas"
+  "templates/default"
+  "templates/default/src"
+  "templates/default/migrations"
 )
 
 for path in "${required_files[@]}"; do
@@ -58,10 +71,14 @@ grep -q "Infrastructure as code" README.md
 grep -q "Framework-owned component styling" README.md
 grep -q "generated Docker Compose setup" README.md
 grep -q "Postgres-backed queues" README.md
+grep -q "sealion new" README.md
+grep -q "sealion run dev" README.md
 
 grep -q "$domain" docs/site/index.html
 grep -q "Component styling" docs/site/index.html
+grep -q "Initial user experience" docs/site/index.html
 grep -q "Tailwind-like ergonomics without the Tailwind dependency" docs/site/component-style-system.html
+grep -q "Install, create, run, log in" docs/site/initial-user-experience.html
 grep -q "CI/CD regression plan" docs/site/ci-cd-regression-tests.html
 grep -q "Directory structure" docs/site/repo-structure.html
 

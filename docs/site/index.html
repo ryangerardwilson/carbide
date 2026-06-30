@@ -14,6 +14,7 @@
         <h1>A full-stack C framework with a narrow runtime contract.</h1>
         <p class="lead">Sealion starts with one app container image, one Postgres service container, checked-in infrastructure, and regression tests that protect the framework before it grows.</p>
         <nav class="nav" aria-label="Documentation">
+          <a href="initial-user-experience.html">Initial user experience</a>
           <a href="component-style-system.html">Component styling</a>
           <a href="ci-cd-regression-tests.html">CI/CD regression plan</a>
           <a href="repo-structure.html">Directory structure</a>
@@ -25,6 +26,14 @@
     <main class="shell grid">
       <div>
         <section>
+          <h2>Install And Start</h2>
+          <pre><code>curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/sealion/main/install.sh | bash
+sealion new demo
+cd demo
+sealion run dev</code></pre>
+        </section>
+
+        <section>
           <h2>Product Contract</h2>
           <ul>
             <li>Apps run in the official Sealion app container.</li>
@@ -32,6 +41,7 @@
             <li>The app and database stay in separate containers.</li>
             <li>Infrastructure belongs in version-controlled code.</li>
             <li>Component styling is Tailwind-like, generated, and framework-owned.</li>
+            <li>The default starter includes register, login, logout, and dashboard.</li>
             <li>The first IaC target is generated Docker Compose for local development.</li>
           </ul>
         </section>

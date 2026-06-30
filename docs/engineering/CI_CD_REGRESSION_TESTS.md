@@ -45,6 +45,7 @@ Initial checks:
 - required directories exist;
 - README keeps the core product contracts: app container, Postgres-only,
   infrastructure as code, local Compose first, and Postgres-backed queues;
+- install script, CLI, and default template files exist;
 - documentation site files exist;
 - custom Pages domain is present in `docs/site/CNAME`;
 - workflow files exist.
@@ -118,6 +119,7 @@ Purpose: protect developer experience and generated files.
 Future checks:
 
 - `sealion new` creates the canonical directory structure;
+- `sealion init` succeeds only in an empty directory;
 - generated files are deterministic;
 - invalid commands print actionable errors;
 - scaffolded apps pass the same CI checks as framework examples.
@@ -172,8 +174,9 @@ Future checks:
 The first implemented CI job is intentionally small:
 
 ```sh
-bash -n scripts/*.sh
+bash -n scripts/*.sh bin/sealion install.sh
 bash scripts/check_repo_contract.sh
+bash scripts/test_cli_scaffold.sh
 ```
 
 This protects the repo and documentation deployment while the framework code is
