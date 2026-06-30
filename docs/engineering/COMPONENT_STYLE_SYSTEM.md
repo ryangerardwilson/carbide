@@ -31,7 +31,7 @@ validates, and compiles those strings through framework-owned C tooling.
 
 ## Authoring Model
 
-Starter app components live in `.scales` files:
+Starter app components live in `.scale` files:
 
 ```text
 ui_components/
@@ -40,20 +40,23 @@ ui_components/
 `-- l3/
 ```
 
-`.skin` views import `.scales` components and pass data through variables:
+`.skin` views import `.scale` components and pass data through variables:
 
 ```html
-<s-l3.dashboard-page :passover=[user_email] />
+<s-l2.layout :passover=[title,app_name]>
+  <s-l3.dashboard-page :passover=[user_email] />
+</s-l2.layout>
 ```
 
 Use `:passover=[...]` when the component prop names match the variable names
 already in scope. Use explicit props only for aliases or literals, such as
 `<s-l3.example :title="page_title" label="Save" />`.
 
-Components receive only props passed by their caller. If an L3 component uses an
-L2 component, it must forward the required props through `:passover=[...]` or
-explicit props. Dotted component names map to `.scales` paths, so
-`s-l3.dashboard-page` resolves to `ui_components/l3/dashboard_page.scales`.
+Components receive only props passed by their caller. `.scale` files do not
+embed other `.scale` files; all organization, arrangement, and embedding across
+components belongs in `.skin` files. Dotted component names map to `.scale`
+paths, so `s-l3.dashboard-page` resolves to
+`ui_components/l3/dashboard_page.scale`.
 
 Components can attach a style specification to rendered markup:
 
@@ -113,7 +116,8 @@ Tailwind for generated apps, framework examples, CI, or documentation.
 The component style system needs dedicated regression coverage:
 
 - view files stay import-only and do not own CSS;
-- components use `.scales`, not `.html`;
+- components use `.scale`, not `.html`;
+- `.scale` files do not contain Scale component tags;
 - L1/L2/L3 component directories exist in generated apps;
 - utility parser accepts valid specs and rejects unknown utilities;
 - generated CSS is deterministic;

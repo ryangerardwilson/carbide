@@ -31,20 +31,17 @@ required_files=(
   "templates/default/model/session.c"
   "templates/default/controller/auth_controller.c"
   "templates/default/controller/page_controller.c"
-  "templates/default/view/layout.skin"
   "templates/default/view/home.skin"
   "templates/default/view/register.skin"
   "templates/default/view/login.skin"
   "templates/default/view/dashboard.skin"
   "templates/default/view/not_found.skin"
-  "templates/default/ui_components/l1/base_styles.scales"
-  "templates/default/ui_components/l2/page_shell.scales"
-  "templates/default/ui_components/l2/auth_form.scales"
-  "templates/default/ui_components/l3/home_page.scales"
-  "templates/default/ui_components/l3/login_page.scales"
-  "templates/default/ui_components/l3/register_page.scales"
-  "templates/default/ui_components/l3/dashboard_page.scales"
-  "templates/default/ui_components/l3/not_found_page.scales"
+  "templates/default/ui_components/l1/.gitkeep"
+  "templates/default/ui_components/l2/layout.scale"
+  "templates/default/ui_components/l2/auth_form.scale"
+  "templates/default/ui_components/l3/home_page.scale"
+  "templates/default/ui_components/l3/dashboard_page.scale"
+  "templates/default/ui_components/l3/not_found_page.scale"
   "templates/default/migrations/001_auth.sql"
 )
 
@@ -116,31 +113,35 @@ grep -q "COPY model ./model" templates/default/Dockerfile
 grep -q "COPY controller ./controller" templates/default/Dockerfile
 grep -q "COPY view ./view" templates/default/Dockerfile
 grep -q "COPY ui_components ./ui_components" templates/default/Dockerfile
-grep -q "{{ title }}" templates/default/view/layout.skin
-grep -q '<s-l1.base-styles />' templates/default/view/layout.skin
-grep -Fq '<s-l2.page-shell :passover=[content] />' templates/default/view/layout.skin
-grep -q "{!! content !!}" templates/default/ui_components/l2/page_shell.scales
+test ! -e templates/default/view/layout.skin
+grep -q "{{ title }}" templates/default/ui_components/l2/layout.scale
+grep -q "<style>" templates/default/ui_components/l2/layout.scale
+grep -q "{!! content !!}" templates/default/ui_components/l2/layout.scale
+grep -Fq '<s-l2.layout :passover=[title,app_name]>' templates/default/view/home.skin
+grep -Fq '</s-l2.layout>' templates/default/view/home.skin
 grep -Fq '<s-l3.home-page :passover=[app_name] />' templates/default/view/home.skin
-grep -Fq '<s-l3.login-page :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/view/login.skin
-grep -Fq '<s-l3.register-page :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/view/register.skin
+grep -Fq '<s-l2.auth-form :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/view/login.skin
+grep -Fq '<s-l2.auth-form :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/view/register.skin
 grep -Fq '<s-l3.dashboard-page :passover=[user_email] />' templates/default/view/dashboard.skin
 grep -q '<s-l3.not-found-page />' templates/default/view/not_found.skin
-grep -q "{{ user_email }}" templates/default/ui_components/l3/dashboard_page.scales
-grep -Fq '<s-l2.auth-form :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/ui_components/l3/login_page.scales
-grep -Fq '<s-l2.auth-form :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/ui_components/l3/register_page.scales
+grep -q "{{ user_email }}" templates/default/ui_components/l3/dashboard_page.scale
 ! grep -R "{% component" templates/default/view templates/default/ui_components README.md docs >/dev/null
 ! grep -R ':auth-title=' templates/default/view templates/default/ui_components/l3 >/dev/null
 grep -q "render_template_text" templates/default/src/main.c
 grep -q "respond_view" templates/default/src/main.c
 grep -q "view/%s.skin" templates/default/src/main.c
-grep -q "view/layout.skin" templates/default/src/main.c
 grep -q "parse_passover_props" templates/default/src/main.c
+grep -q "find_component_close" templates/default/src/main.c
 ! grep -q "view/%s.html" templates/default/src/main.c
-grep -q "ui_components/%s.scales" templates/default/src/main.c
+! grep -q "view/layout.skin" templates/default/src/main.c
+grep -q "ui_components/%s.scale" templates/default/src/main.c
+! grep -q "ui_components/%s.scales" templates/default/src/main.c
 ! grep -q "<style>" templates/default/src/main.c
 ! grep -R "<style>" templates/default/view >/dev/null
+! grep -R '<s-' templates/default/ui_components >/dev/null
 ! find templates/default/view -name '*.html' -print -quit | grep -q .
 ! find templates/default/ui_components -name '*.html' -print -quit | grep -q .
+! find templates/default/ui_components -name '*.scales' -print -quit | grep -q .
 ! grep -R "views/" templates/default README.md docs >/dev/null
 grep -q "listening inside container" templates/default/src/main.c
 grep -q "open %s" templates/default/src/main.c

@@ -116,8 +116,10 @@ Future checks:
   controller, view, component, and Dockerfile changes;
 - generated apps include MVC directories and import-only `view/*.skin`
   templates instead of embedding page markup in C string literals;
-- generated apps include `.scales` components under `ui_components/l1`,
+- generated apps include `.scale` components under `ui_components/l1`,
   `ui_components/l2`, and `ui_components/l3`;
+- generated `.skin` files compose scale components, including `layout.scale`;
+- generated `.scale` files never contain Scale component tags;
 - restart behavior preserves Postgres data;
 - environment schema rejects missing required values.
 

@@ -57,12 +57,17 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |       |   `-- main.c
 |       |-- ui_components/
 |       |   |-- l1/
+|       |   |   `-- .gitkeep
 |       |   |-- l2/
+|       |   |   |-- auth_form.scale
+|       |   |   `-- layout.scale
 |       |   `-- l3/
+|       |       |-- dashboard_page.scale
+|       |       |-- home_page.scale
+|       |       `-- not_found_page.scale
 |       `-- view/
 |           |-- dashboard.skin
 |           |-- home.skin
-|           |-- layout.skin
 |           |-- login.skin
 |           |-- not_found.skin
 |           `-- register.skin
@@ -94,10 +99,11 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
   `sealion init`.
 - `templates/default/model/`: generated Postgres-backed model code.
 - `templates/default/controller/`: generated request-flow handlers.
-- `templates/default/view/`: thin `.skin` starter templates that import
-  `.scales` components and pass data into them.
-- `templates/default/ui_components/`: generated `.scales` components organized
-  into `l1`, `l2`, and `l3`.
+- `templates/default/view/`: thin `.skin` starter templates that compose
+  `.scale` components and pass data into them.
+- `templates/default/ui_components/`: generated `.scale` components organized
+  into `l1`, `l2`, and `l3`; scale files are leaf render units and do not embed
+  other scale files.
 - `tests/fixtures/`: shared test fixtures.
 - `tests/integration/`: tests that use Postgres or containers.
 - `tests/regression/`: tests created after a bug or broken contract.

@@ -220,6 +220,19 @@ static bool copy_component_path(char *out, size_t out_len, const char *start, si
   return component_name_is_safe(out);
 }
 
+static bool copy_component_tag_name(char *out, size_t out_len, const char *start, size_t len) {
+  if (len == 0 || len >= out_len) return false;
+  for (size_t i = 0; i < len; i++) {
+    char c = start[i];
+    if (!(isalnum((unsigned char)c) || c == '_' || c == '-' || c == '.')) {
+      return false;
+    }
+    out[i] = c;
+  }
+  out[len] = '\0';
+  return true;
+}
+
 static bool copy_prop_name(char *out, size_t out_len, const char *start, size_t len) {
   if (len == 0 || len >= out_len) return false;
   for (size_t i = 0; i < len; i++) {
@@ -315,16 +328,81 @@ static bool parse_passover_props(
   return true;
 }
 
+static bool add_raw_prop(
+  ViewVar *props,
+  size_t *prop_count,
+  char prop_names[MAX_COMPONENT_PROPS][MAX_PROP_NAME],
+  const char *name,
+  const char *value
+) {
+  if (*prop_count >= MAX_COMPONENT_PROPS) return false;
+  size_t name_len = strlen(name);
+  if (name_len == 0 || name_len >= MAX_PROP_NAME) return false;
+  memcpy(prop_names[*prop_count], name, name_len + 1);
+  props[*prop_count] = (ViewVar){prop_names[*prop_count], value};
+  (*prop_count)++;
+  return true;
+}
+
+static bool component_open_matches(const char *candidate, const char *tag_name) {
+  size_t tag_len = strlen(tag_name);
+  if (strncmp(candidate, "<s-", 3) != 0) return false;
+  if (strncmp(candidate + 3, tag_name, tag_len) != 0) return false;
+  char next = candidate[3 + tag_len];
+  return next == '>' || next == '/' || isspace((unsigned char)next);
+}
+
+static bool find_component_close(
+  const char *content_start,
+  const char *tag_name,
+  const char **content_end,
+  const char **end_out
+) {
+  char close_tag[160];
+  int n = snprintf(close_tag, sizeof(close_tag), "</s-%s>", tag_name);
+  if (n <= 0 || (size_t)n >= sizeof(close_tag)) return false;
+
+  const char *p = content_start;
+  int depth = 1;
+  while (*p) {
+    const char *next_open = strstr(p, "<s-");
+    const char *next_close = strstr(p, close_tag);
+    if (!next_close) return false;
+
+    if (next_open && next_open < next_close && component_open_matches(next_open, tag_name)) {
+      const char *open_end = strchr(next_open, '>');
+      if (!open_end) return false;
+      const char *tag_tail = open_end;
+      while (tag_tail > next_open && isspace((unsigned char)tag_tail[-1])) tag_tail--;
+      if (tag_tail == next_open || tag_tail[-1] != '/') depth++;
+      p = open_end + 1;
+      continue;
+    }
+
+    depth--;
+    if (depth == 0) {
+      *content_end = next_close;
+      *end_out = next_close + (size_t)n;
+      return true;
+    }
+    p = next_close + (size_t)n;
+  }
+  return false;
+}
+
 static bool parse_component_import(
   const char *start,
   const ViewVar *source_vars,
   size_t source_var_count,
   char *component_name,
   size_t component_name_len,
+  char *component_tag_name,
+  size_t component_tag_name_len,
   ViewVar *props,
   size_t *prop_count,
   char prop_names[MAX_COMPONENT_PROPS][MAX_PROP_NAME],
   char prop_literals[MAX_COMPONENT_PROPS][MAX_PROP_VALUE],
+  bool *self_closing,
   const char **end_out
 ) {
   const char *p = start + strlen("<s-");
@@ -333,11 +411,18 @@ static bool parse_component_import(
   while (*p && !isspace((unsigned char)*p) && *p != '/' && *p != '>') p++;
   size_t len = (size_t)(p - name_start);
   if (!copy_component_path(component_name, component_name_len, name_start, len)) return false;
+  if (!copy_component_tag_name(component_tag_name, component_tag_name_len, name_start, len)) return false;
 
   for (;;) {
     while (*p && isspace((unsigned char)*p)) p++;
     if (p[0] == '/' && p[1] == '>') {
+      *self_closing = true;
       *end_out = p + 2;
+      return true;
+    }
+    if (*p == '>') {
+      *self_closing = false;
+      *end_out = p + 1;
       return true;
     }
     if (*prop_count >= MAX_COMPONENT_PROPS) return false;
@@ -417,7 +502,7 @@ static bool render_component(
 ) {
   char path[256];
   if (depth >= MAX_COMPONENT_DEPTH) return false;
-  snprintf(path, sizeof(path), "ui_components/%s.scales", component_name);
+  snprintf(path, sizeof(path), "ui_components/%s.scale", component_name);
   return render_template_file(path, vars, var_count, out, out_len, depth + 1);
 }
 
@@ -445,30 +530,73 @@ static bool render_template_text(
     if (!append_bytes(out, out_len, &used, cursor, (size_t)(start - cursor))) return false;
 
     if (start == component) {
+      if (depth > 0) return false;
       char component_name[128];
+      char component_tag_name[128];
       char prop_names[MAX_COMPONENT_PROPS][MAX_PROP_NAME];
       char prop_literals[MAX_COMPONENT_PROPS][MAX_PROP_VALUE];
       ViewVar props[MAX_COMPONENT_PROPS];
       size_t prop_count = 0;
       char rendered[MAX_VIEW];
+      char *slot_template = NULL;
+      char *slot_content = NULL;
       const char *end = NULL;
+      bool self_closing = true;
       if (!parse_component_import(
         start,
         vars,
         var_count,
         component_name,
         sizeof(component_name),
+        component_tag_name,
+        sizeof(component_tag_name),
         props,
         &prop_count,
         prop_names,
         prop_literals,
+        &self_closing,
         &end
       )) {
         return false;
       }
+
+      if (!self_closing) {
+        const char *content_end = NULL;
+        const char *block_end = NULL;
+        if (!find_component_close(end, component_tag_name, &content_end, &block_end)) {
+          return false;
+        }
+        size_t slot_len = (size_t)(content_end - end);
+        if (slot_len >= MAX_VIEW) return false;
+        slot_template = malloc(MAX_VIEW);
+        slot_content = malloc(MAX_VIEW);
+        if (!slot_template || !slot_content) {
+          free(slot_template);
+          free(slot_content);
+          return false;
+        }
+        memcpy(slot_template, end, slot_len);
+        slot_template[slot_len] = '\0';
+        if (!render_template_text(slot_template, vars, var_count, slot_content, MAX_VIEW, depth)) {
+          free(slot_template);
+          free(slot_content);
+          return false;
+        }
+        if (!add_raw_prop(props, &prop_count, prop_names, "content", slot_content)) {
+          free(slot_template);
+          free(slot_content);
+          return false;
+        }
+        end = block_end;
+      }
+
       if (!render_component(component_name, props, prop_count, rendered, sizeof(rendered), depth)) {
+        free(slot_template);
+        free(slot_content);
         return false;
       }
+      free(slot_template);
+      free(slot_content);
       if (!append_text(out, out_len, &used, rendered)) return false;
       cursor = end;
       continue;
@@ -520,20 +648,15 @@ static bool render_page(
   size_t out_len
 ) {
   char view_path[256];
-  char content[MAX_VIEW];
   snprintf(view_path, sizeof(view_path), "view/%s.skin", view_name);
-  if (!render_template_file(view_path, vars, var_count, content, sizeof(content), 0)) {
-    return false;
-  }
 
-  ViewVar layout_vars[var_count + 3];
-  layout_vars[0] = (ViewVar){"title", title};
-  layout_vars[1] = (ViewVar){"app_name", APP_NAME};
-  layout_vars[2] = (ViewVar){"content", content};
+  ViewVar view_vars[var_count + 2];
+  view_vars[0] = (ViewVar){"title", title};
+  view_vars[1] = (ViewVar){"app_name", APP_NAME};
   for (size_t i = 0; i < var_count; i++) {
-    layout_vars[i + 3] = vars[i];
+    view_vars[i + 2] = vars[i];
   }
-  return render_template_file("view/layout.skin", layout_vars, var_count + 3, out, out_len, 0);
+  return render_template_file(view_path, view_vars, var_count + 2, out, out_len, 0);
 }
 
 void respond_view(

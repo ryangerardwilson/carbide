@@ -34,13 +34,15 @@ Compose watch enabled. Edits under `src/`, `model/`, `controller/`, `view/`,
 `ui_components/`, or to `Dockerfile` rebuild and replace the app container.
 
 Generated apps keep page flow in `view/*.skin`, but UI implementation belongs in
-`.scales` components under `ui_components/l1`, `ui_components/l2`, and
+`.scale` components under `ui_components/l1`, `ui_components/l2`, and
 `ui_components/l3`. The starter renderer supports escaped variables with
 `{{ name }}`, trusted raw slots with `{!! content !!}`, and Blade-like Scale tags
 with same-name passover, such as `<s-l3.dashboard-page :passover=[user_email] />`.
 Explicit props remain available for aliases or literals, such as
 `<s-l3.example :title="page_title" label="Save" />`.
-In this model, `.scales` components attach to `.skin` view files.
+In this model, `.scale` components attach to `.skin` view files, and `.skin`
+files are the only place where scale components are organized, arranged, or
+embedded together.
 
 The generated app includes:
 
@@ -49,7 +51,8 @@ The generated app includes:
 - checked-in Docker Compose infrastructure;
 - register, login, logout, and dashboard routes;
 - MVC directories for model, view, and controller code;
-- `.scales` components under `ui_components/`;
+- `.scale` components under `ui_components/`;
+- a `layout.scale` component used from each `.skin` page;
 - Postgres-backed users and sessions;
 - a seeded demo account at `admin@sealion.local` with password `password`.
 

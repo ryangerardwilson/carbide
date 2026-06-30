@@ -1,1 +1,3 @@
-<s-l3.not-found-page />
+<s-l2.layout :passover=[title,app_name]>
+  <s-l3.not-found-page />
+</s-l2.layout>

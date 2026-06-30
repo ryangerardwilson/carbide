@@ -38,14 +38,17 @@ Generated apps start with an MVC shape:
 - `ui_components/l1/`, `ui_components/l2/`, and `ui_components/l3/` own UI
   markup and styling.
 
-Edit component markup in `ui_components/**/*.scales`. Skin files in `view/`
+Edit component markup in `ui_components/**/*.scale`. Skin files in `view/`
 should only import components and pass props, for example
-`<s-l3.dashboard-page :passover=[user_email] />`. Use explicit props only for
-aliases or literals, such as `<s-l3.example :title="page_title" label="Save" />`.
-Components receive only the props passed by their caller.
-`s-l3.dashboard-page` maps to `ui_components/l3/dashboard_page.scales`. Sealion
-renders `.scales` components inside `.skin` views, with escaped variables via
-`{{ name }}` and trusted raw slots via `{!! content !!}`.
+`<s-l3.dashboard-page :passover=[user_email] />`. Skin files can also wrap
+content with block components, such as `<s-l2.layout>...</s-l2.layout>`. Use
+explicit props only for aliases or literals, such as
+`<s-l3.example :title="page_title" label="Save" />`. Components receive only the
+props passed by their caller. Scale files do not embed other scale files;
+composition belongs in `.skin`. `s-l3.dashboard-page` maps to
+`ui_components/l3/dashboard_page.scale`. Sealion renders `.scale` components
+inside `.skin` views, with escaped variables via `{{ name }}` and trusted raw
+slots via `{!! content !!}`.
 
 Demo login:
 
@@ -60,7 +63,7 @@ password
 - Postgres service container
 - register, login, logout, and dashboard routes
 - MVC directories for model, view, and controller code
-- `.scales` UI components under `ui_components/l1`, `ui_components/l2`, and
+- `.scale` UI components under `ui_components/l1`, `ui_components/l2`, and
   `ui_components/l3`
 - Postgres-backed users and sessions
 - checked-in local Docker Compose contract

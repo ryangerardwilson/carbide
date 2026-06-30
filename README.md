@@ -137,15 +137,17 @@ Compose watch enabled. Edits under `src/`, `model/`, `controller/`, `view/`,
 
 Generated apps use an MVC starter layout. `model/` owns Postgres state,
 `controller/` owns request flow, and `view/` owns thin templates that import
-components. UI implementation lives in `.scales` files under
+components. UI implementation lives in `.scale` files under
 `ui_components/l1`, `ui_components/l2`, and `ui_components/l3`. Views pass
 same-named variables into components with a Blade-like Scale tag syntax:
-`<s-l3.dashboard-page :passover=[user_email] />`. Use explicit props only for
-aliases or literals, such as `<s-l3.example :title="page_title" label="Save" />`.
-Components receive only the props passed by the caller. The tag
-`s-l3.dashboard-page` maps to `ui_components/l3/dashboard_page.scales`. The
-starter renderer supports escaped variables with `{{ name }}` and trusted raw
-slots with `{!! content !!}`.
+`<s-l3.dashboard-page :passover=[user_email] />`. Skins can also wrap content
+with block components, such as `<s-l2.layout>...</s-l2.layout>`. Use explicit
+props only for aliases or literals, such as
+`<s-l3.example :title="page_title" label="Save" />`. Components receive only the
+props passed by the caller. Scale files do not embed other scale files;
+composition belongs in `.skin`. The tag `s-l3.dashboard-page` maps to
+`ui_components/l3/dashboard_page.scale`. The starter renderer supports escaped
+variables with `{{ name }}` and trusted raw slots with `{!! content !!}`.
 
 ## Roadmap
 
@@ -182,8 +184,9 @@ slots with `{!! content !!}`.
 ### Phase 3: Views And Assets
 
 - Keep interpreted `view/*.skin` templates as import-only flow files.
-- Keep component implementation in `ui_components/**/*.scales`, attached from
+- Keep component implementation in `ui_components/**/*.scale`, attached from
   `.skin` files through Scale component tags.
+- Keep `.scale` files leaf-only: scale files do not embed other scale files.
 - Maintain L1/L2/L3 component boundaries for primitives, patterns, and
   product/domain components.
 - Support escaped variables with `{{ name }}` and trusted raw slots with
