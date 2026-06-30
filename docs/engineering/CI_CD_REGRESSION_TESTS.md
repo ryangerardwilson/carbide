@@ -141,6 +141,8 @@ Future checks:
   Compose build output by default;
 - CLI success, error, version, upgrade, and dev-stack output use the shared
   aligned renderer instead of scattered raw prints;
+- `sealion run dev` streams frontend, backend, database, and watch output
+  through service-tagged rows after the stack is ready;
 - generated files are deterministic;
 - invalid commands print actionable errors;
 - scaffolded apps pass the same CI checks as framework examples.

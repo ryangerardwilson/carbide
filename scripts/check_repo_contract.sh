@@ -101,7 +101,7 @@ grep -q "sealion run dev" README.md
 grep -q "module github.com/ryangerardwilson/sealion" go.mod
 grep -q "package main" cmd/sealion/main.go
 grep -q "composeUpDetached" cmd/sealion/main.go
-grep -q "runComposeWatch" cmd/sealion/main.go
+grep -q "runDevStreams" cmd/sealion/main.go
 grep -q -- "--quiet-build" cmd/sealion/main.go
 grep -q "Sealion dev" cmd/sealion/main.go
 grep -q "Go is required to build the Sealion CLI" install.sh
@@ -154,7 +154,10 @@ grep -q "API listening inside backend container" templates/default/src/main.c
 grep -q "frontend proxies API calls" templates/default/src/main.c
 grep -q "compose.supports(\"--watch\")" cmd/sealion/main.go
 grep -q "newRenderer" cmd/sealion/main.go
-grep -q "streamComposeOutput" cmd/sealion/main.go
+grep -q "runDevStreams" cmd/sealion/main.go
+grep -q "streamLogOutput" cmd/sealion/main.go
+grep -q "parseComposeLogLine" cmd/sealion/main.go
+grep -q "composeLogsArgs" cmd/sealion/main.go
 grep -q 'outputRow{"watch", "enabled"}' cmd/sealion/main.go
 
 grep -q "$domain" docs/site/index.html

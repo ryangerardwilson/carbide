@@ -34,13 +34,15 @@ The frontend listens on port 8080 inside its container. The browser URL is the
 host URL printed by the CLI. API calls use the same origin under `/api`.
 
 When Docker Compose supports file watch, `sealion run dev` starts the stack with
-quiet Compose output and watch enabled. Edits under `view/web/src/`, `src/`,
-`model/`, `controller/`, view web package/config files, or to `Dockerfile`
-rebuild and replace the relevant container. Use `docker compose logs -f` for raw
-container logs.
+quiet Compose output, watch enabled, and live logs streamed below the startup
+summary. Edits under `view/web/src/`, `src/`, `model/`, `controller/`, view web
+package/config files, or to `Dockerfile` rebuild and replace the relevant
+container.
 
-The CLI presents status as aligned rows with TTY-only muted styling. Captured or
-piped output remains plain text for tests and scripts.
+The CLI presents status as aligned rows with TTY-only color. Captured or piped
+output remains plain text for tests, scripts, and AI agents. Once the stack is
+ready, frontend, backend, database, and watch events appear in one service-tagged
+stream.
 
 Generated apps keep browser UI in `view/web/src/`. Bun owns the frontend
 server and API proxy, Tailwind owns styling, and React owns page flow, forms,
@@ -83,7 +85,8 @@ unless the current directory is empty.
 
 Runs the generated app through Docker Compose. The frontend, backend, and
 database are separate services, matching the runtime topology contract. The CLI
-prints the app URL, API URL, demo login, watch status, and the log command.
+prints the app URL, API URL, demo login, watch status, and then streams logs
+until `Ctrl+C`.
 
 ## Product Principle
 

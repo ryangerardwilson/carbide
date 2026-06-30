@@ -59,9 +59,10 @@ type app struct {
 }
 
 type composeCommand struct {
-	name string
-	base []string
-	help string
+	name    string
+	base    []string
+	help    string
+	logHelp string
 }
 
 type renderer struct {
@@ -72,6 +73,16 @@ type renderer struct {
 type outputRow struct {
 	key   string
 	value string
+}
+
+type runningProcess struct {
+	name string
+	cmd  *exec.Cmd
+}
+
+type processResult struct {
+	name string
+	err  error
 }
 
 func main() {
@@ -331,20 +342,21 @@ func (a app) commandRunDev() error {
 	if !watch {
 		r.Rows(
 			outputRow{"watch", "unavailable in this Docker Compose"},
-			outputRow{"logs", "docker compose logs -f"},
+			outputRow{"logs", "streaming below"},
 			outputRow{"stop", "docker compose down"},
 		)
-		return nil
+		r.Section("Logs", "live container output")
+		return a.runDevStreams(compose, env, false)
 	}
 
 	r.Rows(
 		outputRow{"watch", "enabled"},
-		outputRow{"logs", "docker compose logs -f"},
+		outputRow{"logs", "streaming below"},
 		outputRow{"stop", "Ctrl+C"},
 	)
-	r.Blank()
+	r.Section("Logs", "live container output")
 
-	return a.runComposeWatch(compose, env)
+	return a.runDevStreams(compose, env, true)
 }
 
 func (a app) printDevHeader(r renderer, port int, requestedPort string, watch bool) {
@@ -365,68 +377,147 @@ func (a app) printDevHeader(r renderer, port int, requestedPort string, watch bo
 	r.Blank()
 }
 
-func (a app) runComposeWatch(compose composeCommand, env []string) error {
-	cmd := exec.Command(compose.name, compose.args("watch", "--no-up", "--quiet")...)
-	cmd.Env = env
-	cmd.Stdin = os.Stdin
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return err
-	}
-
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("Docker Compose watch failed to start: %w", err)
-	}
-
+func (a app) runDevStreams(compose composeCommand, env []string, watch bool) error {
 	var streams sync.WaitGroup
-	streams.Add(2)
-	go streamComposeOutput(stdout, newRenderer(a.stdout), &streams)
-	go streamComposeOutput(stderr, newRenderer(a.stderr), &streams)
+	results := make(chan processResult, 3)
+	processes := make([]runningProcess, 0, 2)
 
-	done := make(chan error, 1)
-	go func() {
-		done <- cmd.Wait()
-	}()
+	logProcess, err := a.startComposeStream(
+		"logs",
+		compose,
+		env,
+		composeLogsArgs(compose),
+		func(input io.Reader, r renderer, wg *sync.WaitGroup) {
+			streamLogOutput(input, r, wg)
+		},
+		&streams,
+		results,
+	)
+	if err != nil {
+		return err
+	}
+	processes = append(processes, logProcess)
+
+	if watch {
+		watchProcess, err := a.startComposeStream(
+			"watch",
+			compose,
+			env,
+			[]string{"watch", "--no-up", "--quiet"},
+			func(input io.Reader, r renderer, wg *sync.WaitGroup) {
+				streamWatchOutput(input, r, wg)
+			},
+			&streams,
+			results,
+		)
+		if err != nil {
+			stopProcesses(processes, syscall.SIGTERM)
+			waitForProcesses(len(processes), processes, results, 5*time.Second)
+			streams.Wait()
+			return err
+		}
+		processes = append(processes, watchProcess)
+	}
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 	defer signal.Stop(signals)
 
-	var watchErr error
+	var first processResult
 	interrupted := false
 
 	select {
 	case sig := <-signals:
 		interrupted = true
-		r := newRenderer(a.stdout)
-		r.Row(outputRow{"status", "stopping containers"})
-		_ = cmd.Process.Signal(sig)
-		select {
-		case watchErr = <-done:
-		case <-time.After(5 * time.Second):
-			_ = cmd.Process.Kill()
-			watchErr = <-done
-		}
-	case watchErr = <-done:
+		newRenderer(a.stdout).Row(outputRow{"status", "stopping containers"})
+		stopProcesses(processes, sig)
+	case first = <-results:
+		stopProcesses(processes, syscall.SIGTERM)
 	}
 
+	alreadyReported := 0
+	if !interrupted {
+		alreadyReported = 1
+	}
+	waitForProcesses(len(processes)-alreadyReported, processes, results, 5*time.Second)
 	streams.Wait()
+
 	downErr := composeDown(compose, env)
 	if interrupted {
 		return downErr
 	}
-	if watchErr != nil {
+	if first.err != nil {
 		if downErr != nil {
-			return fmt.Errorf("Docker Compose watch failed: %v; cleanup failed: %w", watchErr, downErr)
+			return fmt.Errorf("Docker Compose %s failed: %v; cleanup failed: %w", first.name, first.err, downErr)
 		}
-		return fmt.Errorf("Docker Compose watch failed: %w", watchErr)
+		return fmt.Errorf("Docker Compose %s failed: %w", first.name, first.err)
 	}
 	return downErr
+}
+
+func (a app) startComposeStream(
+	name string,
+	compose composeCommand,
+	env []string,
+	args []string,
+	stream func(io.Reader, renderer, *sync.WaitGroup),
+	streams *sync.WaitGroup,
+	results chan<- processResult,
+) (runningProcess, error) {
+	cmd := exec.Command(compose.name, compose.args(args...)...)
+	cmd.Env = env
+	cmd.Stdin = os.Stdin
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return runningProcess{}, err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return runningProcess{}, err
+	}
+
+	if err := cmd.Start(); err != nil {
+		return runningProcess{}, fmt.Errorf("Docker Compose %s failed to start: %w", name, err)
+	}
+
+	streams.Add(2)
+	go stream(stdout, newRenderer(a.stdout), streams)
+	go stream(stderr, newRenderer(a.stderr), streams)
+
+	go func() {
+		results <- processResult{name: name, err: cmd.Wait()}
+	}()
+
+	return runningProcess{name: name, cmd: cmd}, nil
+}
+
+func stopProcesses(processes []runningProcess, sig os.Signal) {
+	for _, process := range processes {
+		if process.cmd.Process != nil {
+			_ = process.cmd.Process.Signal(sig)
+		}
+	}
+}
+
+func waitForProcesses(remaining int, processes []runningProcess, results <-chan processResult, timeout time.Duration) {
+	deadline := time.After(timeout)
+	for remaining > 0 {
+		select {
+		case <-results:
+			remaining--
+		case <-deadline:
+			for _, process := range processes {
+				if process.cmd.Process != nil {
+					_ = process.cmd.Process.Kill()
+				}
+			}
+			for remaining > 0 {
+				<-results
+				remaining--
+			}
+		}
+	}
 }
 
 func newRenderer(out io.Writer) renderer {
@@ -449,9 +540,25 @@ func (r renderer) Message(title string, subtitle string, rows ...outputRow) {
 
 func (r renderer) Title(title string, subtitle string) {
 	if r.styled {
-		fmt.Fprintf(r.out, "\033[1m%s\033[0m\n", title)
+		fmt.Fprintf(r.out, "%s\n", r.paint("1;38;5;81", title))
 		if subtitle != "" {
-			fmt.Fprintf(r.out, "\033[2m%s\033[0m\n", subtitle)
+			fmt.Fprintf(r.out, "%s\n", r.paint("2;38;5;245", subtitle))
+		}
+	} else {
+		fmt.Fprintln(r.out, title)
+		if subtitle != "" {
+			fmt.Fprintln(r.out, subtitle)
+		}
+	}
+	fmt.Fprintln(r.out)
+}
+
+func (r renderer) Section(title string, subtitle string) {
+	fmt.Fprintln(r.out)
+	if r.styled {
+		fmt.Fprintf(r.out, "%s\n", r.paint("1;38;5;245", title))
+		if subtitle != "" {
+			fmt.Fprintf(r.out, "%s\n", r.paint("2;38;5;245", subtitle))
 		}
 	} else {
 		fmt.Fprintln(r.out, title)
@@ -491,18 +598,85 @@ func (r renderer) writeRow(row outputRow, width int) {
 
 func (r renderer) writeSingleLine(row outputRow, width int) {
 	if row.key == "" {
-		fmt.Fprintf(r.out, "%*s  %s\n", width, "", row.value)
+		fmt.Fprintf(r.out, "%*s  %s\n", width, "", r.formatValue(row))
 		return
 	}
-	key := row.key
+	key := r.formatKey(row.key)
 	if r.styled {
-		key = "\033[2m" + key + "\033[0m"
-	}
-	if r.styled {
-		fmt.Fprintf(r.out, "%s%s  %s\n", key, strings.Repeat(" ", width-len(row.key)), row.value)
+		fmt.Fprintf(r.out, "%s%s  %s\n", key, strings.Repeat(" ", width-len(row.key)), r.formatValue(row))
 		return
 	}
 	fmt.Fprintf(r.out, "%-*s  %s\n", width, row.key, row.value)
+}
+
+func (r renderer) Log(service string, message string) {
+	label := service
+	if label == "" {
+		label = "log"
+	}
+	width := 9
+	if len(label) > width {
+		width = len(label)
+	}
+	if r.styled {
+		fmt.Fprintf(r.out, "%s%s  %s\n", r.formatService(label), strings.Repeat(" ", width-len(label)), message)
+		return
+	}
+	fmt.Fprintf(r.out, "%-*s  %s\n", width, label, message)
+}
+
+func (r renderer) formatKey(key string) string {
+	return r.paint("2;38;5;245", key)
+}
+
+func (r renderer) formatService(service string) string {
+	switch service {
+	case "frontend":
+		return r.paint("38;5;81", service)
+	case "backend":
+		return r.paint("38;5;114", service)
+	case "db":
+		return r.paint("38;5;222", service)
+	case "watch":
+		return r.paint("38;5;147", service)
+	default:
+		return r.paint("38;5;245", service)
+	}
+}
+
+func (r renderer) formatValue(row outputRow) string {
+	if !r.styled {
+		return row.value
+	}
+	switch row.key {
+	case "status":
+		switch row.value {
+		case "ready":
+			return r.paint("38;5;114", row.value)
+		case "starting containers", "stopping containers":
+			return r.paint("38;5;222", row.value)
+		default:
+			return row.value
+		}
+	case "watch":
+		if row.value == "enabled" {
+			return r.paint("38;5;114", row.value)
+		}
+		return r.paint("38;5;222", row.value)
+	case "app", "api":
+		return r.paint("38;5;81", row.value)
+	case "error":
+		return r.paint("38;5;203", row.value)
+	default:
+		return row.value
+	}
+}
+
+func (r renderer) paint(code string, value string) string {
+	if !r.styled {
+		return value
+	}
+	return "\033[" + code + "m" + value + "\033[0m"
 }
 
 func rowKeyWidth(rows []outputRow) int {
@@ -515,7 +689,7 @@ func rowKeyWidth(rows []outputRow) int {
 	return width
 }
 
-func streamComposeOutput(input io.Reader, r renderer, wg *sync.WaitGroup) {
+func streamWatchOutput(input io.Reader, r renderer, wg *sync.WaitGroup) {
 	defer wg.Done()
 	scanner := bufio.NewScanner(input)
 	scanner.Buffer(make([]byte, 1024), 1024*1024)
@@ -524,7 +698,21 @@ func streamComposeOutput(input io.Reader, r renderer, wg *sync.WaitGroup) {
 		if line == "" || line == "Watch enabled" {
 			continue
 		}
-		r.Row(outputRow{"compose", line})
+		r.Log("watch", line)
+	}
+}
+
+func streamLogOutput(input io.Reader, r renderer, wg *sync.WaitGroup) {
+	defer wg.Done()
+	scanner := bufio.NewScanner(input)
+	scanner.Buffer(make([]byte, 1024), 1024*1024)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+		service, message := parseComposeLogLine(line)
+		r.Log(service, message)
 	}
 }
 
@@ -657,11 +845,13 @@ func isCurrentDirEmpty() (bool, error) {
 func findCompose() (composeCommand, error) {
 	if _, err := commandOutput("", "docker", "compose", "version"); err == nil {
 		help, _ := commandOutput("", "docker", "compose", "up", "--help")
-		return composeCommand{name: "docker", base: []string{"compose"}, help: help}, nil
+		logHelp, _ := commandOutput("", "docker", "compose", "logs", "--help")
+		return composeCommand{name: "docker", base: []string{"compose"}, help: help, logHelp: logHelp}, nil
 	}
 	if _, err := commandOutput("", "docker-compose", "version"); err == nil {
 		help, _ := commandOutput("", "docker-compose", "up", "--help")
-		return composeCommand{name: "docker-compose", help: help}, nil
+		logHelp, _ := commandOutput("", "docker-compose", "logs", "--help")
+		return composeCommand{name: "docker-compose", help: help, logHelp: logHelp}, nil
 	}
 	return composeCommand{}, errors.New("Docker Compose is required for sealion run dev")
 }
@@ -675,6 +865,72 @@ func (c composeCommand) args(extra ...string) []string {
 
 func (c composeCommand) supports(option string) bool {
 	return strings.Contains(c.help, option)
+}
+
+func (c composeCommand) logsSupports(option string) bool {
+	return strings.Contains(c.logHelp, option)
+}
+
+func composeLogsArgs(compose composeCommand) []string {
+	args := []string{"logs", "-f", "--tail", "80"}
+	if compose.logsSupports("--no-color") {
+		args = append(args, "--no-color")
+	}
+	return args
+}
+
+func parseComposeLogLine(line string) (string, string) {
+	line = stripANSI(strings.TrimSpace(line))
+	parts := strings.SplitN(line, "|", 2)
+	if len(parts) != 2 {
+		return "log", line
+	}
+	service := normalizeServiceName(strings.TrimSpace(parts[0]))
+	message := strings.TrimSpace(parts[1])
+	return service, message
+}
+
+func normalizeServiceName(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "log"
+	}
+	parts := strings.Split(name, "-")
+	if len(parts) > 1 {
+		last := parts[len(parts)-1]
+		if _, err := strconv.Atoi(last); err == nil {
+			name = strings.Join(parts[:len(parts)-1], "-")
+		}
+	}
+	if idx := strings.LastIndex(name, "-"); idx >= 0 {
+		name = name[idx+1:]
+	}
+	switch name {
+	case "frontend", "backend", "db":
+		return name
+	default:
+		return name
+	}
+}
+
+func stripANSI(value string) string {
+	var out strings.Builder
+	inEscape := false
+	for i := 0; i < len(value); i++ {
+		ch := value[i]
+		if inEscape {
+			if ch >= '@' && ch <= '~' {
+				inEscape = false
+			}
+			continue
+		}
+		if ch == 0x1b {
+			inEscape = true
+			continue
+		}
+		out.WriteByte(ch)
+	}
+	return out.String()
 }
 
 func composeUpDetached(compose composeCommand, env []string) error {

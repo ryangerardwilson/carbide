@@ -81,15 +81,32 @@ func TestRendererIndentsMultilineValues(t *testing.T) {
 	}
 }
 
-func TestStreamComposeOutputFiltersNoise(t *testing.T) {
+func TestStreamWatchOutputFiltersNoise(t *testing.T) {
 	var out bytes.Buffer
 	var wg sync.WaitGroup
 	wg.Add(1)
-	streamComposeOutput(strings.NewReader("Watch enabled\n\nrebuilt backend\n"), newRenderer(&out), &wg)
+	streamWatchOutput(strings.NewReader("Watch enabled\n\nrebuilt backend\n"), newRenderer(&out), &wg)
 	wg.Wait()
 
-	want := "compose  rebuilt backend\n"
+	want := "watch      rebuilt backend\n"
 	if out.String() != want {
-		t.Fatalf("compose output = %q, want %q", out.String(), want)
+		t.Fatalf("watch output = %q, want %q", out.String(), want)
+	}
+}
+
+func TestStreamLogOutputParsesComposeServices(t *testing.T) {
+	var out bytes.Buffer
+	var wg sync.WaitGroup
+	wg.Add(1)
+	streamLogOutput(
+		strings.NewReader("backend-1  | GET /health\nfrontend-1 | listening\ndemo-db-1 | ready\n"),
+		newRenderer(&out),
+		&wg,
+	)
+	wg.Wait()
+
+	want := "backend    GET /health\nfrontend   listening\ndb         ready\n"
+	if out.String() != want {
+		t.Fatalf("log output = %q, want %q", out.String(), want)
 	}
 }

@@ -126,14 +126,31 @@ if [ "${1:-}" = "compose" ] && [ "${2:-}" = "up" ] && [ "${3:-}" = "--help" ]; t
   exit 0
 fi
 
+if [ "${1:-}" = "compose" ] && [ "${2:-}" = "logs" ] && [ "${3:-}" = "--help" ]; then
+  printf 'Usage: docker compose logs [OPTIONS]\n'
+  printf '      --no-color    Produce monochrome output\n'
+  printf '      --tail string Number of lines to show from the end of the logs\n'
+  exit 0
+fi
+
 if [ "${1:-}" = "compose" ] && [ "${2:-}" = "up" ]; then
   printf '%s\n' "${SEALION_HTTP_PORT:-}" > "$FAKE_DOCKER_PORT_FILE"
   printf '%s\n' "$*" > "$FAKE_DOCKER_ARGS_FILE"
   exit 0
 fi
 
+if [ "${1:-}" = "compose" ] && [ "${2:-}" = "logs" ]; then
+  printf '%s\n' "$*" >> "$FAKE_DOCKER_ARGS_FILE"
+  printf 'backend-1  | GET /health\n'
+  printf 'frontend-1 | listening on :8080\n'
+  sleep 0.2
+  exit 0
+fi
+
 if [ "${1:-}" = "compose" ] && [ "${2:-}" = "watch" ]; then
   printf '%s\n' "$*" >> "$FAKE_DOCKER_ARGS_FILE"
+  printf 'Watch enabled\n'
+  printf 'rebuilding backend\n'
   exit 0
 fi
 
@@ -171,8 +188,12 @@ PY
   grep -Eq "^api[[:space:]]+http://localhost:" "$tmp_dir/run-dev.out"
   grep -Eq "^watch[[:space:]]+enabled" "$tmp_dir/run-dev.out"
   ! grep -q "^Watch enabled$" "$tmp_dir/run-dev.out"
+  grep -Eq "^backend[[:space:]]+GET /health" "$tmp_dir/run-dev.out"
+  grep -Eq "^frontend[[:space:]]+listening on :8080" "$tmp_dir/run-dev.out"
+  grep -Eq "^watch[[:space:]]+rebuilding backend" "$tmp_dir/run-dev.out"
   grep -q -- "--quiet-build" "$args_file"
   grep -q -- "--quiet-pull" "$args_file"
+  grep -q "compose logs -f --tail 80 --no-color" "$args_file"
   grep -q "compose watch --no-up --quiet" "$args_file"
   selected_port="$(cat "$port_file")"
   if [ "$selected_port" = "8080" ]; then

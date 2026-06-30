@@ -149,13 +149,16 @@ explicitly.
 installed CLI when a newer GitHub commit is available.
 
 When Docker Compose supports file watch, `sealion run dev` starts the stack with
-quiet Compose output and watch enabled. Edits under `view/web/src/`, `src/`,
-`model/`, `controller/`, view package/config files, or `Dockerfile` rebuild and
-replace the relevant container. Use `docker compose logs -f` when you want raw
-container logs.
+quiet Compose output, watch enabled, and live logs streamed below the startup
+summary. Edits under `view/web/src/`, `src/`, `model/`, `controller/`, view
+package/config files, or `Dockerfile` rebuild and replace the relevant
+container.
 
 CLI output is rendered through a small Go output layer: headings, aligned labels,
-TTY-only muted styling, and plain text when piped or captured by scripts.
+TTY-only color, and plain text when piped or captured by scripts. After the
+stack is ready, `sealion run dev` prints frontend, backend, database, and watch
+events in one service-tagged stream so humans and AI agents can inspect the
+whole local system from one command.
 
 Generated apps use an MVC shape. `view/web/` owns the Bun server, Tailwind
 build, browser UI, and same-origin `/api` calls. `model/` owns
