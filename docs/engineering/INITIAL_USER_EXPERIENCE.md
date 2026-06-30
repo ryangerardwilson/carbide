@@ -40,11 +40,13 @@ summary. Edits under `view/web/src/`, `src/`, `model/`, `controller/`, view web
 package/config files, or to `Dockerfile` rebuild and replace the relevant
 container.
 
-The CLI presents output as aligned rows with TTY-only color. Captured or piped
-output remains plain text for tests, scripts, and AI agents. Before the log
-stream, `sealion run dev` prints only the working app and API URLs. Once the
-stack is ready, frontend, backend, database, and watch events appear in one
-service-tagged stream and are mirrored to `.sealion/log/dev.jsonl`.
+The CLI presents output as aligned rows with TTY-only color and a terminal-only
+startup progress bar while Docker Compose builds, starts, and waits for
+containers. Captured or piped output remains plain text for tests, scripts, and
+AI agents. Before the log stream, `sealion run dev` prints only the working app
+and API URLs. Once the stack is ready, frontend, backend, database, and watch
+events appear in one service-tagged stream and are mirrored to
+`.sealion/log/dev.jsonl`.
 
 The generated app starts with no seeded users. The first browser visit opens the
 account creation flow. Registration creates the first user and session; later

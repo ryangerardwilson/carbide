@@ -145,6 +145,8 @@ Future checks:
   Compose build output by default;
 - `sealion run dev` prints only the working app/API URLs before the log stream,
   with no port-busy, demo-login, mode, status, stop, or watch-summary rows;
+- `sealion run dev` shows a TTY-only startup progress bar while Compose starts
+  containers, without leaking progress control text into captured output;
 - CLI success, error, version, upgrade, and dev-stack output use the shared
   aligned renderer instead of scattered raw prints;
 - `sealion run dev` streams frontend, backend, database, and watch output

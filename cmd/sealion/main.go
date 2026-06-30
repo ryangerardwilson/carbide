@@ -370,7 +370,9 @@ func (a app) commandRunDev() error {
 	r := newRenderer(a.stdout)
 	a.printDevHeader(r, port)
 	logSink.Write("sealion", "lifecycle", "cli", "starting containers")
-	if err := composeUpDetached(compose, env); err != nil {
+	if err := r.RunProgress("containers", func() error {
+		return composeUpDetached(compose, env)
+	}); err != nil {
 		logSink.Write("sealion", "lifecycle", "cli", err.Error())
 		return err
 	}
@@ -637,6 +639,71 @@ func (r renderer) Log(service string, message string) {
 		return
 	}
 	fmt.Fprintf(r.out, "%-*s  %s\n", width, label, message)
+}
+
+func (r renderer) RunProgress(label string, work func() error) error {
+	if !r.styled {
+		return work()
+	}
+
+	done := make(chan error, 1)
+	go func() {
+		done <- work()
+	}()
+
+	progress := 0.08
+	r.writeProgress(label, progress, "starting")
+	ticker := time.NewTicker(120 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case err := <-done:
+			if err != nil {
+				r.writeProgress(label, progress, "failed")
+				fmt.Fprintln(r.out)
+				return err
+			}
+			r.writeProgress(label, 1, "ready")
+			fmt.Fprintln(r.out)
+			return nil
+		case <-ticker.C:
+			if progress < 0.92 {
+				progress += 0.035
+			}
+			r.writeProgress(label, progress, "starting")
+		}
+	}
+}
+
+func (r renderer) writeProgress(label string, progress float64, state string) {
+	fmt.Fprintf(
+		r.out,
+		"\r%s  %s %s\033[K",
+		r.formatKey(label),
+		r.paint("38;5;81", progressBarFrame(22, progress)),
+		r.paint("2;38;5;245", state),
+	)
+}
+
+func progressBarFrame(width int, progress float64) string {
+	if width < 1 {
+		width = 1
+	}
+	if progress < 0 {
+		progress = 0
+	}
+	if progress > 1 {
+		progress = 1
+	}
+	filled := int(progress * float64(width))
+	if progress > 0 && filled == 0 {
+		filled = 1
+	}
+	if progress == 1 {
+		filled = width
+	}
+	return "[" + strings.Repeat("#", filled) + strings.Repeat("-", width-filled) + "]"
 }
 
 func (r renderer) formatKey(key string) string {

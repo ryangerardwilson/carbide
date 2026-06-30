@@ -83,6 +83,22 @@ func TestRendererIndentsMultilineValues(t *testing.T) {
 	}
 }
 
+func TestProgressBarFrame(t *testing.T) {
+	tests := map[float64]string{
+		-1:   "[----------]",
+		0:    "[----------]",
+		0.01: "[#---------]",
+		0.5:  "[#####-----]",
+		1:    "[##########]",
+		2:    "[##########]",
+	}
+	for progress, want := range tests {
+		if got := progressBarFrame(10, progress); got != want {
+			t.Fatalf("progressBarFrame(10, %v) = %q, want %q", progress, got, want)
+		}
+	}
+}
+
 func TestStreamWatchOutputFiltersNoise(t *testing.T) {
 	var out bytes.Buffer
 	var wg sync.WaitGroup

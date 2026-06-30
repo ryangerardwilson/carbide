@@ -194,6 +194,7 @@ PY
   ! grep -Eq "^login[[:space:]]+" "$tmp_dir/run-dev.out"
   ! grep -Eq "^mode[[:space:]]+" "$tmp_dir/run-dev.out"
   ! grep -Eq "^status[[:space:]]+" "$tmp_dir/run-dev.out"
+  ! grep -Eq "^containers[[:space:]]+" "$tmp_dir/run-dev.out"
   ! grep -Eq "^logs[[:space:]]+" "$tmp_dir/run-dev.out"
   ! grep -Eq "^stop[[:space:]]+" "$tmp_dir/run-dev.out"
   ! grep -Eq "^watch[[:space:]]+enabled" "$tmp_dir/run-dev.out"
