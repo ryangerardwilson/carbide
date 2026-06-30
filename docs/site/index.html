@@ -14,6 +14,7 @@
         <h1>A full-stack C framework with a narrow runtime contract.</h1>
         <p class="lead">Sealion starts with one app container image, one Postgres service container, checked-in infrastructure, and regression tests that protect the framework before it grows.</p>
         <nav class="nav" aria-label="Documentation">
+          <a href="component-style-system.html">Component styling</a>
           <a href="ci-cd-regression-tests.html">CI/CD regression plan</a>
           <a href="repo-structure.html">Directory structure</a>
           <a href="https://github.com/ryangerardwilson/sealion">GitHub</a>
@@ -30,6 +31,7 @@
             <li>Postgres is mandatory, not one adapter among many.</li>
             <li>The app and database stay in separate containers.</li>
             <li>Infrastructure belongs in version-controlled code.</li>
+            <li>Component styling is Tailwind-like, generated, and framework-owned.</li>
             <li>The first IaC target is generated Docker Compose for local development.</li>
           </ul>
         </section>
@@ -55,7 +57,7 @@
       <aside class="system-map" aria-label="Sealion runtime map">
         <div class="node">
           <strong>Repository</strong>
-          <p class="meta">README, docs, workflows, scripts, source, tests, and infrastructure contracts.</p>
+          <p class="meta">README, docs, workflows, scripts, source, tests, UI contracts, and infrastructure contracts.</p>
         </div>
         <div class="arrow">down</div>
         <div class="node">
@@ -75,4 +77,3 @@
     </footer>
   </body>
 </html>
-

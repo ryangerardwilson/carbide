@@ -17,6 +17,7 @@ strict framework can remove many repeated decisions:
 - one request lifecycle
 - one database migration path
 - one checked-in infrastructure contract
+- one framework-owned component style grammar
 - one CLI entry point
 - one opinionated set of security defaults
 
@@ -33,6 +34,9 @@ Sealion should make the hard parts visible instead of hiding them behind magic.
 - **Infrastructure as code:** every supported runtime dependency, service
   boundary, volume, network, secret contract, environment variable, health
   check, and deploy target must be described in checked-in code.
+- **Framework-owned component styling:** Sealion provides Tailwind-like utility
+  ergonomics through its own component style grammar and generated CSS, without
+  requiring Tailwind, Node, npm, or PostCSS.
 - **Explicit ownership:** request memory, response memory, and database handles
   must have clear lifetimes.
 - **Convention over configuration:** defaults should cover normal apps without
@@ -48,6 +52,7 @@ Sealion should make the hard parts visible instead of hiding them behind magic.
 
 - Native host installs before the container contract is stable.
 - Full Laravel API compatibility.
+- Requiring Tailwind or a JavaScript build chain for framework styling.
 - A general-purpose C package manager.
 - ORM magic that depends on runtime reflection C does not have.
 - Supporting multiple databases, web servers, or deployment targets in the
@@ -104,6 +109,8 @@ https://sealion.ryangerardwilson.com
 CI starts with repository contract checks and grows into the full framework
 regression suite described in `docs/engineering/CI_CD_REGRESSION_TESTS.md`.
 The planned repo layout lives in `docs/engineering/DIRECTORY_STRUCTURE.md`.
+The component styling contract lives in
+`docs/engineering/COMPONENT_STYLE_SYSTEM.md`.
 
 ## Roadmap
 
@@ -138,6 +145,9 @@ The planned repo layout lives in `docs/engineering/DIRECTORY_STRUCTURE.md`.
 ### Phase 3: Views And Assets
 
 - Decide whether templates are compiled, interpreted, or generated C.
+- Define the component API and Tailwind-like utility style grammar.
+- Add deterministic CSS generation without requiring Tailwind.
+- Add theme tokens for color, spacing, typography, radius, and breakpoints.
 - Add layouts, partials, escaping, and safe HTML helpers.
 - Add static asset serving for local development.
 - Add a production asset manifest contract.

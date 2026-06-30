@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Component Style System | Sealion</title>
+    <meta name="description" content="Sealion's Tailwind-like component styling system without a Tailwind dependency.">
+    <link rel="stylesheet" href="assets/styles.css">
+  </head>
+  <body>
+    <header class="hero">
+      <div class="shell">
+        <p class="eyebrow"><a href="index.html">Sealion docs</a></p>
+        <h1>Tailwind-like ergonomics without the Tailwind dependency.</h1>
+        <p class="lead">Sealion components should use a compact utility-style grammar that the framework validates and compiles into deterministic CSS.</p>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section>
+        <h2>Product Decision</h2>
+        <p>Sealion owns a small component styling system. It is Tailwind-inspired, but not Tailwind-compatible by default. Tailwind remains optional for apps that choose it.</p>
+      </section>
+
+      <section>
+        <h2>Authoring Model</h2>
+        <pre><code>sl_component("button")
+  .style("inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium bg-primary text-on-primary hover:bg-primary-strong")
+  .render(ctx);</code></pre>
+      </section>
+
+      <section>
+        <h2>Compilation Model</h2>
+        <pre><code>component source -> utility parser -> token resolver -> generated CSS artifact</code></pre>
+        <p>The generated CSS is a build artifact. Component source and theme tokens are the source of truth.</p>
+      </section>
+
+      <section>
+        <h2>Regression Requirements</h2>
+        <ul>
+          <li>Valid utilities compile and unknown utilities fail CI.</li>
+          <li>Generated CSS is deterministic.</li>
+          <li>Missing tokens produce actionable errors.</li>
+          <li>Components compile without Tailwind, Node, npm, or PostCSS.</li>
+          <li>Plain CSS remains an escape hatch, not the primary authoring path.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="shell"><a href="index.html">Back to docs home</a></div>
+    </footer>
+  </body>
+</html>
+

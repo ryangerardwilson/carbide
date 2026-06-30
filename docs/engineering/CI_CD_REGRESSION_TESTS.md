@@ -152,6 +152,21 @@ Future checks:
 - links resolve inside the docs site;
 - release docs are versioned.
 
+### Component Style Regression
+
+Purpose: keep Tailwind-like ergonomics from turning into a Tailwind dependency
+or a loose string convention.
+
+Future checks:
+
+- component style specs parse without Tailwind, Node, npm, or PostCSS;
+- unknown utilities fail with actionable errors;
+- generated CSS is deterministic;
+- missing tokens fail during build;
+- variants generate scoped selectors;
+- component examples compile with the framework-owned style generator;
+- plain CSS escape hatches remain app-owned and explicit.
+
 ## Current Implemented Checks
 
 The first implemented CI job is intentionally small:
@@ -163,4 +178,3 @@ bash scripts/check_repo_contract.sh
 
 This protects the repo and documentation deployment while the framework code is
 still being designed.
-

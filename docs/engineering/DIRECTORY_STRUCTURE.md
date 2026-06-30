@@ -11,6 +11,7 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |       `-- pages.yml
 |-- docs/
 |   |-- engineering/
+|   |   |-- COMPONENT_STYLE_SYSTEM.md
 |   |   |-- CI_CD_REGRESSION_TESTS.md
 |   |   `-- DIRECTORY_STRUCTURE.md
 |   `-- site/
@@ -24,12 +25,14 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |   `-- hello/
 |-- include/
 |   `-- sealion/
+|       `-- ui/
 |-- infra/
 |   |-- compose/
 |   `-- schemas/
 |-- scripts/
 |   `-- check_repo_contract.sh
 |-- src/
+|   `-- ui/
 |-- tests/
 |   |-- fixtures/
 |   |-- integration/
@@ -45,10 +48,13 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 - `docs/site/`: static GitHub Pages artifact.
 - `examples/`: generated or hand-written sample apps.
 - `include/sealion/`: public C headers.
+- `include/sealion/ui/`: public component and style-system APIs.
 - `infra/compose/`: local Compose templates and generated examples.
 - `infra/schemas/`: schemas for infrastructure, environment, and app metadata.
 - `scripts/`: repo-owned checks and maintenance commands.
 - `src/`: framework implementation.
+- `src/ui/`: component rendering, utility parsing, token resolution, and CSS
+  generation.
 - `tests/fixtures/`: shared test fixtures.
 - `tests/integration/`: tests that use Postgres or containers.
 - `tests/regression/`: tests created after a bug or broken contract.
@@ -58,4 +64,3 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 
 Empty directories are placeholders until a real file belongs there. When a
 directory gains behavior, its first file should make that behavior testable.
-
