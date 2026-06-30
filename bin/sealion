@@ -49,7 +49,7 @@ features:
   # sealion run dev
   cd demo && sealion run dev
 
-  format view and component templates
+  format optional .skin and .scale files
   # sealion format
   sealion format
 HELP
