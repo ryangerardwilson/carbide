@@ -40,9 +40,10 @@ Generated apps start with an MVC shape:
 
 Edit component markup in `ui_components/**/*.scale`. Skin files in `view/`
 should only import components and pass props, for example
-`<s-l3.dashboard-page :passover=[user_email] />`. Skin files can also wrap
-content with block components, such as `<s-l2.layout>...</s-l2.layout>`. Use
-explicit props only for aliases or literals, such as
+`<s-l3.dashboard-page :passover=[user_email] />`. Run `sealion format` to expand
+passover arrays into one variable per line. Skin files can also wrap content
+with block components, such as `<s-l2.layout>...</s-l2.layout>`. Use explicit
+props only for aliases or literals, such as
 `<s-l3.example :title="page_title" label="Save" />`. Components receive only the
 props passed by their caller. Scale files do not embed other scale files;
 composition belongs in `.skin`. `s-l3.dashboard-page` maps to

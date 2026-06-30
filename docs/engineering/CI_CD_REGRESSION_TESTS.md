@@ -120,6 +120,7 @@ Future checks:
   `ui_components/l2`, and `ui_components/l3`;
 - generated `.skin` files compose scale components, including `layout.scale`;
 - generated `.scale` files never contain Scale component tags;
+- `sealion format` rewrites compact passover arrays and is idempotent;
 - restart behavior preserves Postgres data;
 - environment schema rejects missing required values.
 

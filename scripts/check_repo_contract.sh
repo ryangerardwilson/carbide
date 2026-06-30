@@ -96,7 +96,9 @@ grep -q "Framework-owned component styling" README.md
 grep -q "generated Docker Compose setup" README.md
 grep -q "Postgres-backed queues" README.md
 grep -q "sealion new" README.md
+grep -q "sealion format" README.md
 grep -q "sealion run dev" README.md
+grep -q "command_format" bin/sealion
 grep -q "default_port = 8080" templates/default/sealion.toml
 ! grep -q 'url = "http://localhost:8080"' templates/default/sealion.toml
 grep -q 'PUBLIC_URL: "http://localhost:${SEALION_HTTP_PORT:-8080}"' templates/default/docker-compose.yml
@@ -117,12 +119,20 @@ test ! -e templates/default/view/layout.skin
 grep -q "{{ title }}" templates/default/ui_components/l2/layout.scale
 grep -q "<style>" templates/default/ui_components/l2/layout.scale
 grep -q "{!! content !!}" templates/default/ui_components/l2/layout.scale
-grep -Fq '<s-l2.layout :passover=[title,app_name]>' templates/default/view/home.skin
+grep -Fxq '<s-l2.layout :passover=[' templates/default/view/home.skin
+grep -Fxq '  title,' templates/default/view/home.skin
+grep -Fxq '  app_name' templates/default/view/home.skin
+grep -Fxq ']>' templates/default/view/home.skin
 grep -Fq '</s-l2.layout>' templates/default/view/home.skin
-grep -Fq '<s-l3.home-page :passover=[app_name] />' templates/default/view/home.skin
-grep -Fq '<s-l2.auth-form :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/view/login.skin
-grep -Fq '<s-l2.auth-form :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />' templates/default/view/register.skin
-grep -Fq '<s-l3.dashboard-page :passover=[user_email] />' templates/default/view/dashboard.skin
+grep -Fxq '  <s-l3.home-page :passover=[' templates/default/view/home.skin
+grep -Fxq '    app_name' templates/default/view/home.skin
+grep -Fxq '  ] />' templates/default/view/home.skin
+grep -Fxq '  <s-l2.auth-form :passover=[' templates/default/view/login.skin
+grep -Fxq '    auth_title,' templates/default/view/login.skin
+grep -Fxq '    auth_footer' templates/default/view/login.skin
+grep -Fxq '  <s-l2.auth-form :passover=[' templates/default/view/register.skin
+grep -Fxq '  <s-l3.dashboard-page :passover=[' templates/default/view/dashboard.skin
+grep -Fxq '    user_email' templates/default/view/dashboard.skin
 grep -q '<s-l3.not-found-page />' templates/default/view/not_found.skin
 grep -q "{{ user_email }}" templates/default/ui_components/l3/dashboard_page.scale
 ! grep -R "{% component" templates/default/view templates/default/ui_components README.md docs >/dev/null

@@ -128,8 +128,9 @@ and dashboard routes already wired. It prefers `http://localhost:8080`, but
 automatically selects another local port when 8080 is already in use. Set
 `SEALION_HTTP_PORT=<port>` to choose the host port explicitly.
 
-`sealion help` prints the command reference. `sealion upgrade` upgrades the
-installed CLI when a newer GitHub commit is available.
+`sealion help` prints the command reference. `sealion format` formats `.skin`
+and `.scale` files. `sealion upgrade` upgrades the installed CLI when a newer
+GitHub commit is available.
 
 When Docker Compose supports file watch, `sealion run dev` starts the stack with
 Compose watch enabled. Edits under `src/`, `model/`, `controller/`, `view/`,
@@ -140,9 +141,10 @@ Generated apps use an MVC starter layout. `model/` owns Postgres state,
 components. UI implementation lives in `.scale` files under
 `ui_components/l1`, `ui_components/l2`, and `ui_components/l3`. Views pass
 same-named variables into components with a Blade-like Scale tag syntax:
-`<s-l3.dashboard-page :passover=[user_email] />`. Skins can also wrap content
-with block components, such as `<s-l2.layout>...</s-l2.layout>`. Use explicit
-props only for aliases or literals, such as
+`<s-l3.dashboard-page :passover=[user_email] />`. `sealion format` expands
+passover arrays into one variable per line. Skins can also wrap content with
+block components, such as `<s-l2.layout>...</s-l2.layout>`. Use explicit props
+only for aliases or literals, such as
 `<s-l3.example :title="page_title" label="Save" />`. Components receive only the
 props passed by the caller. Scale files do not embed other scale files;
 composition belongs in `.skin`. The tag `s-l3.dashboard-page` maps to
@@ -191,6 +193,7 @@ variables with `{{ name }}` and trusted raw slots with `{!! content !!}`.
   product/domain components.
 - Support escaped variables with `{{ name }}` and trusted raw slots with
   `{!! content !!}`.
+- Add `sealion format` for readable `.skin` and `.scale` passover tags.
 - Define the component API and Tailwind-like utility style grammar.
 - Add deterministic CSS generation without requiring Tailwind.
 - Add theme tokens for color, spacing, typography, radius, and breakpoints.

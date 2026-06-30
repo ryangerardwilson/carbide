@@ -38,6 +38,8 @@ Generated apps keep page flow in `view/*.skin`, but UI implementation belongs in
 `ui_components/l3`. The starter renderer supports escaped variables with
 `{{ name }}`, trusted raw slots with `{!! content !!}`, and Blade-like Scale tags
 with same-name passover, such as `<s-l3.dashboard-page :passover=[user_email] />`.
+`sealion format` expands passover arrays into one variable per line for
+readability.
 Explicit props remain available for aliases or literals, such as
 `<s-l3.example :title="page_title" label="Save" />`.
 In this model, `.scale` components attach to `.skin` view files, and `.skin`
@@ -65,6 +67,10 @@ Prints the command reference.
 ### `sealion upgrade`
 
 Upgrades the installed CLI when a newer GitHub commit is available.
+
+### `sealion format`
+
+Formats `.skin` and `.scale` files in the current project.
 
 ### `sealion new <project-name>`
 

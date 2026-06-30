@@ -43,14 +43,20 @@ ui_components/
 `.skin` views import `.scale` components and pass data through variables:
 
 ```html
-<s-l2.layout :passover=[title,app_name]>
-  <s-l3.dashboard-page :passover=[user_email] />
+<s-l2.layout :passover=[
+  title,
+  app_name
+]>
+  <s-l3.dashboard-page :passover=[
+    user_email
+  ] />
 </s-l2.layout>
 ```
 
 Use `:passover=[...]` when the component prop names match the variable names
 already in scope. Use explicit props only for aliases or literals, such as
 `<s-l3.example :title="page_title" label="Save" />`.
+`sealion format` expands passover arrays into this multiline style.
 
 Components receive only props passed by their caller. `.scale` files do not
 embed other `.scale` files; all organization, arrangement, and embedding across
@@ -118,6 +124,7 @@ The component style system needs dedicated regression coverage:
 - view files stay import-only and do not own CSS;
 - components use `.scale`, not `.html`;
 - `.scale` files do not contain Scale component tags;
+- `sealion format` is idempotent for `.skin` and `.scale` files;
 - L1/L2/L3 component directories exist in generated apps;
 - utility parser accepts valid specs and rejects unknown utilities;
 - generated CSS is deterministic;
