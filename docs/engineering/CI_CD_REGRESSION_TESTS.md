@@ -13,7 +13,8 @@ Runs on every pull request:
 - Go CLI unit tests;
 - shell syntax checks for repo-owned scripts;
 - documentation site contract checks;
-- generated Docker stack smoke test with Postgres-backed JSON login;
+- generated Docker stack smoke test with registration-first, Postgres-backed
+  JSON auth;
 - future C compile, unit, sanitizer, and integration checks.
 
 ### Main Branch Gate
@@ -117,7 +118,10 @@ Future checks:
 - frontend, backend, and Postgres run as separate services;
 - health checks converge;
 - generated backend logs the external frontend URL used for API proxying;
-- demo login through `/api/login` sets a cookie and returns JSON;
+- login fails before the first user is registered;
+- registration through `/api/register` creates the first user, sets a cookie,
+  and returns JSON;
+- login through `/api/login` works after registration;
 - generated Compose config declares file-watch rebuilds for `view/web` source,
   view web package/config files, backend source, model, controller, and
   Dockerfile changes;
@@ -139,10 +143,15 @@ Future checks:
 - `sealion init` succeeds only in an empty directory;
 - `sealion run dev` prints a compact startup summary and suppresses noisy
   Compose build output by default;
+- `sealion run dev` prints only the working app/API URLs before the log stream,
+  with no port-busy, demo-login, mode, status, stop, or watch-summary rows;
 - CLI success, error, version, upgrade, and dev-stack output use the shared
   aligned renderer instead of scattered raw prints;
 - `sealion run dev` streams frontend, backend, database, and watch output
   through service-tagged rows after the stack is ready;
+- `sealion run dev` writes `.sealion/log/dev.jsonl`, and `sealion logs` can
+  query it by service, text, limit, and JSON output;
+- generated apps contain no seeded demo account or demo credentials;
 - generated files are deterministic;
 - invalid commands print actionable errors;
 - scaffolded apps pass the same CI checks as framework examples.

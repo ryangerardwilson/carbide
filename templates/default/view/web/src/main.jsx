@@ -3,8 +3,6 @@ import { createRoot } from 'react-dom/client';
 import './tailwind.css';
 
 const APP_NAME = '__PROJECT_NAME__';
-const DEMO_EMAIL = 'admin@sealion.local';
-const DEMO_PASSWORD = 'password';
 
 const buttonClass =
   'inline-flex min-h-11 items-center justify-center bg-teal-700 px-5 font-bold text-white transition hover:bg-teal-800 disabled:opacity-65';
@@ -58,13 +56,12 @@ function useRoute() {
 
 function AuthForm({ mode, onSubmit, busy, error, onMode }) {
   const isRegister = mode === 'register';
-  const [email, setEmail] = useState(isRegister ? '' : DEMO_EMAIL);
-  const [password, setPassword] = useState(isRegister ? '' : DEMO_PASSWORD);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
-    setEmail(isRegister ? '' : DEMO_EMAIL);
-    setPassword(isRegister ? '' : DEMO_PASSWORD);
-  }, [isRegister]);
+    setPassword('');
+  }, [mode]);
 
   return (
     <form
@@ -77,7 +74,7 @@ function AuthForm({ mode, onSubmit, busy, error, onMode }) {
       <div>
         <p className={eyebrowClass}>Sealion starter</p>
         <h1 className="m-0 text-[34px] leading-tight text-[#16211b]">
-          {isRegister ? 'Create your account' : 'Log in to the dashboard'}
+          {isRegister ? 'Create the first account' : 'Log in to the dashboard'}
         </h1>
         <p className={`mt-3 ${mutedClass}`}>
           React owns this interface. The C backend owns auth, sessions, and Postgres state.
@@ -126,13 +123,6 @@ function AuthForm({ mode, onSubmit, busy, error, onMode }) {
           {isRegister ? 'Log in' : 'Create one'}
         </button>
       </p>
-
-      {!isRegister ? (
-        <p className={`m-0 ${mutedClass}`}>
-          Demo login: <code className="bg-emerald-50 px-1.5 py-0.5">{DEMO_EMAIL}</code> /{' '}
-          <code className="bg-emerald-50 px-1.5 py-0.5">{DEMO_PASSWORD}</code>
-        </p>
-      ) : null}
     </form>
   );
 }
@@ -186,7 +176,7 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const mode = useMemo(() => (route === '/register' ? 'register' : 'login'), [route]);
+  const mode = useMemo(() => (route === '/login' ? 'login' : 'register'), [route]);
 
   useEffect(() => {
     api('/api/me')

@@ -10,8 +10,9 @@ sealion run dev
 
 Then open the frontend URL printed by `sealion run dev`.
 
-If port 8080 is already in use, `sealion run dev` selects another local port.
-To choose one explicitly:
+`sealion run dev` prints the working app and API URLs. It prefers port 8080 and
+silently selects another local port when 8080 is already in use. To choose one
+explicitly:
 
 ```sh
 SEALION_HTTP_PORT=18080 sealion run dev
@@ -44,11 +45,21 @@ it. Edits under `view/web/src/`, `src/`, `model/`, `controller/`, view web
 package/config files, or `Dockerfile` rebuild and replace the relevant
 container.
 
-Demo login:
+The first browser visit opens account creation. Create the first user, then use
+the login form for later sessions.
+
+`sealion run dev` streams frontend, backend, database, and watch logs in one
+terminal view and mirrors them to a local structured log file:
 
 ```text
-admin@sealion.local
-password
+.sealion/log/dev.jsonl
+```
+
+Query the latest structured logs from the project root:
+
+```sh
+sealion logs service backend
+sealion logs containing "/api/login" json
 ```
 
 ## Included
@@ -59,4 +70,5 @@ password
 - same-origin `/api` proxy from the Bun frontend to the C backend
 - register, login, logout, and dashboard experience
 - Postgres-backed users and sessions
+- queryable structured dev logs
 - checked-in local Docker Compose contract

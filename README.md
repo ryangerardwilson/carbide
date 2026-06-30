@@ -31,8 +31,8 @@ Sealion should make the hard parts visible instead of hiding them behind magic.
 - **Container-first:** every app runs through generated containers, not host
   Bun, host compiler setup, or hidden local services.
 - **Go CLI:** `sealion` is a compiled Go CLI. It owns scaffolding, upgrades,
-  local port selection, structured terminal output, and the Docker Compose
-  development lifecycle.
+  local port selection, structured terminal output, queryable dev logs, and the
+  Docker Compose development lifecycle.
 - **React default frontend:** the browser UI lives in the frontend container.
   Bun, React, and Tailwind are required inside that container, not on the
   developer's host machine.
@@ -140,13 +140,15 @@ Postgres inside containers.
 `sealion new <project-name>` creates a new project directory. `sealion init`
 initializes the current directory only when it is empty. `sealion run dev`
 starts the generated frontend, backend, and Postgres containers with register,
-login, logout, and dashboard already wired. It prefers
-`http://localhost:8080`, but automatically selects another local port when 8080
-is already in use. Set `SEALION_HTTP_PORT=<port>` to choose the host port
-explicitly.
+login, logout, and dashboard already wired. It prints the working app and API
+URLs, preferring `http://localhost:8080` and silently selecting another local
+port when 8080 is already in use. Set `SEALION_HTTP_PORT=<port>` to choose the
+host port explicitly.
 
 `sealion help` prints the command reference. `sealion upgrade` upgrades the
-installed CLI when a newer GitHub commit is available.
+installed CLI when a newer GitHub commit is available. `sealion logs` reads the
+structured dev log file written by `sealion run dev`; examples include
+`sealion logs service backend` and `sealion logs containing "/api/login" json`.
 
 When Docker Compose supports file watch, `sealion run dev` starts the stack with
 quiet Compose output, watch enabled, and live logs streamed below the startup
@@ -155,10 +157,11 @@ package/config files, or `Dockerfile` rebuild and replace the relevant
 container.
 
 CLI output is rendered through a small Go output layer: headings, aligned labels,
-TTY-only color, and plain text when piped or captured by scripts. After the
-stack is ready, `sealion run dev` prints frontend, backend, database, and watch
-events in one service-tagged stream so humans and AI agents can inspect the
-whole local system from one command.
+TTY-only color, and plain text when piped or captured by scripts. `sealion run
+dev` prints only the working app/API URLs before the log stream. Every streamed
+frontend, backend, database, and watch event is also written as JSONL to
+`.sealion/log/dev.jsonl` so humans, scripts, and AI agents can inspect or query
+the whole local system from one command.
 
 Generated apps use an MVC shape. `view/web/` owns the Bun server, Tailwind
 build, browser UI, and same-origin `/api` calls. `model/` owns
@@ -253,7 +256,8 @@ owns the C HTTP/API server.
 - Define the first production infrastructure-as-code target after local Compose
   is stable.
 - Add health checks and readiness checks.
-- Add structured logs suitable for container platforms.
+- Extend the existing structured dev logs into the production container
+  contract.
 - Add deployment examples for a single-node app and a worker process.
 - Add backup, restore, and migration rollback guidance.
 
@@ -271,7 +275,7 @@ The first milestone is a containerized app that can:
 1. boot with one command,
 2. serve a route,
 3. return JSON,
-4. write one structured request log line,
+4. write one queryable dev log line,
 5. connect to the required Postgres container,
 6. shut down cleanly.
 

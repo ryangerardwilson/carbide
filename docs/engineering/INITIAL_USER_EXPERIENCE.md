@@ -23,8 +23,9 @@ Then open:
 the app URL printed by sealion run dev
 ```
 
-If port 8080 is already in use, `sealion run dev` selects another local port.
-To choose one explicitly:
+`sealion run dev` prints the working app and API URLs. It prefers port 8080 and
+silently selects another local port when 8080 is already in use. To choose one
+explicitly:
 
 ```sh
 SEALION_HTTP_PORT=18080 sealion run dev
@@ -39,10 +40,15 @@ summary. Edits under `view/web/src/`, `src/`, `model/`, `controller/`, view web
 package/config files, or to `Dockerfile` rebuild and replace the relevant
 container.
 
-The CLI presents status as aligned rows with TTY-only color. Captured or piped
-output remains plain text for tests, scripts, and AI agents. Once the stack is
-ready, frontend, backend, database, and watch events appear in one service-tagged
-stream.
+The CLI presents output as aligned rows with TTY-only color. Captured or piped
+output remains plain text for tests, scripts, and AI agents. Before the log
+stream, `sealion run dev` prints only the working app and API URLs. Once the
+stack is ready, frontend, backend, database, and watch events appear in one
+service-tagged stream and are mirrored to `.sealion/log/dev.jsonl`.
+
+The generated app starts with no seeded users. The first browser visit opens the
+account creation flow. Registration creates the first user and session; later
+sessions use the login form.
 
 Generated apps keep browser UI in `view/web/src/`. Bun owns the frontend
 server and API proxy, Tailwind owns styling, and React owns page flow, forms,
@@ -59,7 +65,7 @@ The generated app includes:
 - register, login, logout, and dashboard routes;
 - model and controller directories for backend code;
 - Postgres-backed users and sessions;
-- a seeded demo account at `admin@sealion.local` with password `password`.
+- queryable structured dev logs.
 
 ## Commands
 
@@ -85,8 +91,13 @@ unless the current directory is empty.
 
 Runs the generated app through Docker Compose. The frontend, backend, and
 database are separate services, matching the runtime topology contract. The CLI
-prints the app URL, API URL, demo login, watch status, and then streams logs
-until `Ctrl+C`.
+prints the app URL and API URL, then streams logs until `Ctrl+C`.
+
+### `sealion logs`
+
+Reads `.sealion/log/dev.jsonl`, the structured log file written by `sealion run
+dev`. It supports simple word-based queries such as `sealion logs service
+backend`, `sealion logs containing "/api/login"`, and `sealion logs json`.
 
 ## Product Principle
 

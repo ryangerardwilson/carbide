@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -85,7 +87,7 @@ func TestStreamWatchOutputFiltersNoise(t *testing.T) {
 	var out bytes.Buffer
 	var wg sync.WaitGroup
 	wg.Add(1)
-	streamWatchOutput(strings.NewReader("Watch enabled\n\nrebuilt backend\n"), newRenderer(&out), &wg)
+	streamWatchOutput(strings.NewReader("Watch enabled\n\nrebuilt backend\n"), newRenderer(&out), nil, "stdout", &wg)
 	wg.Wait()
 
 	want := "watch      rebuilt backend\n"
@@ -101,6 +103,8 @@ func TestStreamLogOutputParsesComposeServices(t *testing.T) {
 	streamLogOutput(
 		strings.NewReader("backend-1  | GET /health\nfrontend-1 | listening\ndemo-db-1 | ready\n"),
 		newRenderer(&out),
+		nil,
+		"stdout",
 		&wg,
 	)
 	wg.Wait()
@@ -108,5 +112,66 @@ func TestStreamLogOutputParsesComposeServices(t *testing.T) {
 	want := "backend    GET /health\nfrontend   listening\ndb         ready\n"
 	if out.String() != want {
 		t.Fatalf("log output = %q, want %q", out.String(), want)
+	}
+}
+
+func TestStreamLogOutputWritesStructuredJSON(t *testing.T) {
+	logPath := filepath.Join(t.TempDir(), "dev.jsonl")
+	sink, err := openDevLogSink(logPath)
+	if err != nil {
+		t.Fatalf("openDevLogSink returned %v", err)
+	}
+
+	var out bytes.Buffer
+	var wg sync.WaitGroup
+	wg.Add(1)
+	streamLogOutput(strings.NewReader("backend-1 | GET /health\n"), newRenderer(&out), sink, "stdout", &wg)
+	wg.Wait()
+	if err := sink.Close(); err != nil {
+		t.Fatalf("Close returned %v", err)
+	}
+
+	data, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("ReadFile returned %v", err)
+	}
+	text := string(data)
+	for _, want := range []string{
+		`"source":"compose-log"`,
+		`"stream":"stdout"`,
+		`"service":"backend"`,
+		`"message":"GET /health"`,
+	} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("structured log %q missing %s", text, want)
+		}
+	}
+}
+
+func TestParseLogQuery(t *testing.T) {
+	query, err := parseLogQuery([]string{"service", "backend", "containing", "health", "limit", "5", "json"})
+	if err != nil {
+		t.Fatalf("parseLogQuery returned %v", err)
+	}
+	if query.service != "backend" || query.contains != "health" || query.limit != 5 || !query.json {
+		t.Fatalf("query = %#v", query)
+	}
+}
+
+func TestFilterAndLimitLogEntries(t *testing.T) {
+	entries := []structuredLogEntry{
+		{Service: "frontend", Message: "listening"},
+		{Service: "backend", Message: "GET /health"},
+		{Service: "backend", Message: "POST /api/login"},
+	}
+
+	filtered := filterLogEntries(entries, logQuery{service: "backend", contains: "api"})
+	if len(filtered) != 1 || filtered[0].Message != "POST /api/login" {
+		t.Fatalf("filtered = %#v", filtered)
+	}
+
+	limited := limitLogEntries(entries, 2)
+	if len(limited) != 2 || limited[0].Message != "GET /health" {
+		t.Fatalf("limited = %#v", limited)
 	}
 }

@@ -27,6 +27,7 @@ required_files=(
   "scripts/test_cli_scaffold.sh"
   "scripts/test_starter_docker_flow.sh"
   "templates/default/Dockerfile"
+  "templates/default/.gitignore"
   "templates/default/docker-compose.yml"
   "templates/default/view/web/Dockerfile"
   "templates/default/view/web/index.html"
@@ -96,6 +97,7 @@ grep -q "generated Docker Compose setup" README.md
 grep -q "Postgres-backed queues" README.md
 grep -q "sealion new" README.md
 grep -q "sealion run dev" README.md
+grep -q "sealion logs" README.md
 ! grep -q "command_format" bin/sealion
 ! grep -q "sealion format" bin/sealion
 grep -q "module github.com/ryangerardwilson/sealion" go.mod
@@ -107,6 +109,7 @@ grep -q "Sealion dev" cmd/sealion/main.go
 grep -q "Go is required to build the Sealion CLI" install.sh
 grep -q ".bin/sealion" install.sh
 grep -q "default_port = 8080" templates/default/sealion.toml
+grep -q ".sealion/" templates/default/.gitignore
 ! grep -q 'url = "http://localhost:8080"' templates/default/sealion.toml
 grep -q "frontend:" templates/default/docker-compose.yml
 grep -q "backend:" templates/default/docker-compose.yml
@@ -145,6 +148,9 @@ grep -q "respond_json" templates/default/src/main.c
 grep -q "/api/login" templates/default/src/main.c
 grep -q "/api/me" templates/default/src/main.c
 grep -q "handle_api_dashboard" templates/default/src/main.c
+! grep -R "admin@sealion.local" templates/default README.md docs >/dev/null
+! grep -R "Demo login" templates/default README.md docs >/dev/null
+! grep -q "seed_admin" templates/default/model/user.c
 ! grep -q "render_template_text" templates/default/src/main.c
 ! grep -q "respond_view" templates/default/src/main.c
 ! grep -q "<style>" templates/default/src/main.c
@@ -158,14 +164,18 @@ grep -q "runDevStreams" cmd/sealion/main.go
 grep -q "streamLogOutput" cmd/sealion/main.go
 grep -q "parseComposeLogLine" cmd/sealion/main.go
 grep -q "composeLogsArgs" cmd/sealion/main.go
-grep -q 'outputRow{"watch", "enabled"}' cmd/sealion/main.go
+grep -q "openDevLogSink" cmd/sealion/main.go
+grep -q "commandLogs" cmd/sealion/main.go
+grep -q ".sealion/log/dev.jsonl" cmd/sealion/main.go
+! grep -q 'outputRow{"login"' cmd/sealion/main.go
+! grep -q 'outputRow{"mode"' cmd/sealion/main.go
 
 grep -q "$domain" docs/site/index.html
 grep -q "Bun frontend" docs/site/index.html
 grep -q "Initial user experience" docs/site/index.html
 grep -q "Bun frontend, C API backend, Postgres database" docs/site/component-style-system.html
 grep -q "Tailwind is required" docs/site/component-style-system.html
-grep -q "Install, create, run, log in" docs/site/initial-user-experience.html
+grep -q "Install, create, run, register" docs/site/initial-user-experience.html
 grep -q "CI/CD regression plan" docs/site/ci-cd-regression-tests.html
 grep -q "Directory structure" docs/site/repo-structure.html
 

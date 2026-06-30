@@ -70,37 +70,6 @@ static void ensure_schema(void) {
   db_exec_or_die("DELETE FROM sessions WHERE expires_at < now()");
 }
 
-static void seed_admin(void) {
-  PGresult *count = PQexec(db, "SELECT count(*) FROM users");
-  if (PQresultStatus(count) != PGRES_TUPLES_OK) {
-    PQclear(count);
-    return;
-  }
-  int user_count = atoi(PQgetvalue(count, 0, 0));
-  PQclear(count);
-  if (user_count > 0) return;
-
-  char salt[33];
-  char hash[65];
-  random_hex(salt, 16);
-  password_hash("password", salt, hash);
-  const char *params[3] = {"admin@sealion.local", hash, salt};
-  PGresult *res = PQexecParams(
-    db,
-    "INSERT INTO users(email, password_hash, password_salt) VALUES($1, $2, $3)",
-    3,
-    NULL,
-    params,
-    NULL,
-    NULL,
-    0
-  );
-  if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-    fprintf(stderr, "could not seed admin: %s\n", PQerrorMessage(db));
-  }
-  PQclear(res);
-}
-
 void connect_db(void) {
   const char *database_url = getenv("DATABASE_URL");
   if (!database_url) database_url = "postgres://sealion:sealion@localhost:5432/sealion";
@@ -109,7 +78,6 @@ void connect_db(void) {
     db = PQconnectdb(database_url);
     if (PQstatus(db) == CONNECTION_OK) {
       ensure_schema();
-      seed_admin();
       return;
     }
     fprintf(stderr, "waiting for postgres (%d/30): %s", attempt, PQerrorMessage(db));

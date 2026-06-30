@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -22,6 +23,8 @@ import (
 
 var version = "0.1.0-dev"
 var commit = ""
+
+const devLogPath = ".sealion/log/dev.jsonl"
 
 const helpText = `Sealion
 Containerized full-stack apps with React, C, and Postgres.
@@ -50,6 +53,11 @@ features:
   run the local development stack
   # sealion run dev
   cd demo && sealion run dev
+
+  inspect structured dev logs
+  # sealion logs [service <name>] [containing <text>] [limit <count>] [json]
+  sealion logs service backend
+  sealion logs containing "/api/login" json
 `
 
 type app struct {
@@ -83,6 +91,27 @@ type runningProcess struct {
 type processResult struct {
 	name string
 	err  error
+}
+
+type structuredLogEntry struct {
+	Time    string `json:"ts"`
+	Source  string `json:"source"`
+	Stream  string `json:"stream"`
+	Service string `json:"service"`
+	Message string `json:"message"`
+}
+
+type devLogSink struct {
+	mu      sync.Mutex
+	file    *os.File
+	encoder *json.Encoder
+}
+
+type logQuery struct {
+	service  string
+	contains string
+	limit    int
+	json     bool
 }
 
 func main() {
@@ -142,6 +171,8 @@ func (a app) run(args []string) error {
 			return a.commandRunDev()
 		}
 		return errors.New("usage: sealion run dev")
+	case "logs":
+		return a.commandLogs(args[1:])
 	default:
 		return fmt.Errorf("unknown command: %s", args[0])
 	}
@@ -330,54 +361,34 @@ func (a app) commandRunDev() error {
 	env := setEnv(os.Environ(), "SEALION_HTTP_PORT", strconv.Itoa(port))
 	env = setEnv(env, "COMPOSE_MENU", "false")
 	watch := compose.supports("--watch")
-
-	r := newRenderer(a.stdout)
-	a.printDevHeader(r, port, requestedPort, watch)
-	r.Row(outputRow{"status", "starting containers"})
-	if err := composeUpDetached(compose, env); err != nil {
+	logSink, err := openDevLogSink(devLogPath)
+	if err != nil {
 		return err
 	}
-	r.Row(outputRow{"status", "ready"})
+	defer logSink.Close()
 
-	if !watch {
-		r.Rows(
-			outputRow{"watch", "unavailable in this Docker Compose"},
-			outputRow{"logs", "streaming below"},
-			outputRow{"stop", "docker compose down"},
-		)
-		r.Section("Logs", "live container output")
-		return a.runDevStreams(compose, env, false)
+	r := newRenderer(a.stdout)
+	a.printDevHeader(r, port)
+	logSink.Write("sealion", "lifecycle", "cli", "starting containers")
+	if err := composeUpDetached(compose, env); err != nil {
+		logSink.Write("sealion", "lifecycle", "cli", err.Error())
+		return err
 	}
-
-	r.Rows(
-		outputRow{"watch", "enabled"},
-		outputRow{"logs", "streaming below"},
-		outputRow{"stop", "Ctrl+C"},
-	)
+	logSink.Write("sealion", "lifecycle", "cli", "ready")
 	r.Section("Logs", "live container output")
 
-	return a.runDevStreams(compose, env, true)
+	return a.runDevStreams(compose, env, watch, logSink)
 }
 
-func (a app) printDevHeader(r renderer, port int, requestedPort string, watch bool) {
+func (a app) printDevHeader(r renderer, port int) {
 	r.Title("Sealion dev", "local stack")
-	if requestedPort == "" && port != 8080 {
-		r.Row(outputRow{"port", fmt.Sprintf("8080 busy, using %d", port)})
-	}
-	mode := "build, start"
-	if watch {
-		mode = "build, start, watch"
-	}
 	r.Rows(
 		outputRow{"app", fmt.Sprintf("http://localhost:%d", port)},
 		outputRow{"api", fmt.Sprintf("http://localhost:%d/api", port)},
-		outputRow{"login", "admin@sealion.local / password"},
-		outputRow{"mode", mode},
 	)
-	r.Blank()
 }
 
-func (a app) runDevStreams(compose composeCommand, env []string, watch bool) error {
+func (a app) runDevStreams(compose composeCommand, env []string, watch bool, logSink *devLogSink) error {
 	var streams sync.WaitGroup
 	results := make(chan processResult, 3)
 	processes := make([]runningProcess, 0, 2)
@@ -387,9 +398,10 @@ func (a app) runDevStreams(compose composeCommand, env []string, watch bool) err
 		compose,
 		env,
 		composeLogsArgs(compose),
-		func(input io.Reader, r renderer, wg *sync.WaitGroup) {
-			streamLogOutput(input, r, wg)
+		func(input io.Reader, r renderer, sink *devLogSink, stream string, wg *sync.WaitGroup) {
+			streamLogOutput(input, r, sink, stream, wg)
 		},
+		logSink,
 		&streams,
 		results,
 	)
@@ -404,9 +416,10 @@ func (a app) runDevStreams(compose composeCommand, env []string, watch bool) err
 			compose,
 			env,
 			[]string{"watch", "--no-up", "--quiet"},
-			func(input io.Reader, r renderer, wg *sync.WaitGroup) {
-				streamWatchOutput(input, r, wg)
+			func(input io.Reader, r renderer, sink *devLogSink, stream string, wg *sync.WaitGroup) {
+				streamWatchOutput(input, r, sink, stream, wg)
 			},
+			logSink,
 			&streams,
 			results,
 		)
@@ -429,7 +442,7 @@ func (a app) runDevStreams(compose composeCommand, env []string, watch bool) err
 	select {
 	case sig := <-signals:
 		interrupted = true
-		newRenderer(a.stdout).Row(outputRow{"status", "stopping containers"})
+		logSink.Write("sealion", "lifecycle", "cli", "stopping containers")
 		stopProcesses(processes, sig)
 	case first = <-results:
 		stopProcesses(processes, syscall.SIGTERM)
@@ -460,7 +473,8 @@ func (a app) startComposeStream(
 	compose composeCommand,
 	env []string,
 	args []string,
-	stream func(io.Reader, renderer, *sync.WaitGroup),
+	stream func(io.Reader, renderer, *devLogSink, string, *sync.WaitGroup),
+	logSink *devLogSink,
 	streams *sync.WaitGroup,
 	results chan<- processResult,
 ) (runningProcess, error) {
@@ -482,8 +496,8 @@ func (a app) startComposeStream(
 	}
 
 	streams.Add(2)
-	go stream(stdout, newRenderer(a.stdout), streams)
-	go stream(stderr, newRenderer(a.stderr), streams)
+	go stream(stdout, newRenderer(a.stdout), logSink, "stdout", streams)
+	go stream(stderr, newRenderer(a.stderr), logSink, "stderr", streams)
 
 	go func() {
 		results <- processResult{name: name, err: cmd.Wait()}
@@ -649,20 +663,6 @@ func (r renderer) formatValue(row outputRow) string {
 		return row.value
 	}
 	switch row.key {
-	case "status":
-		switch row.value {
-		case "ready":
-			return r.paint("38;5;114", row.value)
-		case "starting containers", "stopping containers":
-			return r.paint("38;5;222", row.value)
-		default:
-			return row.value
-		}
-	case "watch":
-		if row.value == "enabled" {
-			return r.paint("38;5;114", row.value)
-		}
-		return r.paint("38;5;222", row.value)
 	case "app", "api":
 		return r.paint("38;5;81", row.value)
 	case "error":
@@ -689,7 +689,7 @@ func rowKeyWidth(rows []outputRow) int {
 	return width
 }
 
-func streamWatchOutput(input io.Reader, r renderer, wg *sync.WaitGroup) {
+func streamWatchOutput(input io.Reader, r renderer, logSink *devLogSink, stream string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	scanner := bufio.NewScanner(input)
 	scanner.Buffer(make([]byte, 1024), 1024*1024)
@@ -698,11 +698,12 @@ func streamWatchOutput(input io.Reader, r renderer, wg *sync.WaitGroup) {
 		if line == "" || line == "Watch enabled" {
 			continue
 		}
+		logSink.Write("compose-watch", stream, "watch", line)
 		r.Log("watch", line)
 	}
 }
 
-func streamLogOutput(input io.Reader, r renderer, wg *sync.WaitGroup) {
+func streamLogOutput(input io.Reader, r renderer, logSink *devLogSink, stream string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	scanner := bufio.NewScanner(input)
 	scanner.Buffer(make([]byte, 1024), 1024*1024)
@@ -712,8 +713,164 @@ func streamLogOutput(input io.Reader, r renderer, wg *sync.WaitGroup) {
 			continue
 		}
 		service, message := parseComposeLogLine(line)
+		logSink.Write("compose-log", stream, service, message)
 		r.Log(service, message)
 	}
+}
+
+func openDevLogSink(path string) (*devLogSink, error) {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return nil, err
+	}
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return nil, err
+	}
+	return &devLogSink{file: file, encoder: json.NewEncoder(file)}, nil
+}
+
+func (s *devLogSink) Close() error {
+	if s == nil || s.file == nil {
+		return nil
+	}
+	return s.file.Close()
+}
+
+func (s *devLogSink) Write(source string, stream string, service string, message string) {
+	if s == nil || s.encoder == nil || strings.TrimSpace(message) == "" {
+		return
+	}
+	entry := structuredLogEntry{
+		Time:    time.Now().UTC().Format(time.RFC3339Nano),
+		Source:  source,
+		Stream:  stream,
+		Service: service,
+		Message: message,
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_ = s.encoder.Encode(entry)
+}
+
+func (a app) commandLogs(args []string) error {
+	if !isFile("sealion.toml") {
+		return errors.New("run this inside a Sealion project")
+	}
+	query, err := parseLogQuery(args)
+	if err != nil {
+		return err
+	}
+	entries, err := readStructuredLogEntries(devLogPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return errors.New("no dev logs found; run sealion run dev first")
+		}
+		return err
+	}
+	entries = filterLogEntries(entries, query)
+	entries = limitLogEntries(entries, query.limit)
+
+	if query.json {
+		encoder := json.NewEncoder(a.stdout)
+		for _, entry := range entries {
+			if err := encoder.Encode(entry); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	r := newRenderer(a.stdout)
+	for _, entry := range entries {
+		r.Log(entry.Service, entry.Message)
+	}
+	return nil
+}
+
+func parseLogQuery(args []string) (logQuery, error) {
+	query := logQuery{limit: 80}
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "service":
+			i++
+			if i >= len(args) || args[i] == "" {
+				return query, errors.New("usage: sealion logs [service <name>] [containing <text>] [limit <count>] [json]")
+			}
+			query.service = args[i]
+		case "containing":
+			i++
+			if i >= len(args) || args[i] == "" {
+				return query, errors.New("usage: sealion logs [service <name>] [containing <text>] [limit <count>] [json]")
+			}
+			query.contains = args[i]
+		case "limit":
+			i++
+			if i >= len(args) {
+				return query, errors.New("usage: sealion logs [service <name>] [containing <text>] [limit <count>] [json]")
+			}
+			limit, err := strconv.Atoi(args[i])
+			if err != nil || limit < 1 {
+				return query, errors.New("log limit must be a positive number")
+			}
+			query.limit = limit
+		case "json":
+			query.json = true
+		default:
+			return query, fmt.Errorf("unknown logs option: %s", args[i])
+		}
+	}
+	return query, nil
+}
+
+func readStructuredLogEntries(path string) ([]structuredLogEntry, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var entries []structuredLogEntry
+	scanner := bufio.NewScanner(file)
+	scanner.Buffer(make([]byte, 1024), 1024*1024)
+	lineNumber := 0
+	for scanner.Scan() {
+		lineNumber++
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+		var entry structuredLogEntry
+		if err := json.Unmarshal([]byte(line), &entry); err != nil {
+			return nil, fmt.Errorf("invalid structured log line %d: %w", lineNumber, err)
+		}
+		entries = append(entries, entry)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return entries, nil
+}
+
+func filterLogEntries(entries []structuredLogEntry, query logQuery) []structuredLogEntry {
+	filtered := make([]structuredLogEntry, 0, len(entries))
+	contains := strings.ToLower(query.contains)
+	for _, entry := range entries {
+		if query.service != "" && entry.Service != query.service {
+			continue
+		}
+		if contains != "" && !strings.Contains(strings.ToLower(entry.Message), contains) {
+			continue
+		}
+		filtered = append(filtered, entry)
+	}
+	return filtered
+}
+
+func limitLogEntries(entries []structuredLogEntry, limit int) []structuredLogEntry {
+	if limit < 1 || len(entries) <= limit {
+		return entries
+	}
+	return entries[len(entries)-limit:]
 }
 
 func resolveHome() (string, error) {

@@ -11,8 +11,8 @@
     <header class="hero">
       <div class="shell">
         <p class="eyebrow"><a href="index.html">Sealion docs</a></p>
-        <h1>Install, create, run, log in.</h1>
-        <p class="lead">The first Sealion app should boot with one command and include a Bun/React/Tailwind frontend, C API backend, Postgres-backed auth, logout, and dashboard flow by default.</p>
+        <h1>Install, create, run, register.</h1>
+        <p class="lead">The first Sealion app should boot with one command and include a Bun/React/Tailwind frontend, C API backend, Postgres-backed account creation, login, logout, and dashboard flow by default.</p>
       </div>
     </header>
 
@@ -25,10 +25,11 @@ cd demo
 sealion run dev</code></pre>
         <p>The installer builds the CLI with Go. The generated app does not require host Bun, Node, C compiler setup, or Postgres because those run inside containers.</p>
         <p>Open the app URL printed by <code>sealion run dev</code>.</p>
-        <p>If port 8080 is already in use, <code>sealion run dev</code> selects another local port. To choose one explicitly, run <code>SEALION_HTTP_PORT=18080 sealion run dev</code>.</p>
+        <p><code>sealion run dev</code> prints the working app and API URLs. It prefers port 8080 and silently selects another local port when 8080 is already in use. To choose one explicitly, run <code>SEALION_HTTP_PORT=18080 sealion run dev</code>.</p>
         <p>The frontend listens on port 8080 inside its container. Your browser should use the host URL printed by the CLI.</p>
         <p>When Docker Compose supports file watch, <code>sealion run dev</code> starts the stack with quiet Compose output, watch enabled, and live logs streamed below the startup summary. Edits under <code>view/web/src/</code>, <code>src/</code>, <code>model/</code>, <code>controller/</code>, view web package/config files, or to <code>Dockerfile</code> rebuild and replace the relevant container.</p>
-        <p>The CLI presents status as aligned rows with TTY-only color. Captured or piped output remains plain text for tests, scripts, and AI agents. Once the stack is ready, frontend, backend, database, and watch events appear in one service-tagged stream.</p>
+        <p>The CLI presents aligned rows with TTY-only color. Captured or piped output remains plain text for tests, scripts, and AI agents. Before the log stream, <code>sealion run dev</code> prints only the working app and API URLs. Once the stack is ready, frontend, backend, database, and watch events appear in one service-tagged stream and are mirrored to <code>.sealion/log/dev.jsonl</code>.</p>
+        <p>The generated app starts with no seeded users. The first browser visit opens account creation. Registration creates the first user and session; later sessions use the login form.</p>
         <p>Generated apps keep browser UI in <code>view/web/src/</code>. Bun owns the frontend server and API proxy, Tailwind owns styling, React owns page flow, forms, and dashboard rendering. The C backend owns <code>/api</code> routes, auth, sessions, validation, and Postgres access.</p>
       </section>
 
@@ -42,7 +43,7 @@ sealion run dev</code></pre>
           <li>Register, login, logout, and dashboard routes.</li>
           <li>Model and controller directories for backend code.</li>
           <li>Postgres-backed users and sessions.</li>
-          <li>Seeded demo account: <code>admin@sealion.local</code> / <code>password</code>.</li>
+          <li>Queryable structured dev logs.</li>
         </ul>
       </section>
 
@@ -53,7 +54,8 @@ sealion run dev</code></pre>
           <li><code>sealion upgrade</code> upgrades the installed CLI when a newer GitHub commit is available.</li>
           <li><code>sealion new &lt;project-name&gt;</code> creates a new project directory.</li>
           <li><code>sealion init</code> initializes the current empty directory.</li>
-          <li><code>sealion run dev</code> starts the Docker Compose dev stack, prints the app URL, API URL, demo login, watch status, and then streams logs until <code>Ctrl+C</code>.</li>
+          <li><code>sealion run dev</code> starts the Docker Compose dev stack, prints the app URL and API URL, then streams logs until <code>Ctrl+C</code>.</li>
+          <li><code>sealion logs</code> reads <code>.sealion/log/dev.jsonl</code> with service, text, limit, and JSON queries.</li>
         </ul>
       </section>
     </main>

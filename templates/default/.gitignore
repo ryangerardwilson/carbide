@@ -1,4 +1,5 @@
 .env
+.sealion/
 build/
 view/web/build/
 view/web/dist/
