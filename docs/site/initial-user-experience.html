@@ -22,13 +22,14 @@
         <pre><code>curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/sealion/main/install.sh | bash
 sealion new demo
 cd demo
-sealion run dev</code></pre>
+sealion run dev
+sealion stop dev</code></pre>
         <p>The installer builds the CLI with Go. The generated app does not require host Bun, Node, C compiler setup, or Postgres because those run inside containers.</p>
         <p>Open the app URL printed by <code>sealion run dev</code>.</p>
         <p><code>sealion run dev</code> prints the working app and API URLs. It prefers port 8080 and silently selects another local port when 8080 is already in use. To choose one explicitly, run <code>SEALION_HTTP_PORT=18080 sealion run dev</code>.</p>
         <p>The frontend listens on port 8080 inside its container. Your browser should use the host URL printed by the CLI.</p>
         <p>When Docker Compose supports file watch, <code>sealion run dev</code> starts the stack with quiet Compose output, watch enabled, and live logs streamed below the startup summary. Edits under <code>view/web/src/</code>, <code>src/</code>, <code>model/</code>, <code>controller/</code>, view web package/config files, or to <code>Dockerfile</code> rebuild and replace the relevant container.</p>
-        <p>The CLI presents aligned rows with TTY-only color and terminal-only per-container startup animation while Docker Compose builds, starts, and waits for containers. Captured or piped output remains plain text for tests, scripts, and AI agents. Before startup, <code>sealion run dev</code> prints only the working app and API URLs. Logs begin only after Compose reports the stack ready. Frontend, backend, database, and watch events appear in one timestamped, service-tagged stream and are mirrored to <code>.sealion/log/dev.jsonl</code>. <code>NO_COLOR</code> disables ANSI color without disabling the terminal startup animation.</p>
+        <p>The CLI presents aligned rows with TTY-only color and terminal-only Pacman-style per-container startup and shutdown animation while Docker Compose builds, starts, waits for, or stops containers. Captured or piped output remains plain text for tests, scripts, and AI agents. Before startup, <code>sealion run dev</code> prints only the working app and API URLs. Logs begin only after Compose reports the stack ready. <code>Ctrl+C</code> detaches from live log streaming and leaves the containers running. <code>sealion logs follow</code> attaches to live container logs again. <code>sealion stop dev</code> stops the local development stack. Frontend, backend, database, and watch events appear in one timestamped, service-tagged stream and are mirrored to <code>.sealion/log/dev.jsonl</code>. <code>NO_COLOR</code> disables ANSI color without disabling the terminal startup or shutdown animation.</p>
         <p>The generated app starts with no seeded users. The first browser visit opens account creation. Registration creates the first user and session; later sessions use the login form.</p>
         <p>Generated apps keep browser UI in <code>view/web/src/</code>. Bun owns the frontend server and API proxy, Tailwind owns styling, React owns page flow, forms, and dashboard rendering. The C backend owns <code>/api</code> routes, auth, sessions, validation, and Postgres access.</p>
       </section>
@@ -54,8 +55,9 @@ sealion run dev</code></pre>
           <li><code>sealion upgrade</code> upgrades the installed CLI when a newer GitHub commit is available.</li>
           <li><code>sealion new &lt;project-name&gt;</code> creates a new project directory.</li>
           <li><code>sealion init</code> initializes the current empty directory.</li>
-          <li><code>sealion run dev</code> starts the Docker Compose dev stack, prints the app URL and API URL, then streams logs until <code>Ctrl+C</code>.</li>
-          <li><code>sealion logs</code> reads <code>.sealion/log/dev.jsonl</code> with service, text, limit, and JSON queries.</li>
+          <li><code>sealion run dev</code> starts the Docker Compose dev stack, prints the app URL and API URL, then streams logs until <code>Ctrl+C</code> detaches.</li>
+          <li><code>sealion stop dev</code> stops the Docker Compose dev stack.</li>
+          <li><code>sealion logs</code> reads <code>.sealion/log/dev.jsonl</code> with service, text, limit, and JSON queries. <code>sealion logs follow</code> attaches to live container logs.</li>
         </ul>
       </section>
     </main>

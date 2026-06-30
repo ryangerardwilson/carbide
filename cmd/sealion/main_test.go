@@ -89,9 +89,12 @@ func TestServiceProgressFrame(t *testing.T) {
 		step  int
 		want  string
 	}{
-		{"starting", 0, "[C.........]"},
-		{"starting", 1, "[ c........]"},
+		{"starting", 0, "[Cooooooooo]"},
+		{"starting", 1, "[ coooooooo]"},
+		{"stopping", 0, "[oooooooooC]"},
+		{"stopping", 1, "[ooooooooc ]"},
 		{"ready", 0, "[##########]"},
+		{"stopped", 0, "[          ]"},
 		{"failed", 0, "[!!!!!!!!!!]"},
 	}
 	for _, test := range tests {
@@ -119,6 +122,24 @@ func TestServiceProgressState(t *testing.T) {
 	}
 }
 
+func TestServiceStopProgressState(t *testing.T) {
+	tests := []struct {
+		status composeServiceStatus
+		want   string
+	}{
+		{composeServiceStatus{state: "running"}, "stopping"},
+		{composeServiceStatus{state: "exited"}, "stopping"},
+		{composeServiceStatus{state: "stopped"}, "stopped"},
+		{composeServiceStatus{state: "failed"}, "failed"},
+		{composeServiceStatus{}, "stopping"},
+	}
+	for _, test := range tests {
+		if got := serviceStopProgressState(test.status); got != test.want {
+			t.Fatalf("serviceStopProgressState(%#v) = %q, want %q", test.status, got, test.want)
+		}
+	}
+}
+
 func TestServiceProgressRunsWithoutColor(t *testing.T) {
 	var out bytes.Buffer
 	r := renderer{out: &out, interactive: true}
@@ -137,11 +158,37 @@ func TestServiceProgressRunsWithoutColor(t *testing.T) {
 	}
 
 	got := out.String()
-	if !strings.Contains(got, "[C.................] starting") {
+	if !strings.Contains(got, "[Cooooooooooooooooo] starting") {
 		t.Fatalf("progress output missing starting frame: %q", got)
 	}
 	if !strings.Contains(got, "[##################] ready") {
 		t.Fatalf("progress output missing ready frame: %q", got)
+	}
+}
+
+func TestServiceStopProgressRunsWithoutColor(t *testing.T) {
+	var out bytes.Buffer
+	r := renderer{out: &out, interactive: true}
+
+	err := r.RunServiceStopProgress(
+		[]string{"backend"},
+		func() map[string]composeServiceStatus {
+			return nil
+		},
+		func() error {
+			return nil
+		},
+	)
+	if err != nil {
+		t.Fatalf("RunServiceStopProgress returned %v", err)
+	}
+
+	got := out.String()
+	if !strings.Contains(got, "[oooooooooooooooooC] stopping") {
+		t.Fatalf("stop progress output missing stopping frame: %q", got)
+	}
+	if !strings.Contains(got, "[                  ] stopped") {
+		t.Fatalf("stop progress output missing stopped frame: %q", got)
 	}
 }
 
@@ -226,6 +273,14 @@ func TestParseLogQuery(t *testing.T) {
 	}
 	if query.service != "backend" || query.contains != "health" || query.limit != 5 || !query.json {
 		t.Fatalf("query = %#v", query)
+	}
+
+	query, err = parseLogQuery([]string{"follow", "service", "frontend"})
+	if err != nil {
+		t.Fatalf("parseLogQuery follow returned %v", err)
+	}
+	if !query.follow || query.service != "frontend" {
+		t.Fatalf("follow query = %#v", query)
 	}
 }
 

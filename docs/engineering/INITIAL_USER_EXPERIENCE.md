@@ -12,6 +12,7 @@ curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/sealion/main/insta
 sealion new demo
 cd demo
 sealion run dev
+sealion stop dev
 ```
 
 The installer builds the CLI with Go. The generated app does not require host
@@ -41,13 +42,16 @@ package/config files, or to `Dockerfile` rebuild and replace the relevant
 container.
 
 The CLI presents output as aligned rows with TTY-only color and terminal-only
-per-container startup animation while Docker Compose builds, starts, and waits
-for containers. Captured or piped output remains plain text for tests, scripts,
-and AI agents. Before startup, `sealion run dev` prints only the working app and
-API URLs. Logs begin only after Compose reports the stack ready. Frontend,
-backend, database, and watch events appear in one timestamped, service-tagged
-stream and are mirrored to `.sealion/log/dev.jsonl`. `NO_COLOR` disables ANSI
-color without disabling the terminal startup animation.
+Pacman-style per-container startup and shutdown animation while Docker Compose
+builds, starts, waits for, or stops containers. Captured or piped output remains
+plain text for tests, scripts, and AI agents. Before startup, `sealion run dev`
+prints only the working app and API URLs. Logs begin only after Compose reports
+the stack ready. `Ctrl+C` detaches from live log streaming and leaves the
+containers running. `sealion logs follow` attaches to live container logs again.
+`sealion stop dev` stops the local development stack. Frontend, backend,
+database, and watch events appear in one timestamped, service-tagged stream and
+are mirrored to `.sealion/log/dev.jsonl`. `NO_COLOR` disables ANSI color without
+disabling the terminal startup or shutdown animation.
 
 The generated app starts with no seeded users. The first browser visit opens the
 account creation flow. Registration creates the first user and session; later
@@ -94,13 +98,20 @@ unless the current directory is empty.
 
 Runs the generated app through Docker Compose. The frontend, backend, and
 database are separate services, matching the runtime topology contract. The CLI
-prints the app URL and API URL, then streams logs until `Ctrl+C`.
+prints the app URL and API URL, then streams logs until `Ctrl+C`. `Ctrl+C`
+detaches from the log stream without stopping containers.
+
+### `sealion stop dev`
+
+Stops the generated app's Docker Compose dev stack. This is the explicit
+container teardown command.
 
 ### `sealion logs`
 
 Reads `.sealion/log/dev.jsonl`, the structured log file written by `sealion run
 dev`. It supports simple word-based queries such as `sealion logs service
 backend`, `sealion logs containing "/api/login"`, and `sealion logs json`.
+`sealion logs follow` attaches to live container logs again after detaching.
 
 ## Product Principle
 

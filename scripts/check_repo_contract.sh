@@ -97,6 +97,7 @@ grep -q "generated Docker Compose setup" README.md
 grep -q "Postgres-backed queues" README.md
 grep -q "sealion new" README.md
 grep -q "sealion run dev" README.md
+grep -q "sealion stop dev" README.md
 grep -q "sealion logs" README.md
 ! grep -q "command_format" bin/sealion
 ! grep -q "sealion format" bin/sealion
@@ -161,13 +162,16 @@ grep -q "frontend proxies API calls" templates/default/src/main.c
 grep -q "compose.supports(\"--watch\")" cmd/sealion/main.go
 grep -q "newRenderer" cmd/sealion/main.go
 grep -q "runDevStreams" cmd/sealion/main.go
+grep -q "commandStopDev" cmd/sealion/main.go
 grep -q "RunServiceProgress" cmd/sealion/main.go
+grep -q "RunServiceStopProgress" cmd/sealion/main.go
 grep -q "serviceProgressFrame" cmd/sealion/main.go
 grep -q "composeServiceStatuses" cmd/sealion/main.go
 grep -q "streamLogOutput" cmd/sealion/main.go
 grep -q "parseComposeLogLine" cmd/sealion/main.go
 grep -q "composeLogsArgs" cmd/sealion/main.go
 grep -q "openDevLogSink" cmd/sealion/main.go
+grep -q "openAppendDevLogSink" cmd/sealion/main.go
 grep -q "commandLogs" cmd/sealion/main.go
 grep -q ".sealion/log/dev.jsonl" cmd/sealion/main.go
 ! grep -q 'outputRow{"login"' cmd/sealion/main.go

@@ -54,6 +54,14 @@ features:
   # sealion run dev
   cd demo && sealion run dev
 
+  stop the local development stack
+  # sealion stop dev
+  cd demo && sealion stop dev
+
+  follow live dev logs
+  # sealion logs follow [service <name>] [containing <text>]
+  sealion logs follow
+
   inspect structured dev logs
   # sealion logs [service <name>] [containing <text>] [limit <count>] [json]
   sealion logs service backend
@@ -113,6 +121,7 @@ type logQuery struct {
 	contains string
 	limit    int
 	json     bool
+	follow   bool
 }
 
 type composeServiceStatus struct {
@@ -178,6 +187,11 @@ func (a app) run(args []string) error {
 			return a.commandRunDev()
 		}
 		return errors.New("usage: sealion run dev")
+	case "stop":
+		if len(args) == 2 && args[1] == "dev" {
+			return a.commandStopDev()
+		}
+		return errors.New("usage: sealion stop dev")
 	case "logs":
 		return a.commandLogs(args[1:])
 	default:
@@ -396,6 +410,48 @@ func (a app) commandRunDev() error {
 	return a.runDevStreams(compose, env, watch, logSink)
 }
 
+func (a app) commandStopDev() error {
+	if !isFile("sealion.toml") {
+		return errors.New("run this inside a Sealion project")
+	}
+
+	compose, err := findCompose()
+	if err != nil {
+		return err
+	}
+
+	env := setEnv(os.Environ(), "COMPOSE_MENU", "false")
+	services := composeServices(compose, env)
+	r := newRenderer(a.stdout)
+	r.Title("Sealion stop dev", "local stack")
+
+	logSink, _ := openAppendDevLogSink(devLogPath)
+	if logSink != nil {
+		defer logSink.Close()
+		logSink.Write("sealion", "lifecycle", "cli", "stopping containers")
+	}
+
+	if err := r.RunServiceStopProgress(
+		services,
+		func() map[string]composeServiceStatus {
+			return composeServiceStatuses(compose, env)
+		},
+		func() error {
+			return composeDown(compose, env)
+		},
+	); err != nil {
+		if logSink != nil {
+			logSink.Write("sealion", "lifecycle", "cli", err.Error())
+		}
+		return err
+	}
+	if logSink != nil {
+		logSink.Write("sealion", "lifecycle", "cli", "stopped containers")
+	}
+	r.Rows(outputRow{"dev", "stopped"})
+	return nil
+}
+
 func (a app) printDevHeader(r renderer, port int) {
 	r.Title("Sealion dev", "local stack")
 	r.Rows(
@@ -458,7 +514,7 @@ func (a app) runDevStreams(compose composeCommand, env []string, watch bool, log
 	select {
 	case sig := <-signals:
 		interrupted = true
-		logSink.Write("sealion", "lifecycle", "cli", "stopping containers")
+		logSink.Write("sealion", "lifecycle", "cli", "detached from dev logs")
 		stopProcesses(processes, sig)
 	case first = <-results:
 		stopProcesses(processes, syscall.SIGTERM)
@@ -471,17 +527,21 @@ func (a app) runDevStreams(compose composeCommand, env []string, watch bool, log
 	waitForProcesses(len(processes)-alreadyReported, processes, results, 5*time.Second)
 	streams.Wait()
 
-	downErr := composeDown(compose, env)
 	if interrupted {
-		return downErr
+		r := newRenderer(a.stdout)
+		r.Blank()
+		r.Rows(
+			outputRow{"logs", "detached"},
+			outputRow{"dev", "running"},
+			outputRow{"follow", "sealion logs follow"},
+			outputRow{"stop", "sealion stop dev"},
+		)
+		return nil
 	}
 	if first.err != nil {
-		if downErr != nil {
-			return fmt.Errorf("Docker Compose %s failed: %v; cleanup failed: %w", first.name, first.err, downErr)
-		}
 		return fmt.Errorf("Docker Compose %s failed: %w", first.name, first.err)
 	}
-	return downErr
+	return nil
 }
 
 func (a app) startComposeStream(
@@ -684,6 +744,23 @@ func (r renderer) RunServiceProgress(
 	poll func() map[string]composeServiceStatus,
 	work func() error,
 ) error {
+	return r.runServiceProgress("start", services, poll, work)
+}
+
+func (r renderer) RunServiceStopProgress(
+	services []string,
+	poll func() map[string]composeServiceStatus,
+	work func() error,
+) error {
+	return r.runServiceProgress("stop", services, poll, work)
+}
+
+func (r renderer) runServiceProgress(
+	mode string,
+	services []string,
+	poll func() map[string]composeServiceStatus,
+	work func() error,
+) error {
 	if !r.interactive {
 		return work()
 	}
@@ -698,7 +775,7 @@ func (r renderer) RunServiceProgress(
 	}
 	statuses := map[string]composeServiceStatus{}
 	step := 0
-	r.writeServiceProgress(services, statuses, step)
+	r.writeServiceProgress(mode, services, statuses, step)
 	ticker := time.NewTicker(140 * time.Millisecond)
 	defer ticker.Stop()
 
@@ -709,34 +786,34 @@ func (r renderer) RunServiceProgress(
 				for _, service := range services {
 					statuses[service] = composeServiceStatus{service: service, state: "failed"}
 				}
-				r.rewriteServiceProgress(services, statuses, step)
+				r.rewriteServiceProgress(mode, services, statuses, step)
 				return err
 			}
 			for _, service := range services {
-				statuses[service] = composeServiceStatus{service: service, state: "running", health: "healthy"}
+				statuses[service] = composeServiceStatus{service: service, state: progressDoneState(mode), health: "healthy"}
 			}
-			r.rewriteServiceProgress(services, statuses, step)
+			r.rewriteServiceProgress(mode, services, statuses, step)
 			return nil
 		case <-ticker.C:
 			step++
 			if current := poll(); len(current) > 0 {
 				statuses = current
 			}
-			r.rewriteServiceProgress(services, statuses, step)
+			r.rewriteServiceProgress(mode, services, statuses, step)
 		}
 	}
 }
 
-func (r renderer) rewriteServiceProgress(services []string, statuses map[string]composeServiceStatus, step int) {
+func (r renderer) rewriteServiceProgress(mode string, services []string, statuses map[string]composeServiceStatus, step int) {
 	fmt.Fprintf(r.out, "\033[%dA", len(services))
-	r.writeServiceProgress(services, statuses, step)
+	r.writeServiceProgress(mode, services, statuses, step)
 }
 
-func (r renderer) writeServiceProgress(services []string, statuses map[string]composeServiceStatus, step int) {
+func (r renderer) writeServiceProgress(mode string, services []string, statuses map[string]composeServiceStatus, step int) {
 	width := rowTextWidth(services)
 	for index, service := range services {
 		status := statuses[service]
-		state := serviceProgressState(status)
+		state := progressState(mode, status)
 		frame := serviceProgressFrame(18, step+index, state)
 		fmt.Fprintf(
 			r.out,
@@ -749,6 +826,20 @@ func (r renderer) writeServiceProgress(services []string, statuses map[string]co
 	}
 }
 
+func progressDoneState(mode string) string {
+	if mode == "stop" {
+		return "stopped"
+	}
+	return "running"
+}
+
+func progressState(mode string, status composeServiceStatus) string {
+	if mode == "stop" {
+		return serviceStopProgressState(status)
+	}
+	return serviceProgressState(status)
+}
+
 func serviceProgressFrame(width int, step int, state string) string {
 	if width < 1 {
 		width = 1
@@ -756,31 +847,64 @@ func serviceProgressFrame(width int, step int, state string) string {
 	switch state {
 	case "ready":
 		return "[" + strings.Repeat("#", width) + "]"
+	case "stopped":
+		return "[" + strings.Repeat(" ", width) + "]"
 	case "failed":
 		return "[" + strings.Repeat("!", width) + "]"
+	case "stopping":
+		return reversePacmanFrame(width, step)
 	default:
-		position := step % width
-		if position < 0 {
-			position = 0
-		}
-		var b strings.Builder
-		b.WriteByte('[')
-		for i := 0; i < width; i++ {
-			if i == position {
-				if step%2 == 0 {
-					b.WriteByte('C')
-				} else {
-					b.WriteByte('c')
-				}
-			} else if i < position {
-				b.WriteByte(' ')
-			} else {
-				b.WriteByte('.')
-			}
-		}
-		b.WriteByte(']')
-		return b.String()
+		return pacmanFrame(width, step)
 	}
+}
+
+func pacmanFrame(width int, step int) string {
+	position := step % width
+	if position < 0 {
+		position = 0
+	}
+	var b strings.Builder
+	b.WriteByte('[')
+	for i := 0; i < width; i++ {
+		switch {
+		case i == position:
+			b.WriteByte(pacmanMouth(step))
+		case i < position:
+			b.WriteByte(' ')
+		default:
+			b.WriteByte('o')
+		}
+	}
+	b.WriteByte(']')
+	return b.String()
+}
+
+func reversePacmanFrame(width int, step int) string {
+	position := width - 1 - (step % width)
+	if position < 0 {
+		position = 0
+	}
+	var b strings.Builder
+	b.WriteByte('[')
+	for i := 0; i < width; i++ {
+		switch {
+		case i == position:
+			b.WriteByte(pacmanMouth(step))
+		case i > position:
+			b.WriteByte(' ')
+		default:
+			b.WriteByte('o')
+		}
+	}
+	b.WriteByte(']')
+	return b.String()
+}
+
+func pacmanMouth(step int) byte {
+	if step%2 == 0 {
+		return 'C'
+	}
+	return 'c'
 }
 
 func serviceProgressState(status composeServiceStatus) string {
@@ -798,10 +922,23 @@ func serviceProgressState(status composeServiceStatus) string {
 	return "starting"
 }
 
+func serviceStopProgressState(status composeServiceStatus) string {
+	state := strings.ToLower(status.state)
+	if state == "failed" || state == "dead" {
+		return "failed"
+	}
+	if state == "stopped" {
+		return "stopped"
+	}
+	return "stopping"
+}
+
 func serviceProgressColor(state string) string {
 	switch state {
 	case "ready":
 		return "38;5;114"
+	case "stopped":
+		return "2;38;5;245"
 	case "failed":
 		return "38;5;203"
 	default:
@@ -885,6 +1022,10 @@ func streamWatchOutput(input io.Reader, r renderer, logSink *devLogSink, stream 
 }
 
 func streamLogOutput(input io.Reader, r renderer, logSink *devLogSink, stream string, wg *sync.WaitGroup) {
+	streamLogOutputWithQuery(input, r, logSink, stream, logQuery{}, wg)
+}
+
+func streamLogOutputWithQuery(input io.Reader, r renderer, logSink *devLogSink, stream string, query logQuery, wg *sync.WaitGroup) {
 	defer wg.Done()
 	scanner := bufio.NewScanner(input)
 	scanner.Buffer(make([]byte, 1024), 1024*1024)
@@ -896,7 +1037,9 @@ func streamLogOutput(input io.Reader, r renderer, logSink *devLogSink, stream st
 		service, message := parseComposeLogLine(line)
 		entry := newStructuredLogEntry("compose-log", stream, service, message)
 		logSink.WriteEntry(entry)
-		r.LogEntry(entry)
+		if logEntryMatchesQuery(entry, query) {
+			r.LogEntry(entry)
+		}
 	}
 }
 
@@ -911,10 +1054,18 @@ func newStructuredLogEntry(source string, stream string, service string, message
 }
 
 func openDevLogSink(path string) (*devLogSink, error) {
+	return openDevLogSinkWithFlags(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC)
+}
+
+func openAppendDevLogSink(path string) (*devLogSink, error) {
+	return openDevLogSinkWithFlags(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND)
+}
+
+func openDevLogSinkWithFlags(path string, flags int) (*devLogSink, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return nil, err
 	}
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(path, flags, 0644)
 	if err != nil {
 		return nil, err
 	}
@@ -949,6 +1100,9 @@ func (a app) commandLogs(args []string) error {
 	if err != nil {
 		return err
 	}
+	if query.follow {
+		return a.commandLogsFollow(query)
+	}
 	entries, err := readStructuredLogEntries(devLogPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -976,6 +1130,72 @@ func (a app) commandLogs(args []string) error {
 	return nil
 }
 
+func (a app) commandLogsFollow(query logQuery) error {
+	if query.json {
+		return errors.New("sealion logs follow does not support json")
+	}
+	if query.limit != 80 {
+		return errors.New("sealion logs follow does not support limit")
+	}
+
+	compose, err := findCompose()
+	if err != nil {
+		return err
+	}
+	env := setEnv(os.Environ(), "COMPOSE_MENU", "false")
+	logSink, err := openAppendDevLogSink(devLogPath)
+	if err != nil {
+		return err
+	}
+	defer logSink.Close()
+
+	var streams sync.WaitGroup
+	results := make(chan processResult, 1)
+	process, err := a.startComposeStream(
+		"logs",
+		compose,
+		env,
+		composeLogsArgs(compose),
+		func(input io.Reader, r renderer, sink *devLogSink, stream string, wg *sync.WaitGroup) {
+			streamLogOutputWithQuery(input, r, sink, stream, query, wg)
+		},
+		logSink,
+		&streams,
+		results,
+	)
+	if err != nil {
+		return err
+	}
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(signals)
+
+	var first processResult
+	interrupted := false
+	select {
+	case sig := <-signals:
+		interrupted = true
+		logSink.Write("sealion", "lifecycle", "cli", "detached from dev logs")
+		stopProcesses([]runningProcess{process}, sig)
+	case first = <-results:
+	}
+
+	if interrupted {
+		waitForProcesses(1, []runningProcess{process}, results, 5*time.Second)
+		streams.Wait()
+		r := newRenderer(a.stdout)
+		r.Blank()
+		r.Rows(outputRow{"logs", "detached"})
+		return nil
+	}
+	streams.Wait()
+	if first.err != nil {
+		return fmt.Errorf("Docker Compose %s failed: %w", first.name, first.err)
+	}
+	return nil
+}
+
 func entryTimestamp(entry structuredLogEntry) time.Time {
 	timestamp, err := time.Parse(time.RFC3339Nano, entry.Time)
 	if err != nil {
@@ -988,22 +1208,24 @@ func parseLogQuery(args []string) (logQuery, error) {
 	query := logQuery{limit: 80}
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
+		case "follow":
+			query.follow = true
 		case "service":
 			i++
 			if i >= len(args) || args[i] == "" {
-				return query, errors.New("usage: sealion logs [service <name>] [containing <text>] [limit <count>] [json]")
+				return query, errors.New("usage: sealion logs [follow] [service <name>] [containing <text>] [limit <count>] [json]")
 			}
 			query.service = args[i]
 		case "containing":
 			i++
 			if i >= len(args) || args[i] == "" {
-				return query, errors.New("usage: sealion logs [service <name>] [containing <text>] [limit <count>] [json]")
+				return query, errors.New("usage: sealion logs [follow] [service <name>] [containing <text>] [limit <count>] [json]")
 			}
 			query.contains = args[i]
 		case "limit":
 			i++
 			if i >= len(args) {
-				return query, errors.New("usage: sealion logs [service <name>] [containing <text>] [limit <count>] [json]")
+				return query, errors.New("usage: sealion logs [follow] [service <name>] [containing <text>] [limit <count>] [json]")
 			}
 			limit, err := strconv.Atoi(args[i])
 			if err != nil || limit < 1 {
@@ -1050,17 +1272,22 @@ func readStructuredLogEntries(path string) ([]structuredLogEntry, error) {
 
 func filterLogEntries(entries []structuredLogEntry, query logQuery) []structuredLogEntry {
 	filtered := make([]structuredLogEntry, 0, len(entries))
-	contains := strings.ToLower(query.contains)
 	for _, entry := range entries {
-		if query.service != "" && entry.Service != query.service {
-			continue
+		if logEntryMatchesQuery(entry, query) {
+			filtered = append(filtered, entry)
 		}
-		if contains != "" && !strings.Contains(strings.ToLower(entry.Message), contains) {
-			continue
-		}
-		filtered = append(filtered, entry)
 	}
 	return filtered
+}
+
+func logEntryMatchesQuery(entry structuredLogEntry, query logQuery) bool {
+	if query.service != "" && entry.Service != query.service {
+		return false
+	}
+	if query.contains != "" && !strings.Contains(strings.ToLower(entry.Message), strings.ToLower(query.contains)) {
+		return false
+	}
+	return true
 }
 
 func limitLogEntries(entries []structuredLogEntry, limit int) []structuredLogEntry {

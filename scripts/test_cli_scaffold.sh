@@ -11,6 +11,8 @@ export SEALION_HOME="$repo_root"
 grep -q "sealion help" "$tmp_dir/help.out"
 grep -q "sealion upgrade" "$tmp_dir/help.out"
 grep -q "sealion run dev" "$tmp_dir/help.out"
+grep -q "sealion stop dev" "$tmp_dir/help.out"
+grep -q "sealion logs follow" "$tmp_dir/help.out"
 grep -q "sealion logs service backend" "$tmp_dir/help.out"
 ! grep -q "sealion format" "$tmp_dir/help.out"
 
@@ -137,6 +139,18 @@ if [ "${1:-}" = "compose" ] && [ "${2:-}" = "logs" ] && [ "${3:-}" = "--help" ];
   exit 0
 fi
 
+if [ "${1:-}" = "compose" ] && [ "${2:-}" = "config" ] && [ "${3:-}" = "--services" ]; then
+  printf 'frontend\nbackend\ndb\n'
+  exit 0
+fi
+
+if [ "${1:-}" = "compose" ] && [ "${2:-}" = "ps" ] && [ "${3:-}" = "--format" ] && [ "${4:-}" = "json" ]; then
+  printf '{"Service":"frontend","State":"running","Health":"healthy"}\n'
+  printf '{"Service":"backend","State":"running","Health":"healthy"}\n'
+  printf '{"Service":"db","State":"running","Health":"healthy"}\n'
+  exit 0
+fi
+
 if [ "${1:-}" = "compose" ] && [ "${2:-}" = "up" ]; then
   printf '%s\n' "${SEALION_HTTP_PORT:-}" > "$FAKE_DOCKER_PORT_FILE"
   printf '%s\n' "$*" > "$FAKE_DOCKER_ARGS_FILE"
@@ -147,6 +161,10 @@ if [ "${1:-}" = "compose" ] && [ "${2:-}" = "logs" ]; then
   printf '%s\n' "$*" >> "$FAKE_DOCKER_ARGS_FILE"
   printf 'backend-1  | GET /health\n'
   printf 'frontend-1 | listening on :8080\n'
+  if [ "${FAKE_DOCKER_STREAM_LONG:-}" = "1" ]; then
+    trap 'exit 0' INT TERM
+    while true; do sleep 1; done
+  fi
   sleep 0.2
   exit 0
 fi
@@ -155,6 +173,10 @@ if [ "${1:-}" = "compose" ] && [ "${2:-}" = "watch" ]; then
   printf '%s\n' "$*" >> "$FAKE_DOCKER_ARGS_FILE"
   printf 'Watch enabled\n'
   printf 'rebuilding backend\n'
+  if [ "${FAKE_DOCKER_STREAM_LONG:-}" = "1" ]; then
+    trap 'exit 0' INT TERM
+    while true; do sleep 1; done
+  fi
   exit 0
 fi
 
@@ -215,6 +237,14 @@ PY
   grep -q -- "--quiet-pull" "$args_file"
   grep -q "compose logs -f --tail 80 --no-color" "$args_file"
   grep -q "compose watch --no-up --quiet" "$args_file"
+  ! grep -q "compose down" "$args_file"
+  PATH="$fake_bin:$PATH" FAKE_DOCKER_ARGS_FILE="$args_file" "$repo_root/bin/sealion" stop dev > "$tmp_dir/stop-dev.out"
+  grep -q "Sealion stop dev" "$tmp_dir/stop-dev.out"
+  grep -Eq "^dev[[:space:]]+stopped" "$tmp_dir/stop-dev.out"
+  grep -q "compose down --remove-orphans" "$args_file"
+  PATH="$fake_bin:$PATH" FAKE_DOCKER_ARGS_FILE="$args_file" "$repo_root/bin/sealion" logs follow service backend > "$tmp_dir/logs-follow.out"
+  grep -Eq "^[0-9]{2}:[0-9]{2}:[0-9]{2}[[:space:]]+backend[[:space:]]+GET /health" "$tmp_dir/logs-follow.out"
+  ! grep -q "frontend" "$tmp_dir/logs-follow.out"
   selected_port="$(cat "$port_file")"
   if [ "$selected_port" = "8080" ]; then
     printf 'sealion run dev should not select occupied port 8080\n' >&2
@@ -226,6 +256,23 @@ PY
     exit 1
   fi
   grep -q "port 8080 is already in use" "$tmp_dir/explicit-port.err"
+
+  : > "$args_file"
+  PATH="$fake_bin:$PATH" FAKE_DOCKER_STREAM_LONG=1 FAKE_DOCKER_PORT_FILE="$port_file" FAKE_DOCKER_ARGS_FILE="$args_file" "$repo_root/bin/sealion" run dev > "$tmp_dir/run-dev-detach.out" &
+  run_dev_pid="$!"
+  for _ in $(seq 1 50); do
+    if grep -q "GET /health" "$tmp_dir/run-dev-detach.out" 2>/dev/null; then
+      break
+    fi
+    sleep 0.1
+  done
+  kill -INT "$run_dev_pid"
+  wait "$run_dev_pid"
+  grep -Eq "^logs[[:space:]]+detached" "$tmp_dir/run-dev-detach.out"
+  grep -Eq "^dev[[:space:]]+running" "$tmp_dir/run-dev-detach.out"
+  grep -Eq "^follow[[:space:]]+sealion logs follow" "$tmp_dir/run-dev-detach.out"
+  grep -Eq "^stop[[:space:]]+sealion stop dev" "$tmp_dir/run-dev-detach.out"
+  ! grep -q "compose down" "$args_file"
 
   kill "$listener_pid" >/dev/null 2>&1 || true
 fi

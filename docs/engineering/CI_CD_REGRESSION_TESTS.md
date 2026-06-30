@@ -149,10 +149,16 @@ Future checks:
   Compose starts containers, without leaking progress control text into
   captured output, and without treating `NO_COLOR` as a request to disable
   terminal animation;
+- `Ctrl+C` during `sealion run dev` detaches from live logs without running
+  `docker compose down`;
+- `sealion stop dev` is the explicit teardown path, runs `docker compose down`,
+  and shows TTY-only per-container shutdown animation;
 - CLI success, error, version, upgrade, and dev-stack output use the shared
   aligned renderer instead of scattered raw prints;
 - `sealion run dev` streams frontend, backend, database, and watch output
   through timestamped service-tagged rows after the stack is ready;
+- `sealion logs follow` reattaches to live container logs and preserves
+  timestamped, service-tagged rendering;
 - `sealion run dev` writes `.sealion/log/dev.jsonl`, and `sealion logs` can
   query it by service, text, limit, and JSON output;
 - generated apps contain no seeded demo account or demo credentials;
