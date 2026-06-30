@@ -22,8 +22,12 @@ test -f "$tmp_dir/demo/src/main.c"
 test -f "$tmp_dir/demo/migrations/001_auth.sql"
 
 grep -q 'name = "demo"' "$tmp_dir/demo/sealion.toml"
+grep -q "default_port = 8080" "$tmp_dir/demo/sealion.toml"
+! grep -q 'url = "http://localhost:8080"' "$tmp_dir/demo/sealion.toml"
 grep -q 'name: demo' "$tmp_dir/demo/docker-compose.yml"
+grep -q 'PUBLIC_URL: "http://localhost:${SEALION_HTTP_PORT:-8080}"' "$tmp_dir/demo/docker-compose.yml"
 grep -q 'admin@sealion.local' "$tmp_dir/demo/src/main.c"
+grep -q "listening inside container" "$tmp_dir/demo/src/main.c"
 ! grep -R "__PROJECT_" "$tmp_dir/demo" >/dev/null
 
 mkdir "$tmp_dir/init-app"

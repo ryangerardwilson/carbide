@@ -21,6 +21,7 @@ required_files=(
   "docs/site/repo-structure.html"
   "docs/site/assets/styles.css"
   "scripts/test_cli_scaffold.sh"
+  "scripts/test_starter_docker_flow.sh"
   "templates/default/Dockerfile"
   "templates/default/docker-compose.yml"
   "templates/default/sealion.toml"
@@ -73,6 +74,11 @@ grep -q "generated Docker Compose setup" README.md
 grep -q "Postgres-backed queues" README.md
 grep -q "sealion new" README.md
 grep -q "sealion run dev" README.md
+grep -q "default_port = 8080" templates/default/sealion.toml
+! grep -q 'url = "http://localhost:8080"' templates/default/sealion.toml
+grep -q 'PUBLIC_URL: "http://localhost:${SEALION_HTTP_PORT:-8080}"' templates/default/docker-compose.yml
+grep -q "listening inside container" templates/default/src/main.c
+grep -q "open %s" templates/default/src/main.c
 
 grep -q "$domain" docs/site/index.html
 grep -q "Component styling" docs/site/index.html

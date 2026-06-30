@@ -614,8 +614,10 @@ static void handle_client(int client) {
 
 int main(void) {
   const char *port_text = getenv("APP_PORT");
+  const char *public_url = getenv("PUBLIC_URL");
   int port = port_text ? atoi(port_text) : 8080;
   if (port <= 0) port = 8080;
+  if (public_url && public_url[0] == '\0') public_url = NULL;
 
   connect_db();
 
@@ -640,7 +642,12 @@ int main(void) {
     return 1;
   }
 
-  printf("%s running on http://localhost:%d\n", APP_NAME, port);
+  if (public_url) {
+    printf("%s listening inside container on :%d\n", APP_NAME, port);
+    printf("open %s\n", public_url);
+  } else {
+    printf("%s listening on http://localhost:%d\n", APP_NAME, port);
+  }
   fflush(stdout);
 
   for (;;) {
@@ -653,4 +660,3 @@ int main(void) {
     handle_client(client);
   }
 }
-

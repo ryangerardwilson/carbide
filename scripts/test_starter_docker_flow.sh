@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
+tmp_dir="$(mktemp -d)"
+port=""
+
+cleanup() {
+  if [ -n "$port" ] && [ -d "$tmp_dir/demo" ]; then
+    (
+      cd "$tmp_dir/demo"
+      SEALION_HTTP_PORT="$port" docker compose down -v --remove-orphans >/dev/null 2>&1 || true
+    )
+  fi
+  rm -rf "$tmp_dir"
+}
+trap cleanup EXIT
+
+command -v docker >/dev/null 2>&1 || {
+  printf 'docker is required for starter docker flow tests\n' >&2
+  exit 1
+}
+docker compose version >/dev/null
+command -v curl >/dev/null 2>&1 || {
+  printf 'curl is required for starter docker flow tests\n' >&2
+  exit 1
+}
+command -v python3 >/dev/null 2>&1 || {
+  printf 'python3 is required for starter docker flow tests\n' >&2
+  exit 1
+}
+
+port="$(
+  python3 - <<'PY'
+import socket
+import sys
+
+for port in range(19080, 19140):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.bind(("127.0.0.1", port))
+    except OSError:
+        sock.close()
+        continue
+    sock.close()
+    print(port)
+    sys.exit(0)
+
+sys.exit(1)
+PY
+)"
+
+export SEALION_HOME="$repo_root"
+cd "$tmp_dir"
+"$repo_root/bin/sealion" new demo >/dev/null
+
+cd "$tmp_dir/demo"
+SEALION_HTTP_PORT="$port" docker compose up -d --build
+
+for _ in $(seq 1 60); do
+  if curl -fsS "http://localhost:$port/health" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
+curl -fsS "http://localhost:$port/health" >/dev/null
+docker compose logs app > "$tmp_dir/app.log"
+grep -q "listening inside container on :8080" "$tmp_dir/app.log"
+grep -q "open http://localhost:$port" "$tmp_dir/app.log"
+
+curl \
+  -sS \
+  -D "$tmp_dir/login.headers" \
+  -o "$tmp_dir/login.body" \
+  -c "$tmp_dir/cookies" \
+  -d "email=admin%40sealion.local&password=password" \
+  "http://localhost:$port/login"
+
+grep -q "303 See Other" "$tmp_dir/login.headers"
+grep -q "Location: /dashboard" "$tmp_dir/login.headers"
+grep -q "Set-Cookie: sealion_session=" "$tmp_dir/login.headers"
+grep -q "sealion_session" "$tmp_dir/cookies"
+
+curl -fsS -b "$tmp_dir/cookies" "http://localhost:$port/dashboard" > "$tmp_dir/dashboard.html"
+grep -q "<h1>Dashboard</h1>" "$tmp_dir/dashboard.html"
+grep -q "You are logged in as" "$tmp_dir/dashboard.html"
+
+printf 'starter docker flow ok\n'

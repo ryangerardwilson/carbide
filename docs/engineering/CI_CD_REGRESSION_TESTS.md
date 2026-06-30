@@ -12,6 +12,7 @@ Runs on every pull request:
 - repository contract checks;
 - shell syntax checks for repo-owned scripts;
 - documentation site contract checks;
+- generated Docker stack smoke test with Postgres-backed login redirect;
 - future C format, compile, unit, sanitizer, and integration checks.
 
 ### Main Branch Gate
@@ -109,6 +110,8 @@ Future checks:
 - app container builds from a clean checkout;
 - app and Postgres run as separate services;
 - health checks converge;
+- generated app logs the external browser URL selected for the host port;
+- demo login redirects to the protected dashboard with a persisted session;
 - restart behavior preserves Postgres data;
 - environment schema rejects missing required values.
 
@@ -177,7 +180,8 @@ The first implemented CI job is intentionally small:
 bash -n scripts/*.sh bin/sealion install.sh
 bash scripts/check_repo_contract.sh
 bash scripts/test_cli_scaffold.sh
+bash scripts/test_starter_docker_flow.sh
 ```
 
-This protects the repo and documentation deployment while the framework code is
-still being designed.
+This protects the repo, generated starter, Docker dev topology, and
+documentation deployment while the framework code is still being designed.

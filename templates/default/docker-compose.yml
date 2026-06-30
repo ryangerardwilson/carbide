@@ -6,6 +6,7 @@ services:
       context: .
     environment:
       APP_PORT: "8080"
+      PUBLIC_URL: "http://localhost:${SEALION_HTTP_PORT:-8080}"
       DATABASE_URL: postgres://sealion:sealion@db:5432/sealion
     ports:
       - "${SEALION_HTTP_PORT:-8080}:8080"

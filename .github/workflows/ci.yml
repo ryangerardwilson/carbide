@@ -30,3 +30,6 @@ jobs:
 
       - name: Test CLI scaffold
         run: bash scripts/test_cli_scaffold.sh
+
+      - name: Test generated Docker flow
+        run: bash scripts/test_starter_docker_flow.sh

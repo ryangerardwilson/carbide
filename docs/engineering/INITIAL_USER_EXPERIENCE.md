@@ -16,7 +16,7 @@ sealion run dev
 Then open:
 
 ```text
-http://localhost:8080
+the app URL printed by sealion run dev
 ```
 
 If port 8080 is already in use, `sealion run dev` selects another local port.
@@ -25,6 +25,9 @@ To choose one explicitly:
 ```sh
 SEALION_HTTP_PORT=18080 sealion run dev
 ```
+
+The app listens on port 8080 inside the container. The browser URL is the host
+URL printed by the CLI and app logs.
 
 The generated app includes:
 

@@ -24,6 +24,7 @@
           <li>Repository contract checks.</li>
           <li>Shell syntax checks for repo-owned scripts.</li>
           <li>Documentation site contract checks.</li>
+          <li>Generated Docker stack smoke test with Postgres-backed login redirect.</li>
           <li>Future C format, compile, unit, sanitizer, and integration checks.</li>
         </ul>
         <h3>Main Branch Gate</h3>
@@ -43,7 +44,7 @@
           <li><strong>Unit tests:</strong> protects router, request, response, middleware, config, and logging behavior.</li>
           <li><strong>Sanitizers:</strong> exposes memory ownership, undefined behavior, and leaks.</li>
           <li><strong>Postgres integration:</strong> tests readiness, pooling, migrations, transactions, and parameterized queries.</li>
-          <li><strong>Container and IaC:</strong> validates Compose generation, service separation, health checks, and environment schemas.</li>
+          <li><strong>Container and IaC:</strong> validates Compose generation, service separation, health checks, external URL logs, auth redirects, and environment schemas.</li>
           <li><strong>CLI golden tests:</strong> protects scaffolding, deterministic generated files, and actionable command errors.</li>
           <li><strong>Security regression:</strong> protects cookies, CSRF, upload limits, SQL parameterization, and secret handling.</li>
           <li><strong>Documentation regression:</strong> keeps examples, links, and published docs aligned with framework behavior.</li>
@@ -54,7 +55,8 @@
         <h2>Implemented Now</h2>
         <pre><code>bash -n scripts/*.sh bin/sealion install.sh
 bash scripts/check_repo_contract.sh
-bash scripts/test_cli_scaffold.sh</code></pre>
+bash scripts/test_cli_scaffold.sh
+bash scripts/test_starter_docker_flow.sh</code></pre>
         <p>The source plan is maintained in <code>docs/engineering/CI_CD_REGRESSION_TESTS.md</code>.</p>
       </section>
     </main>
