@@ -79,8 +79,28 @@ static void respond(int client, const char *status, const char *headers, const c
 
 static void redirect_to(int client, const char *location, const char *extra_headers) {
   char headers[1024];
-  snprintf(headers, sizeof(headers), "Location: %s\r\n%s", location, extra_headers ? extra_headers : "");
-  respond(client, "303 See Other", headers, "<!doctype html><title>Redirect</title><p>Redirecting.</p>");
+  char body[1024];
+  snprintf(
+    headers,
+    sizeof(headers),
+    "Location: %s\r\n"
+    "Cache-Control: no-store\r\n"
+    "%s",
+    location,
+    extra_headers ? extra_headers : ""
+  );
+  snprintf(
+    body,
+    sizeof(body),
+    "<!doctype html><title>Redirecting</title>"
+    "<meta http-equiv=\"refresh\" content=\"0;url=%s\">"
+    "<script>window.location.replace('%s');</script>"
+    "<p><a href=\"%s\">Continue</a></p>",
+    location,
+    location,
+    location
+  );
+  respond(client, "303 See Other", headers, body);
 }
 
 static bool append_bytes(char *out, size_t out_len, size_t *used, const char *data, size_t data_len) {
@@ -227,7 +247,7 @@ static bool render_page(
 ) {
   char view_path[256];
   char content[MAX_VIEW];
-  snprintf(view_path, sizeof(view_path), "views/%s.html", view_name);
+  snprintf(view_path, sizeof(view_path), "view/%s.html", view_name);
   if (!render_view_file(view_path, vars, var_count, content, sizeof(content))) {
     return false;
   }
@@ -237,7 +257,7 @@ static bool render_page(
     {"app_name", APP_NAME},
     {"content", content},
   };
-  return render_view_file("views/layout.html", layout_vars, 3, out, out_len);
+  return render_view_file("view/layout.html", layout_vars, 3, out, out_len);
 }
 
 static void respond_view(

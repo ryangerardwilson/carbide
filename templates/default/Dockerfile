@@ -10,7 +10,7 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY src ./src
-COPY views ./views
+COPY view ./view
 
 RUN gcc -std=c11 -Wall -Wextra -Wpedantic -O2 \
   -I/usr/include/postgresql \

@@ -60,7 +60,7 @@ grep -q "develop:" "$tmp_dir/compose.config"
 grep -q "watch:" "$tmp_dir/compose.config"
 grep -q "action: rebuild" "$tmp_dir/compose.config"
 grep -q "/src" "$tmp_dir/compose.config"
-grep -q "/views" "$tmp_dir/compose.config"
+grep -q "/view" "$tmp_dir/compose.config"
 grep -q "/Dockerfile" "$tmp_dir/compose.config"
 SEALION_HTTP_PORT="$port" docker compose up -d --build
 
@@ -90,8 +90,11 @@ curl \
 
 grep -q "303 See Other" "$tmp_dir/login.headers"
 grep -q "Location: /dashboard" "$tmp_dir/login.headers"
+grep -q "Cache-Control: no-store" "$tmp_dir/login.headers"
 grep -q "Set-Cookie: sealion_session=" "$tmp_dir/login.headers"
 grep -q "sealion_session" "$tmp_dir/cookies"
+grep -q "window.location.replace('/dashboard')" "$tmp_dir/login.body"
+grep -q 'href="/dashboard"' "$tmp_dir/login.body"
 
 curl -fsS -b "$tmp_dir/cookies" "http://localhost:$port/dashboard" > "$tmp_dir/dashboard.html"
 grep -q "<h1>Dashboard</h1>" "$tmp_dir/dashboard.html"

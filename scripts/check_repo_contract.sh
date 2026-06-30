@@ -26,12 +26,12 @@ required_files=(
   "templates/default/docker-compose.yml"
   "templates/default/sealion.toml"
   "templates/default/src/main.c"
-  "templates/default/views/layout.html"
-  "templates/default/views/home.html"
-  "templates/default/views/register.html"
-  "templates/default/views/login.html"
-  "templates/default/views/dashboard.html"
-  "templates/default/views/not_found.html"
+  "templates/default/view/layout.html"
+  "templates/default/view/home.html"
+  "templates/default/view/register.html"
+  "templates/default/view/login.html"
+  "templates/default/view/dashboard.html"
+  "templates/default/view/not_found.html"
   "templates/default/migrations/001_auth.sql"
 )
 
@@ -49,7 +49,7 @@ required_dirs=(
   "infra/schemas"
   "templates/default"
   "templates/default/src"
-  "templates/default/views"
+  "templates/default/view"
   "templates/default/migrations"
 )
 
@@ -88,15 +88,16 @@ grep -q "develop:" templates/default/docker-compose.yml
 grep -q "watch:" templates/default/docker-compose.yml
 grep -q "action: rebuild" templates/default/docker-compose.yml
 grep -q "path: ./src" templates/default/docker-compose.yml
-grep -q "path: ./views" templates/default/docker-compose.yml
+grep -q "path: ./view" templates/default/docker-compose.yml
 grep -q "path: ./Dockerfile" templates/default/docker-compose.yml
-grep -q "COPY views ./views" templates/default/Dockerfile
-grep -q "{{ title }}" templates/default/views/layout.html
-grep -q "{!! content !!}" templates/default/views/layout.html
-grep -q "{{ user_email }}" templates/default/views/dashboard.html
+grep -q "COPY view ./view" templates/default/Dockerfile
+grep -q "{{ title }}" templates/default/view/layout.html
+grep -q "{!! content !!}" templates/default/view/layout.html
+grep -q "{{ user_email }}" templates/default/view/dashboard.html
 grep -q "render_template_text" templates/default/src/main.c
 grep -q "respond_view" templates/default/src/main.c
 ! grep -q "<style>" templates/default/src/main.c
+! grep -R "views/" templates/default README.md docs >/dev/null
 grep -q "listening inside container" templates/default/src/main.c
 grep -q "open %s" templates/default/src/main.c
 grep -q "compose_supports_watch" bin/sealion

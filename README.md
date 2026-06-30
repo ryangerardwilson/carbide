@@ -132,10 +132,10 @@ automatically selects another local port when 8080 is already in use. Set
 installed CLI when a newer GitHub commit is available.
 
 When Docker Compose supports file watch, `sealion run dev` starts the stack with
-Compose watch enabled. Edits under `src/`, `views/`, or to `Dockerfile` rebuild
+Compose watch enabled. Edits under `src/`, `view/`, or to `Dockerfile` rebuild
 and replace the app container, which matches the current C compile model.
 
-Generated apps keep page markup in `views/*.html`. The starter renderer supports
+Generated apps keep page markup in `view/*.html`. The starter renderer supports
 escaped variables with `{{ name }}` and trusted raw slots with `{!! content !!}`
 so developers can edit HTML directly instead of writing C string literals.
 
@@ -173,7 +173,7 @@ so developers can edit HTML directly instead of writing C string literals.
 
 ### Phase 3: Views And Assets
 
-- Start with interpreted `views/*.html` templates for the generated app.
+- Start with interpreted `view/*.html` templates for the generated app.
 - Support escaped variables with `{{ name }}` and trusted raw slots with
   `{!! content !!}`.
 - Define the component API and Tailwind-like utility style grammar.

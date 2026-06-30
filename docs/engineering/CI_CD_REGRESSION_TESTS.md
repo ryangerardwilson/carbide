@@ -114,7 +114,7 @@ Future checks:
 - demo login redirects to the protected dashboard with a persisted session;
 - generated Compose config declares file-watch rebuilds for app source and the
   view templates and Dockerfile;
-- generated apps include editable `views/*.html` templates instead of embedding
+- generated apps include editable `view/*.html` templates instead of embedding
   page markup in C string literals;
 - restart behavior preserves Postgres data;
 - environment schema rejects missing required values.

@@ -26,8 +26,8 @@ sealion run dev</code></pre>
         <p>Open the app URL printed by <code>sealion run dev</code>.</p>
         <p>If port 8080 is already in use, <code>sealion run dev</code> selects another local port. To choose one explicitly, run <code>SEALION_HTTP_PORT=18080 sealion run dev</code>.</p>
         <p>The app listens on port 8080 inside the container. Your browser should use the host URL printed by the CLI and app logs.</p>
-        <p>When Docker Compose supports file watch, <code>sealion run dev</code> starts the stack with Compose watch enabled. Edits under <code>src/</code>, <code>views/</code>, or to <code>Dockerfile</code> rebuild and replace the app container.</p>
-        <p>Generated apps keep page markup in <code>views/*.html</code>. The starter renderer supports escaped variables with <code>{{ name }}</code> and trusted raw slots with <code>{!! content !!}</code>.</p>
+        <p>When Docker Compose supports file watch, <code>sealion run dev</code> starts the stack with Compose watch enabled. Edits under <code>src/</code>, <code>view/</code>, or to <code>Dockerfile</code> rebuild and replace the app container.</p>
+        <p>Generated apps keep page markup in <code>view/*.html</code>. The starter renderer supports escaped variables with <code>{{ name }}</code> and trusted raw slots with <code>{!! content !!}</code>.</p>
       </section>
 
       <section>
@@ -37,7 +37,7 @@ sealion run dev</code></pre>
           <li>Postgres service container.</li>
           <li>Checked-in Docker Compose infrastructure.</li>
           <li>Register, login, logout, and dashboard routes.</li>
-          <li>Editable HTML views in <code>views/</code>.</li>
+          <li>Editable HTML view files in <code>view/</code>.</li>
           <li>Postgres-backed users and sessions.</li>
           <li>Seeded demo account: <code>admin@sealion.local</code> / <code>password</code>.</li>
         </ul>
