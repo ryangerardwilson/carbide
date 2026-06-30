@@ -25,7 +25,7 @@
           <li>Shell syntax checks for repo-owned scripts.</li>
           <li>Documentation site contract checks.</li>
           <li>Generated Docker stack smoke test with Postgres-backed login redirect.</li>
-          <li>Future C format, compile, unit, sanitizer, and integration checks.</li>
+          <li>Future C compile, unit, sanitizer, and integration checks.</li>
         </ul>
         <h3>Main Branch Gate</h3>
         <ul>
@@ -47,7 +47,6 @@
           <li><strong>Container and IaC:</strong> validates Compose generation, frontend/backend/database separation, health checks, file-watch rebuilds for frontend, backend, model, controller, and Dockerfile changes, external URL logs, JSON auth, and environment schemas.</li>
           <li><strong>Frontend:</strong> protects the Bun/React/Tailwind container, same-origin API proxy, lockfile install path, and dashboard app shell.</li>
           <li><strong>Backend API:</strong> protects JSON auth responses, session cookies, <code>/api/me</code>, and Postgres-backed dashboard data.</li>
-          <li><strong>Formatter:</strong> verifies <code>sealion format</code> rewrites compact passover arrays and is idempotent.</li>
           <li><strong>CLI golden tests:</strong> protects scaffolding, deterministic generated files, and actionable command errors.</li>
           <li><strong>Security regression:</strong> protects cookies, CSRF, upload limits, SQL parameterization, and secret handling.</li>
           <li><strong>Documentation regression:</strong> keeps examples, links, and published docs aligned with framework behavior.</li>

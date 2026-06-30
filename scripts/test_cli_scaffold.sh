@@ -10,8 +10,14 @@ export SEALION_HOME="$repo_root"
 "$repo_root/bin/sealion" help > "$tmp_dir/help.out"
 grep -q "sealion help" "$tmp_dir/help.out"
 grep -q "sealion upgrade" "$tmp_dir/help.out"
-grep -q "sealion format" "$tmp_dir/help.out"
 grep -q "sealion run dev" "$tmp_dir/help.out"
+! grep -q "sealion format" "$tmp_dir/help.out"
+
+if "$repo_root/bin/sealion" format >/tmp/sealion-format.out 2>/tmp/sealion-format.err; then
+  printf 'sealion format should not exist\n' >&2
+  exit 1
+fi
+grep -q "unknown command: format" /tmp/sealion-format.err
 
 cd "$tmp_dir"
 "$repo_root/bin/sealion" new demo
@@ -79,33 +85,6 @@ grep -q "Containerized full stack development" "$tmp_dir/demo/frontend/src/main.
 ! find "$tmp_dir/demo" -path '*/ui_components/*' -print -quit | grep -q .
 ! grep -R "views/" "$tmp_dir/demo" >/dev/null
 ! grep -R "__PROJECT_" "$tmp_dir/demo" >/dev/null
-
-(
-  cd "$tmp_dir/demo"
-  "$repo_root/bin/sealion" format > "$tmp_dir/format-empty.out"
-)
-grep -q "formatted 0 file(s)" "$tmp_dir/format-empty.out"
-
-mkdir -p "$tmp_dir/demo/view"
-printf '<s-l2.layout :passover=[title,app_name]>\n  <s-l2.auth-form :passover=[auth_title,auth_action,email_value,password_autocomplete,submit_label,error,auth_footer] />\n</s-l2.layout>\n' > "$tmp_dir/demo/view/login.skin"
-"$repo_root/bin/sealion" format "$tmp_dir/demo/view/login.skin" > "$tmp_dir/format.out"
-grep -q "formatted 1 file(s)" "$tmp_dir/format.out"
-grep -Fxq '<s-l2.layout :passover=[' "$tmp_dir/demo/view/login.skin"
-grep -Fxq '  title,' "$tmp_dir/demo/view/login.skin"
-grep -Fxq '  <s-l2.auth-form :passover=[' "$tmp_dir/demo/view/login.skin"
-grep -Fxq '    auth_footer' "$tmp_dir/demo/view/login.skin"
-"$repo_root/bin/sealion" format "$tmp_dir/demo/view/login.skin" > "$tmp_dir/format-idempotent.out"
-grep -q "formatted 0 file(s)" "$tmp_dir/format-idempotent.out"
-
-printf '<s-l1.badge :passover=[label,tone] />\n' > "$tmp_dir/loose.scale"
-"$repo_root/bin/sealion" format "$tmp_dir/loose.scale" > "$tmp_dir/format-scale.out"
-grep -q "formatted 1 file(s)" "$tmp_dir/format-scale.out"
-grep -Fxq '<s-l1.badge :passover=[' "$tmp_dir/loose.scale"
-grep -Fxq '  label,' "$tmp_dir/loose.scale"
-grep -Fxq '  tone' "$tmp_dir/loose.scale"
-grep -Fxq '] />' "$tmp_dir/loose.scale"
-"$repo_root/bin/sealion" format "$tmp_dir/loose.scale" > "$tmp_dir/format-scale-idempotent.out"
-grep -q "formatted 0 file(s)" "$tmp_dir/format-scale-idempotent.out"
 
 mkdir "$tmp_dir/init-app"
 cd "$tmp_dir/init-app"

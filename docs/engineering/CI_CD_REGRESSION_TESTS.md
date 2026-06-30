@@ -13,7 +13,7 @@ Runs on every pull request:
 - shell syntax checks for repo-owned scripts;
 - documentation site contract checks;
 - generated Docker stack smoke test with Postgres-backed JSON login;
-- future C format, compile, unit, sanitizer, and integration checks.
+- future C compile, unit, sanitizer, and integration checks.
 
 ### Main Branch Gate
 
@@ -123,8 +123,6 @@ Future checks:
 - Bun frontend proxies `/api` and `/health` to the backend;
 - `/api/me` reports anonymous and authenticated state correctly;
 - `/dashboard` is served by the React app shell;
-- `sealion format` rewrites compact passover arrays and is idempotent when
-  optional `.skin` or `.scale` files exist;
 - restart behavior preserves Postgres data;
 - environment schema rejects missing required values.
 
@@ -169,18 +167,6 @@ Future checks:
 - generated command snippets are paste-ready;
 - links resolve inside the docs site;
 - release docs are versioned.
-
-### Optional Server-Rendered UI Regression
-
-Purpose: preserve the earlier `.skin` and `.scale` work if Sealion later adds
-an optional server-rendered UI mode.
-
-Future checks:
-
-- `.skin` and `.scale` files format idempotently;
-- component calls obey their documented hierarchy;
-- unknown template directives fail with actionable errors;
-- server-rendered examples compile without becoming the default starter path.
 
 ## Current Implemented Checks
 

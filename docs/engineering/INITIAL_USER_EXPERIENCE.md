@@ -62,11 +62,6 @@ Prints the command reference.
 
 Upgrades the installed CLI when a newer GitHub commit is available.
 
-### `sealion format`
-
-Formats `.skin` and `.scale` files when a project contains them. In the default
-Bun/React/Tailwind starter, it is a harmless no-op.
-
 ### `sealion new <project-name>`
 
 Creates a new project directory from the default starter template. It fails if

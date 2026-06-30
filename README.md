@@ -138,9 +138,8 @@ login, logout, and dashboard already wired. It prefers
 is already in use. Set `SEALION_HTTP_PORT=<port>` to choose the host port
 explicitly.
 
-`sealion help` prints the command reference. `sealion format` formats `.skin`
-and `.scale` files. `sealion upgrade` upgrades the installed CLI when a newer
-GitHub commit is available.
+`sealion help` prints the command reference. `sealion upgrade` upgrades the
+installed CLI when a newer GitHub commit is available.
 
 When Docker Compose supports file watch, `sealion run dev` starts the stack with
 Compose watch enabled. Edits under `frontend/src/`, `src/`, `model/`,
@@ -151,9 +150,6 @@ Generated apps use a React-plus-C shape. `frontend/` owns the Bun server,
 Tailwind build, browser UI, and same-origin `/api` calls. `model/` owns
 Postgres state, `controller/` owns request flow and JSON responses, and `src/`
 owns the C HTTP/API server.
-`sealion format` remains available for projects that opt into `.skin` and
-`.scale` files later, but the default starter no longer requires a custom
-Blade-like template language.
 
 ## Roadmap
 
@@ -164,7 +160,7 @@ Blade-like template language.
   connection environment variables.
 - Define the default three-container Compose topology for local development.
 - Define the mandatory infrastructure-as-code file layout and validation rules.
-- Choose compiler, libc, build system, formatter, and test runner.
+- Choose compiler, libc, build system, and test runner.
 - Create the canonical app directory layout.
 - Define the request, response, app, and service lifecycle contracts.
 - Define the install URL, `sealion new`, `sealion init`, and `sealion run dev`
@@ -197,8 +193,6 @@ Blade-like template language.
   primitives.
 - Make Tailwind the mandatory generated styling path.
 - Add a production frontend build/serve contract after the dev loop is stable.
-- Keep `.skin`/`.scale` as an optional future server-rendered mode, not the
-  default starter path.
 
 ### Phase 4: Database Layer
 
@@ -267,4 +261,4 @@ The first milestone is a containerized app that can:
 6. shut down cleanly.
 
 That milestone proves the core loop before the project adds migrations, auth,
-templates, queues, or higher-level database features.
+queues, or higher-level database features.

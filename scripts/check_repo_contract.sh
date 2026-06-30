@@ -88,9 +88,9 @@ grep -q "Infrastructure as code" README.md
 grep -q "generated Docker Compose setup" README.md
 grep -q "Postgres-backed queues" README.md
 grep -q "sealion new" README.md
-grep -q "sealion format" README.md
 grep -q "sealion run dev" README.md
-grep -q "command_format" bin/sealion
+! grep -q "command_format" bin/sealion
+! grep -q "sealion format" bin/sealion
 grep -q "default_port = 8080" templates/default/sealion.toml
 ! grep -q 'url = "http://localhost:8080"' templates/default/sealion.toml
 grep -q "frontend:" templates/default/docker-compose.yml

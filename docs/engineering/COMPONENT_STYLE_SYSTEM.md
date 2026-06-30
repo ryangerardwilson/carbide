@@ -59,14 +59,7 @@ Future component conventions can still use L1/L2/L3 language:
 - L2: reusable patterns such as form sections or page headers;
 - L3: app-specific pages and product/domain sections.
 
-The default React starter should keep those boundaries in component structure,
-without requiring `.skin` or `.scale` files.
-
-## Optional Server Rendering
-
-The earlier `.skin` and `.scale` template work remains a possible future
-server-rendered mode. It is no longer the default path. `sealion format` remains
-available for projects that contain `.skin` and `.scale` files.
+The default React starter should keep those boundaries in component structure.
 
 ## Regression Tests
 
@@ -83,5 +76,4 @@ The frontend contract needs dedicated regression coverage:
 - frontend and backend watch paths are present in Compose;
 - generated frontend installs with `bun install --frozen-lockfile` and builds
   with `bun run build`;
-- Tailwind is present and required in the generated frontend;
-- `.skin`/`.scale` files are not required by the default starter.
+- Tailwind is present and required in the generated frontend.

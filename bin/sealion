@@ -29,8 +29,6 @@ global actions:
     print the installed version
   sealion upgrade
     upgrade the installed CLI from GitHub when a newer commit is available
-  sealion format [path...]
-    format .skin and .scale files
 
 features:
   install the CLI from GitHub
@@ -48,10 +46,6 @@ features:
   run the local development stack
   # sealion run dev
   cd demo && sealion run dev
-
-  format optional .skin and .scale files
-  # sealion format
-  sealion format
 HELP
 }
 
@@ -191,115 +185,6 @@ command_upgrade() {
   rm -f "$tmp_script"
 }
 
-command_format() {
-  command -v python3 >/dev/null 2>&1 || fail "python3 is required for sealion format"
-  if [ "$#" -eq 0 ]; then
-    [ -f "$PWD/sealion.toml" ] || fail "run this inside a Sealion project or pass paths to sealion format"
-    local paths=()
-    [ -e view ] && paths+=("view")
-    [ -e ui_components ] && paths+=("ui_components")
-    if [ "${#paths[@]}" -eq 0 ]; then
-      printf 'formatted 0 file(s)\n'
-      return
-    fi
-    set -- "${paths[@]}"
-  fi
-
-  python3 - "$@" <<'PY'
-from pathlib import Path
-import re
-import sys
-
-TAG_RE = re.compile(r"<s-([A-Za-z0-9_.-]+)([^<>]*?:passover\s*=\s*\[.*?\][^<>]*?)(/?)>", re.S)
-PASSOVER_RE = re.compile(r":passover\s*=\s*\[(.*?)\]", re.S)
-NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_-]*")
-
-
-def line_indent(text, pos):
-    line_start = text.rfind("\n", 0, pos) + 1
-    prefix = text[line_start:pos]
-    return prefix if prefix.strip() == "" else ""
-
-
-def format_tag(match, text):
-    name = match.group(1)
-    body = match.group(2).strip()
-    self_closing = match.group(3) == "/" or body.endswith("/")
-    if body.endswith("/"):
-        body = body[:-1].rstrip()
-
-    passover = PASSOVER_RE.search(body)
-    if not passover:
-        return match.group(0)
-
-    names = NAME_RE.findall(passover.group(1))
-    if not names:
-        return match.group(0)
-
-    before = body[:passover.start()].strip()
-    after = body[passover.end():].strip()
-    attrs = " ".join(part for part in (before, after) if part)
-
-    indent = line_indent(text, match.start())
-    item_indent = indent + "  "
-    first = f"<s-{name}"
-    if attrs:
-        first += f" {attrs}"
-    first += " :passover=["
-
-    lines = [first]
-    for index, item in enumerate(names):
-        comma = "," if index < len(names) - 1 else ""
-        lines.append(f"{item_indent}{item}{comma}")
-    lines.append(f"{indent}] />" if self_closing else f"{indent}]>")
-    return "\n".join(lines)
-
-
-def format_text(text):
-    out = []
-    cursor = 0
-    for match in TAG_RE.finditer(text):
-        out.append(text[cursor:match.start()])
-        out.append(format_tag(match, text))
-        cursor = match.end()
-    out.append(text[cursor:])
-    formatted = "".join(out)
-    if formatted and not formatted.endswith("\n"):
-        formatted += "\n"
-    return formatted
-
-
-def iter_files(paths):
-    seen = set()
-    for raw in paths:
-        root = Path(raw)
-        if not root.exists():
-            raise FileNotFoundError(raw)
-        candidates = root.rglob("*") if root.is_dir() else [root]
-        for path in candidates:
-            if path.is_file() and path.suffix in {".skin", ".scale"}:
-                resolved = path.resolve()
-                if resolved not in seen:
-                    seen.add(resolved)
-                    yield path
-
-
-changed = 0
-try:
-    for path in iter_files(sys.argv[1:]):
-        original = path.read_text()
-        formatted = format_text(original)
-        if formatted != original:
-            path.write_text(formatted)
-            changed += 1
-except FileNotFoundError as exc:
-    print(f"sealion: path not found: {exc}", file=sys.stderr)
-    sys.exit(1)
-
-print(f"formatted {changed} file(s)")
-PY
-}
-
 port_is_available() {
   local port="$1"
   if command -v python3 >/dev/null 2>&1; then
@@ -396,10 +281,6 @@ case "${1:-help}" in
     shift
     [ "$#" -eq 0 ] || fail "usage: sealion upgrade"
     command_upgrade
-    ;;
-  format)
-    shift
-    command_format "$@"
     ;;
   new)
     shift
