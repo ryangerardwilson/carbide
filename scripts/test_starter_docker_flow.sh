@@ -80,13 +80,27 @@ docker compose logs app > "$tmp_dir/app.log"
 grep -q "listening inside container on :8080" "$tmp_dir/app.log"
 grep -q "open http://localhost:$port" "$tmp_dir/app.log"
 
+python3 - "$port" <<'PY' &
+import socket
+import sys
+import time
+
+sock = socket.create_connection(("127.0.0.1", int(sys.argv[1])))
+time.sleep(3)
+sock.close()
+PY
+idle_pid="$!"
+sleep 0.1
+
 curl \
   -sS \
+  --max-time 5 \
   -D "$tmp_dir/login.headers" \
   -o "$tmp_dir/login.body" \
   -c "$tmp_dir/cookies" \
   -d "email=admin%40sealion.local&password=password" \
   "http://localhost:$port/login"
+wait "$idle_pid" || true
 
 grep -q "302 Found" "$tmp_dir/login.headers"
 grep -q "Location: /dashboard" "$tmp_dir/login.headers"

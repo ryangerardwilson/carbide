@@ -7,11 +7,14 @@
 #include <netinet/in.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -706,9 +709,39 @@ static bool read_request(int client, Request *req, char *buffer, size_t buffer_l
   return true;
 }
 
+static bool wait_for_client_data(int client) {
+  fd_set readfds;
+  struct timeval timeout;
+  int ready;
+
+  FD_ZERO(&readfds);
+  FD_SET(client, &readfds);
+  timeout.tv_sec = 0;
+  timeout.tv_usec = 250000;
+
+  do {
+    ready = select(client + 1, &readfds, NULL, NULL, &timeout);
+  } while (ready < 0 && errno == EINTR);
+
+  return ready > 0 && FD_ISSET(client, &readfds);
+}
+
+static void set_client_timeouts(int client) {
+  struct timeval timeout;
+  timeout.tv_sec = 2;
+  timeout.tv_usec = 0;
+  setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+  setsockopt(client, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+}
+
 static void handle_client(int client) {
   char buffer[MAX_REQUEST];
   Request req;
+  set_client_timeouts(client);
+  if (!wait_for_client_data(client)) {
+    close(client);
+    return;
+  }
   if (!read_request(client, &req, buffer, sizeof(buffer))) {
     close(client);
     return;
@@ -746,6 +779,7 @@ int main(void) {
   int port = port_text ? atoi(port_text) : 8080;
   if (port <= 0) port = 8080;
   if (public_url && public_url[0] == '\0') public_url = NULL;
+  signal(SIGPIPE, SIG_IGN);
 
   connect_db();
 
