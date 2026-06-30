@@ -10,6 +10,7 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY src ./src
+COPY views ./views
 
 RUN gcc -std=c11 -Wall -Wextra -Wpedantic -O2 \
   -I/usr/include/postgresql \
@@ -20,4 +21,3 @@ RUN gcc -std=c11 -Wall -Wextra -Wpedantic -O2 \
 EXPOSE 8080
 
 CMD ["sealion-app"]
-

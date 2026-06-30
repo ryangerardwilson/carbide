@@ -46,8 +46,15 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |       |-- migrations/
 |       |   `-- 001_auth.sql
 |       |-- sealion.toml
-|       `-- src/
-|           `-- main.c
+|       |-- src/
+|       |   `-- main.c
+|       `-- views/
+|           |-- dashboard.html
+|           |-- home.html
+|           |-- layout.html
+|           |-- login.html
+|           |-- not_found.html
+|           `-- register.html
 |-- tests/
 |   |-- fixtures/
 |   |-- integration/
@@ -74,6 +81,8 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
   generation.
 - `templates/default/`: generated starter app used by `sealion new` and
   `sealion init`.
+- `templates/default/views/`: editable starter HTML templates rendered by the
+  generated C app.
 - `tests/fixtures/`: shared test fixtures.
 - `tests/integration/`: tests that use Postgres or containers.
 - `tests/regression/`: tests created after a bug or broken contract.

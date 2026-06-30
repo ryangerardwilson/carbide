@@ -20,6 +20,7 @@
 #define MAX_BODY 32768
 #define MAX_COOKIE 4096
 #define MAX_PATH 1024
+#define MAX_VIEW 32768
 
 typedef struct {
   char method[8];
@@ -32,6 +33,11 @@ typedef struct {
   int id;
   char email[256];
 } User;
+
+typedef struct {
+  const char *name;
+  const char *value;
+} ViewVar;
 
 static PGconn *db = NULL;
 
@@ -77,31 +83,182 @@ static void redirect_to(int client, const char *location, const char *extra_head
   respond(client, "303 See Other", headers, "<!doctype html><title>Redirect</title><p>Redirecting.</p>");
 }
 
-static void html_page(char *out, size_t out_len, const char *title, const char *main_html) {
-  snprintf(
-    out,
-    out_len,
-    "<!doctype html>"
-    "<html lang=\"en\">"
-    "<head>"
-    "<meta charset=\"utf-8\">"
-    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-    "<title>%s | %s</title>"
-    "<style>"
-    ":root{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#17211b;background:#f7faf7}"
-    "body{margin:0}.shell{width:min(920px,calc(100%% - 32px));margin:0 auto;padding:48px 0}"
-    ".panel{background:white;border:1px solid #d9e2dc;padding:28px}.nav{display:flex;gap:14px;margin:18px 0}"
-    "a{color:#0f5f59}label{display:block;margin:14px 0 6px;font-weight:700}"
-    "input{width:100%%;padding:11px;border:1px solid #bdcbc3;font:inherit}"
-    "button,.button{display:inline-block;margin-top:18px;background:#0f766e;color:white;border:0;padding:11px 16px;text-decoration:none;font-weight:700;cursor:pointer}"
-    ".muted{color:#60756b}.error{color:#9f1239}.success{color:#166534}code{background:#eef4f0;padding:2px 5px}"
-    "</style>"
-    "</head>"
-    "<body><main class=\"shell\"><section class=\"panel\">%s</section></main></body></html>",
-    title,
-    APP_NAME,
-    main_html
-  );
+static bool append_bytes(char *out, size_t out_len, size_t *used, const char *data, size_t data_len) {
+  if (*used >= out_len) return false;
+  size_t remaining = out_len - *used - 1;
+  bool ok = data_len <= remaining;
+  size_t copy_len = ok ? data_len : remaining;
+  if (copy_len > 0) {
+    memcpy(out + *used, data, copy_len);
+    *used += copy_len;
+  }
+  out[*used] = '\0';
+  return ok;
+}
+
+static bool append_text(char *out, size_t out_len, size_t *used, const char *text) {
+  return append_bytes(out, out_len, used, text ? text : "", strlen(text ? text : ""));
+}
+
+static bool append_escaped(char *out, size_t out_len, size_t *used, const char *text) {
+  const char *p = text ? text : "";
+  while (*p) {
+    switch (*p) {
+      case '&':
+        if (!append_text(out, out_len, used, "&amp;")) return false;
+        break;
+      case '<':
+        if (!append_text(out, out_len, used, "&lt;")) return false;
+        break;
+      case '>':
+        if (!append_text(out, out_len, used, "&gt;")) return false;
+        break;
+      case '"':
+        if (!append_text(out, out_len, used, "&quot;")) return false;
+        break;
+      case '\'':
+        if (!append_text(out, out_len, used, "&#39;")) return false;
+        break;
+      default:
+        if (!append_bytes(out, out_len, used, p, 1)) return false;
+        break;
+    }
+    p++;
+  }
+  return true;
+}
+
+static const char *view_var_value(const ViewVar *vars, size_t var_count, const char *name) {
+  for (size_t i = 0; i < var_count; i++) {
+    if (strcmp(vars[i].name, name) == 0) {
+      return vars[i].value ? vars[i].value : "";
+    }
+  }
+  return "";
+}
+
+static void copy_trimmed_key(char *out, size_t out_len, const char *start, size_t len) {
+  while (len > 0 && isspace((unsigned char)*start)) {
+    start++;
+    len--;
+  }
+  while (len > 0 && isspace((unsigned char)start[len - 1])) {
+    len--;
+  }
+  if (len >= out_len) len = out_len - 1;
+  memcpy(out, start, len);
+  out[len] = '\0';
+}
+
+static bool read_view_file(const char *path, char *out, size_t out_len) {
+  FILE *file = fopen(path, "rb");
+  if (!file) return false;
+  size_t n = fread(out, 1, out_len - 1, file);
+  out[n] = '\0';
+  bool ok = feof(file);
+  fclose(file);
+  return ok;
+}
+
+static bool render_template_text(
+  const char *template_text,
+  const ViewVar *vars,
+  size_t var_count,
+  char *out,
+  size_t out_len
+) {
+  const char *cursor = template_text;
+  size_t used = 0;
+  out[0] = '\0';
+
+  while (*cursor) {
+    const char *escaped = strstr(cursor, "{{");
+    const char *raw = strstr(cursor, "{!!");
+    bool use_raw = raw && (!escaped || raw < escaped);
+    const char *start = use_raw ? raw : escaped;
+    if (!start) {
+      return append_text(out, out_len, &used, cursor);
+    }
+
+    if (!append_bytes(out, out_len, &used, cursor, (size_t)(start - cursor))) return false;
+
+    const char *token_start = start + (use_raw ? 3 : 2);
+    const char *end = use_raw ? strstr(token_start, "!!}") : strstr(token_start, "}}");
+    if (!end) {
+      return append_text(out, out_len, &used, start);
+    }
+
+    char key[128];
+    copy_trimmed_key(key, sizeof(key), token_start, (size_t)(end - token_start));
+    const char *value = view_var_value(vars, var_count, key);
+    if (use_raw) {
+      if (!append_text(out, out_len, &used, value)) return false;
+    } else {
+      if (!append_escaped(out, out_len, &used, value)) return false;
+    }
+
+    cursor = end + (use_raw ? 3 : 2);
+  }
+
+  return true;
+}
+
+static bool render_view_file(
+  const char *path,
+  const ViewVar *vars,
+  size_t var_count,
+  char *out,
+  size_t out_len
+) {
+  char template_text[MAX_VIEW];
+  if (!read_view_file(path, template_text, sizeof(template_text))) {
+    return false;
+  }
+  return render_template_text(template_text, vars, var_count, out, out_len);
+}
+
+static bool render_page(
+  const char *view_name,
+  const char *title,
+  const ViewVar *vars,
+  size_t var_count,
+  char *out,
+  size_t out_len
+) {
+  char view_path[256];
+  char content[MAX_VIEW];
+  snprintf(view_path, sizeof(view_path), "views/%s.html", view_name);
+  if (!render_view_file(view_path, vars, var_count, content, sizeof(content))) {
+    return false;
+  }
+
+  ViewVar layout_vars[] = {
+    {"title", title},
+    {"app_name", APP_NAME},
+    {"content", content},
+  };
+  return render_view_file("views/layout.html", layout_vars, 3, out, out_len);
+}
+
+static void respond_view(
+  int client,
+  const char *status,
+  const char *view_name,
+  const char *title,
+  const ViewVar *vars,
+  size_t var_count
+) {
+  char page[MAX_VIEW];
+  if (!render_page(view_name, title, vars, var_count, page, sizeof(page))) {
+    respond(
+      client,
+      "500 Internal Server Error",
+      NULL,
+      "<!doctype html><title>Template error</title><p>Could not render the requested view.</p>"
+    );
+    return;
+  }
+  respond(client, status, NULL, page);
 }
 
 static int hex_value(char c) {
@@ -406,57 +563,18 @@ static void handle_home(int client, const Request *req) {
     redirect_to(client, "/dashboard", NULL);
     return;
   }
-  char page[MAX_BODY];
-  html_page(
-    page,
-    sizeof(page),
-    "Welcome",
-    "<h1>" APP_NAME "</h1>"
-    "<p class=\"muted\">A Sealion starter app with Postgres-backed auth.</p>"
-    "<nav class=\"nav\"><a class=\"button\" href=\"/register\">Create account</a><a class=\"button\" href=\"/login\">Log in</a></nav>"
-    "<p class=\"muted\">Demo login: <code>admin@sealion.local</code> / <code>password</code></p>"
-  );
-  respond(client, "200 OK", NULL, page);
+  ViewVar vars[] = {{"app_name", APP_NAME}};
+  respond_view(client, "200 OK", "home", "Welcome", vars, 1);
 }
 
 static void handle_register_form(int client, const char *error) {
-  char main_html[8192];
-  char page[MAX_BODY];
-  snprintf(
-    main_html,
-    sizeof(main_html),
-    "<h1>Create account</h1>"
-    "%s"
-    "<form method=\"post\" action=\"/register\">"
-    "<label>Email</label><input name=\"email\" type=\"email\" autocomplete=\"email\" required>"
-    "<label>Password</label><input name=\"password\" type=\"password\" autocomplete=\"new-password\" required>"
-    "<button type=\"submit\">Create account</button>"
-    "</form>"
-    "<p class=\"muted\">Already have an account? <a href=\"/login\">Log in</a>.</p>",
-    error && error[0] ? error : ""
-  );
-  html_page(page, sizeof(page), "Register", main_html);
-  respond(client, "200 OK", NULL, page);
+  ViewVar vars[] = {{"error", error && error[0] ? error : ""}};
+  respond_view(client, "200 OK", "register", "Register", vars, 1);
 }
 
 static void handle_login_form(int client, const char *error) {
-  char main_html[8192];
-  char page[MAX_BODY];
-  snprintf(
-    main_html,
-    sizeof(main_html),
-    "<h1>Log in</h1>"
-    "%s"
-    "<form method=\"post\" action=\"/login\">"
-    "<label>Email</label><input name=\"email\" type=\"email\" value=\"admin@sealion.local\" autocomplete=\"email\" required>"
-    "<label>Password</label><input name=\"password\" type=\"password\" autocomplete=\"current-password\" required>"
-    "<button type=\"submit\">Log in</button>"
-    "</form>"
-    "<p class=\"muted\">Demo password: <code>password</code></p>",
-    error && error[0] ? error : ""
-  );
-  html_page(page, sizeof(page), "Login", main_html);
-  respond(client, "200 OK", NULL, page);
+  ViewVar vars[] = {{"error", error && error[0] ? error : ""}};
+  respond_view(client, "200 OK", "login", "Login", vars, 1);
 }
 
 static void handle_register(int client, const Request *req) {
@@ -509,19 +627,8 @@ static void handle_dashboard(int client, const Request *req) {
     redirect_to(client, "/login", NULL);
     return;
   }
-  char main_html[8192];
-  char page[MAX_BODY];
-  snprintf(
-    main_html,
-    sizeof(main_html),
-    "<h1>Dashboard</h1>"
-    "<p class=\"success\">You are logged in as <strong>%s</strong>.</p>"
-    "<p class=\"muted\">This page is protected by a Postgres-backed Sealion session.</p>"
-    "<form method=\"post\" action=\"/logout\"><button type=\"submit\">Log out</button></form>",
-    user.email
-  );
-  html_page(page, sizeof(page), "Dashboard", main_html);
-  respond(client, "200 OK", NULL, page);
+  ViewVar vars[] = {{"user_email", user.email}};
+  respond_view(client, "200 OK", "dashboard", "Dashboard", vars, 1);
 }
 
 static void handle_logout(int client, const Request *req) {
@@ -606,7 +713,7 @@ static void handle_client(int client) {
   } else if (strcmp(req.method, "POST") == 0 && strcmp(req.path, "/logout") == 0) {
     handle_logout(client, &req);
   } else {
-    respond(client, "404 Not Found", NULL, "<!doctype html><title>Not found</title><p>Not found.</p>");
+    respond_view(client, "404 Not Found", "not_found", "Not found", NULL, 0);
   }
 
   close(client);

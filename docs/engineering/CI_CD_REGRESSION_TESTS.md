@@ -113,7 +113,9 @@ Future checks:
 - generated app logs the external browser URL selected for the host port;
 - demo login redirects to the protected dashboard with a persisted session;
 - generated Compose config declares file-watch rebuilds for app source and the
-  Dockerfile;
+  view templates and Dockerfile;
+- generated apps include editable `views/*.html` templates instead of embedding
+  page markup in C string literals;
 - restart behavior preserves Postgres data;
 - environment schema rejects missing required values.
 

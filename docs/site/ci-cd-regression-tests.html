@@ -44,7 +44,8 @@
           <li><strong>Unit tests:</strong> protects router, request, response, middleware, config, and logging behavior.</li>
           <li><strong>Sanitizers:</strong> exposes memory ownership, undefined behavior, and leaks.</li>
           <li><strong>Postgres integration:</strong> tests readiness, pooling, migrations, transactions, and parameterized queries.</li>
-          <li><strong>Container and IaC:</strong> validates Compose generation, service separation, health checks, file-watch rebuilds, external URL logs, auth redirects, and environment schemas.</li>
+          <li><strong>Container and IaC:</strong> validates Compose generation, service separation, health checks, file-watch rebuilds for source and views, external URL logs, auth redirects, and environment schemas.</li>
+          <li><strong>View templates:</strong> protects editable <code>views/*.html</code> files so generated apps do not require C string literals for page markup.</li>
           <li><strong>CLI golden tests:</strong> protects scaffolding, deterministic generated files, and actionable command errors.</li>
           <li><strong>Security regression:</strong> protects cookies, CSRF, upload limits, SQL parameterization, and secret handling.</li>
           <li><strong>Documentation regression:</strong> keeps examples, links, and published docs aligned with framework behavior.</li>

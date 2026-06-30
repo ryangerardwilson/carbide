@@ -25,7 +25,13 @@ The app listens on port 8080 inside the container. Your browser should use the
 host URL printed by the CLI and app logs.
 
 `sealion run dev` starts Docker Compose watch when your Compose version supports
-it. Edits under `src/` or to `Dockerfile` rebuild and replace the app container.
+it. Edits under `src/`, `views/`, or to `Dockerfile` rebuild and replace the
+app container.
+
+## Views
+
+Edit page markup in `views/*.html`. Sealion renders escaped variables with
+`{{ name }}` and trusted raw slots with `{!! content !!}`.
 
 Demo login:
 
@@ -39,5 +45,6 @@ password
 - C app container
 - Postgres service container
 - register, login, logout, and dashboard routes
+- editable HTML views in `views/`
 - Postgres-backed users and sessions
 - checked-in local Docker Compose contract

@@ -1,0 +1,15 @@
+<h1>Log in</h1>
+
+{!! error !!}
+
+<form method="post" action="/login">
+  <label>Email</label>
+  <input name="email" type="email" value="admin@sealion.local" autocomplete="email" required>
+
+  <label>Password</label>
+  <input name="password" type="password" autocomplete="current-password" required>
+
+  <button type="submit">Log in</button>
+</form>
+
+<p class="muted">Demo password: <code>password</code></p>

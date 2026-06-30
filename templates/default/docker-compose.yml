@@ -18,6 +18,8 @@ services:
         - action: rebuild
           path: ./src
         - action: rebuild
+          path: ./views
+        - action: rebuild
           path: ./Dockerfile
 
   db:

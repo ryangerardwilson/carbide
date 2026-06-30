@@ -60,6 +60,7 @@ grep -q "develop:" "$tmp_dir/compose.config"
 grep -q "watch:" "$tmp_dir/compose.config"
 grep -q "action: rebuild" "$tmp_dir/compose.config"
 grep -q "/src" "$tmp_dir/compose.config"
+grep -q "/views" "$tmp_dir/compose.config"
 grep -q "/Dockerfile" "$tmp_dir/compose.config"
 SEALION_HTTP_PORT="$port" docker compose up -d --build
 
@@ -71,6 +72,10 @@ for _ in $(seq 1 60); do
 done
 
 curl -fsS "http://localhost:$port/health" >/dev/null
+curl -fsS "http://localhost:$port/" > "$tmp_dir/home.html"
+grep -q "<h1>demo</h1>" "$tmp_dir/home.html"
+! grep -q "{{" "$tmp_dir/home.html"
+! grep -q "{!!" "$tmp_dir/home.html"
 docker compose logs app > "$tmp_dir/app.log"
 grep -q "listening inside container on :8080" "$tmp_dir/app.log"
 grep -q "open http://localhost:$port" "$tmp_dir/app.log"
@@ -91,5 +96,7 @@ grep -q "sealion_session" "$tmp_dir/cookies"
 curl -fsS -b "$tmp_dir/cookies" "http://localhost:$port/dashboard" > "$tmp_dir/dashboard.html"
 grep -q "<h1>Dashboard</h1>" "$tmp_dir/dashboard.html"
 grep -q "You are logged in as" "$tmp_dir/dashboard.html"
+! grep -q "{{" "$tmp_dir/dashboard.html"
+! grep -q "{!!" "$tmp_dir/dashboard.html"
 
 printf 'starter docker flow ok\n'
