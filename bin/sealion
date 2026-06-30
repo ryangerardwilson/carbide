@@ -146,6 +146,12 @@ compose_command() {
   fail "Docker Compose is required for sealion run dev"
 }
 
+compose_supports_watch() {
+  local compose="$1"
+  # shellcheck disable=SC2086
+  $compose up --help 2>/dev/null | grep -q -- '--watch'
+}
+
 command_upgrade() {
   local current_head remote_head new_head install_script tmp_script
 
@@ -252,8 +258,15 @@ command_run_dev() {
   fi
   printf 'app: http://localhost:%s\n' "$port"
   printf 'demo login: admin@sealion.local / password\n'
-  # shellcheck disable=SC2086
-  $compose up --build
+  if compose_supports_watch "$compose"; then
+    printf 'watch: enabled for app source rebuilds\n'
+    # shellcheck disable=SC2086
+    $compose up --build --watch
+  else
+    printf 'watch: unavailable in this Docker Compose; running without file watch\n'
+    # shellcheck disable=SC2086
+    $compose up --build
+  fi
 }
 
 case "${1:-help}" in

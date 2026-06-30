@@ -26,6 +26,7 @@ sealion run dev</code></pre>
         <p>Open the app URL printed by <code>sealion run dev</code>.</p>
         <p>If port 8080 is already in use, <code>sealion run dev</code> selects another local port. To choose one explicitly, run <code>SEALION_HTTP_PORT=18080 sealion run dev</code>.</p>
         <p>The app listens on port 8080 inside the container. Your browser should use the host URL printed by the CLI and app logs.</p>
+        <p>When Docker Compose supports file watch, <code>sealion run dev</code> starts the stack with Compose watch enabled. Edits under <code>src/</code> or to <code>Dockerfile</code> rebuild and replace the app container.</p>
       </section>
 
       <section>

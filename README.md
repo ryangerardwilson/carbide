@@ -131,6 +131,10 @@ automatically selects another local port when 8080 is already in use. Set
 `sealion help` prints the command reference. `sealion upgrade` upgrades the
 installed CLI when a newer GitHub commit is available.
 
+When Docker Compose supports file watch, `sealion run dev` starts the stack with
+Compose watch enabled. Edits under `src/` or to `Dockerfile` rebuild and replace
+the app container, which matches the current C compile model.
+
 ## Roadmap
 
 ### Phase 0: Project Contract

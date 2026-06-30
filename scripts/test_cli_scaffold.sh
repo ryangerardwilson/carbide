@@ -26,6 +26,11 @@ grep -q "default_port = 8080" "$tmp_dir/demo/sealion.toml"
 ! grep -q 'url = "http://localhost:8080"' "$tmp_dir/demo/sealion.toml"
 grep -q 'name: demo' "$tmp_dir/demo/docker-compose.yml"
 grep -q 'PUBLIC_URL: "http://localhost:${SEALION_HTTP_PORT:-8080}"' "$tmp_dir/demo/docker-compose.yml"
+grep -q "develop:" "$tmp_dir/demo/docker-compose.yml"
+grep -q "watch:" "$tmp_dir/demo/docker-compose.yml"
+grep -q "action: rebuild" "$tmp_dir/demo/docker-compose.yml"
+grep -q "path: ./src" "$tmp_dir/demo/docker-compose.yml"
+grep -q "path: ./Dockerfile" "$tmp_dir/demo/docker-compose.yml"
 grep -q 'admin@sealion.local' "$tmp_dir/demo/src/main.c"
 grep -q "listening inside container" "$tmp_dir/demo/src/main.c"
 ! grep -R "__PROJECT_" "$tmp_dir/demo" >/dev/null
@@ -48,6 +53,7 @@ grep -q "requires an empty directory" /tmp/sealion-init.err
 if command -v python3 >/dev/null 2>&1; then
   fake_bin="$tmp_dir/fake-bin"
   port_file="$tmp_dir/selected-port"
+  args_file="$tmp_dir/docker-args"
   mkdir "$fake_bin"
   cat > "$fake_bin/docker" <<'SH'
 #!/usr/bin/env bash
@@ -58,8 +64,15 @@ if [ "${1:-}" = "compose" ] && [ "${2:-}" = "version" ]; then
   exit 0
 fi
 
+if [ "${1:-}" = "compose" ] && [ "${2:-}" = "up" ] && [ "${3:-}" = "--help" ]; then
+  printf 'Usage: docker compose up [OPTIONS]\n'
+  printf '      --watch    Watch source code and rebuild/refresh containers when files are updated.\n'
+  exit 0
+fi
+
 if [ "${1:-}" = "compose" ] && [ "${2:-}" = "up" ]; then
   printf '%s\n' "${SEALION_HTTP_PORT:-}" > "$FAKE_DOCKER_PORT_FILE"
+  printf '%s\n' "$*" > "$FAKE_DOCKER_ARGS_FILE"
   exit 0
 fi
 
@@ -86,15 +99,17 @@ PY
   sleep 0.5
 
   cd "$tmp_dir/demo"
-  PATH="$fake_bin:$PATH" FAKE_DOCKER_PORT_FILE="$port_file" "$repo_root/bin/sealion" run dev > "$tmp_dir/run-dev.out"
+  PATH="$fake_bin:$PATH" FAKE_DOCKER_PORT_FILE="$port_file" FAKE_DOCKER_ARGS_FILE="$args_file" "$repo_root/bin/sealion" run dev > "$tmp_dir/run-dev.out"
   grep -q "app: http://localhost:" "$tmp_dir/run-dev.out"
+  grep -q "watch: enabled" "$tmp_dir/run-dev.out"
+  grep -q -- "--watch" "$args_file"
   selected_port="$(cat "$port_file")"
   if [ "$selected_port" = "8080" ]; then
     printf 'sealion run dev should not select occupied port 8080\n' >&2
     exit 1
   fi
 
-  if PATH="$fake_bin:$PATH" FAKE_DOCKER_PORT_FILE="$port_file" SEALION_HTTP_PORT=8080 "$repo_root/bin/sealion" run dev > "$tmp_dir/explicit-port.out" 2> "$tmp_dir/explicit-port.err"; then
+  if PATH="$fake_bin:$PATH" FAKE_DOCKER_PORT_FILE="$port_file" FAKE_DOCKER_ARGS_FILE="$args_file" SEALION_HTTP_PORT=8080 "$repo_root/bin/sealion" run dev > "$tmp_dir/explicit-port.out" 2> "$tmp_dir/explicit-port.err"; then
     printf 'explicit occupied SEALION_HTTP_PORT should fail before compose starts\n' >&2
     exit 1
   fi

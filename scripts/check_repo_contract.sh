@@ -77,8 +77,15 @@ grep -q "sealion run dev" README.md
 grep -q "default_port = 8080" templates/default/sealion.toml
 ! grep -q 'url = "http://localhost:8080"' templates/default/sealion.toml
 grep -q 'PUBLIC_URL: "http://localhost:${SEALION_HTTP_PORT:-8080}"' templates/default/docker-compose.yml
+grep -q "develop:" templates/default/docker-compose.yml
+grep -q "watch:" templates/default/docker-compose.yml
+grep -q "action: rebuild" templates/default/docker-compose.yml
+grep -q "path: ./src" templates/default/docker-compose.yml
+grep -q "path: ./Dockerfile" templates/default/docker-compose.yml
 grep -q "listening inside container" templates/default/src/main.c
 grep -q "open %s" templates/default/src/main.c
+grep -q "compose_supports_watch" bin/sealion
+grep -q -- "--watch" bin/sealion
 
 grep -q "$domain" docs/site/index.html
 grep -q "Component styling" docs/site/index.html

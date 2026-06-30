@@ -13,6 +13,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ./src
+        - action: rebuild
+          path: ./Dockerfile
 
   db:
     image: postgres:16-alpine

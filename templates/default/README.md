@@ -24,6 +24,9 @@ SEALION_HTTP_PORT=18080 sealion run dev
 The app listens on port 8080 inside the container. Your browser should use the
 host URL printed by the CLI and app logs.
 
+`sealion run dev` starts Docker Compose watch when your Compose version supports
+it. Edits under `src/` or to `Dockerfile` rebuild and replace the app container.
+
 Demo login:
 
 ```text

@@ -55,6 +55,12 @@ cd "$tmp_dir"
 "$repo_root/bin/sealion" new demo >/dev/null
 
 cd "$tmp_dir/demo"
+docker compose config > "$tmp_dir/compose.config"
+grep -q "develop:" "$tmp_dir/compose.config"
+grep -q "watch:" "$tmp_dir/compose.config"
+grep -q "action: rebuild" "$tmp_dir/compose.config"
+grep -q "/src" "$tmp_dir/compose.config"
+grep -q "/Dockerfile" "$tmp_dir/compose.config"
 SEALION_HTTP_PORT="$port" docker compose up -d --build
 
 for _ in $(seq 1 60); do
