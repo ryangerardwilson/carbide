@@ -100,7 +100,7 @@ static void redirect_to(int client, const char *location, const char *extra_head
     location,
     location
   );
-  respond(client, "303 See Other", headers, body);
+  respond(client, "302 Found", headers, body);
 }
 
 static bool append_bytes(char *out, size_t out_len, size_t *used, const char *data, size_t data_len) {
@@ -715,6 +715,7 @@ static void handle_client(int client) {
   }
 
   printf("%s %s\n", req.method, req.path);
+  fflush(stdout);
 
   if (strcmp(req.method, "GET") == 0 && strcmp(req.path, "/health") == 0) {
     respond(client, "200 OK", "Content-Type: text/plain; charset=utf-8\r\n", "ok\n");

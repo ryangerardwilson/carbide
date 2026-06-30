@@ -88,7 +88,7 @@ curl \
   -d "email=admin%40sealion.local&password=password" \
   "http://localhost:$port/login"
 
-grep -q "303 See Other" "$tmp_dir/login.headers"
+grep -q "302 Found" "$tmp_dir/login.headers"
 grep -q "Location: /dashboard" "$tmp_dir/login.headers"
 grep -q "Cache-Control: no-store" "$tmp_dir/login.headers"
 grep -q "Set-Cookie: sealion_session=" "$tmp_dir/login.headers"
