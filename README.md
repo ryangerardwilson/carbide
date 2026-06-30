@@ -160,7 +160,8 @@ CLI output is rendered through a small Go output layer: headings, aligned labels
 TTY-only color, terminal-only per-container startup animation, timestamped log
 rows, and plain text when piped or captured by scripts. `sealion run dev` prints
 only the working app/API URLs before the startup animation and log stream. Logs
-begin only after Compose reports the stack ready. Every streamed frontend,
+begin only after Compose reports the stack ready. `NO_COLOR` disables ANSI color
+without disabling the terminal startup animation. Every streamed frontend,
 backend, database, and watch event is also written as JSONL to
 `.sealion/log/dev.jsonl` so humans, scripts, and AI agents can inspect or query
 the whole local system from one command.

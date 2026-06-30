@@ -147,7 +147,8 @@ Future checks:
   with no port-busy, demo-login, mode, status, stop, or watch-summary rows;
 - `sealion run dev` shows TTY-only per-container startup animation while
   Compose starts containers, without leaking progress control text into
-  captured output;
+  captured output, and without treating `NO_COLOR` as a request to disable
+  terminal animation;
 - CLI success, error, version, upgrade, and dev-stack output use the shared
   aligned renderer instead of scattered raw prints;
 - `sealion run dev` streams frontend, backend, database, and watch output

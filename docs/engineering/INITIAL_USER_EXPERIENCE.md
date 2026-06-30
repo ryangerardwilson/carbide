@@ -46,7 +46,8 @@ for containers. Captured or piped output remains plain text for tests, scripts,
 and AI agents. Before startup, `sealion run dev` prints only the working app and
 API URLs. Logs begin only after Compose reports the stack ready. Frontend,
 backend, database, and watch events appear in one timestamped, service-tagged
-stream and are mirrored to `.sealion/log/dev.jsonl`.
+stream and are mirrored to `.sealion/log/dev.jsonl`. `NO_COLOR` disables ANSI
+color without disabling the terminal startup animation.
 
 The generated app starts with no seeded users. The first browser visit opens the
 account creation flow. Registration creates the first user and session; later

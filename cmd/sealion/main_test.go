@@ -119,6 +119,32 @@ func TestServiceProgressState(t *testing.T) {
 	}
 }
 
+func TestServiceProgressRunsWithoutColor(t *testing.T) {
+	var out bytes.Buffer
+	r := renderer{out: &out, interactive: true}
+
+	err := r.RunServiceProgress(
+		[]string{"backend"},
+		func() map[string]composeServiceStatus {
+			return nil
+		},
+		func() error {
+			return nil
+		},
+	)
+	if err != nil {
+		t.Fatalf("RunServiceProgress returned %v", err)
+	}
+
+	got := out.String()
+	if !strings.Contains(got, "[C.................] starting") {
+		t.Fatalf("progress output missing starting frame: %q", got)
+	}
+	if !strings.Contains(got, "[##################] ready") {
+		t.Fatalf("progress output missing ready frame: %q", got)
+	}
+}
+
 func TestStreamWatchOutputFiltersNoise(t *testing.T) {
 	var out bytes.Buffer
 	var wg sync.WaitGroup

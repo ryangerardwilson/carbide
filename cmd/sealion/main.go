@@ -74,8 +74,9 @@ type composeCommand struct {
 }
 
 type renderer struct {
-	out    io.Writer
-	styled bool
+	out         io.Writer
+	styled      bool
+	interactive bool
 }
 
 type outputRow struct {
@@ -550,7 +551,12 @@ func waitForProcesses(remaining int, processes []runningProcess, results <-chan 
 }
 
 func newRenderer(out io.Writer) renderer {
-	return renderer{out: out, styled: shouldStyleOutput(out)}
+	interactive := isTerminalOutput(out)
+	return renderer{
+		out:         out,
+		interactive: interactive,
+		styled:      interactive && os.Getenv("NO_COLOR") == "",
+	}
 }
 
 func renderError(out io.Writer, err error) {
@@ -678,7 +684,7 @@ func (r renderer) RunServiceProgress(
 	poll func() map[string]composeServiceStatus,
 	work func() error,
 ) error {
-	if !r.styled {
+	if !r.interactive {
 		return work()
 	}
 
@@ -1091,6 +1097,10 @@ func shouldStyleOutput(w io.Writer) bool {
 	if os.Getenv("NO_COLOR") != "" {
 		return false
 	}
+	return isTerminalOutput(w)
+}
+
+func isTerminalOutput(w io.Writer) bool {
 	file, ok := w.(*os.File)
 	if !ok {
 		return false
