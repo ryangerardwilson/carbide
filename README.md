@@ -1,0 +1,139 @@
+# Sealion
+
+Sealion is an experimental, Laravel-inspired full-stack web framework for C.
+
+The goal is not to copy Laravel line by line. The goal is to find the smallest
+set of conventions, tools, and runtime guarantees that make building web apps in
+C feel coherent, productive, and safe enough to be practical.
+
+## Product Bet
+
+C is a difficult language for high-level web application development, but a
+strict framework can remove many repeated decisions:
+
+- one mandatory development and production container
+- one project layout
+- one request lifecycle
+- one database migration path
+- one CLI entry point
+- one opinionated set of security defaults
+
+Sealion should make the hard parts visible instead of hiding them behind magic.
+
+## Core Principles
+
+- **Container-first:** every app runs inside the official Sealion container.
+- **Explicit ownership:** request memory, response memory, and database handles
+  must have clear lifetimes.
+- **Convention over configuration:** defaults should cover normal apps without
+  requiring boilerplate.
+- **Safe by default:** routing, sessions, cookies, CSRF, validation, SQL access,
+  and uploads should have conservative defaults.
+- **Inspectable runtime:** generated files, migrations, logs, and app state
+  should be easy to inspect and reproduce.
+- **Small ecosystem surface:** add extension points only after the core app loop
+  is stable.
+
+## Non-Goals
+
+- Native host installs before the container contract is stable.
+- Full Laravel API compatibility.
+- A general-purpose C package manager.
+- ORM magic that depends on runtime reflection C does not have.
+- Supporting every database, web server, or deployment target in the first
+  versions.
+
+## Roadmap
+
+### Phase 0: Project Contract
+
+- Define the official container image and supported Linux base.
+- Choose compiler, libc, build system, formatter, and test runner.
+- Create the canonical app directory layout.
+- Define the request, response, app, and service lifecycle contracts.
+- Publish a minimal "hello route" sample app.
+
+### Phase 1: HTTP Core
+
+- Implement routing for common HTTP methods.
+- Add request parsing for headers, query params, path params, and forms.
+- Add response helpers for text, JSON, redirects, files, and errors.
+- Add middleware chaining with predictable ownership rules.
+- Add structured error pages for development and safe production errors.
+
+### Phase 2: Application Kernel
+
+- Add controller-style handlers.
+- Add configuration loading from environment and checked-in defaults.
+- Add service registration without hidden reflection.
+- Add logging with request IDs.
+- Add graceful shutdown and worker lifecycle hooks.
+
+### Phase 3: Views And Assets
+
+- Decide whether templates are compiled, interpreted, or generated C.
+- Add layouts, partials, escaping, and safe HTML helpers.
+- Add static asset serving for local development.
+- Add a production asset manifest contract.
+
+### Phase 4: Database Layer
+
+- Start with Postgres as the first supported database.
+- Add connection pooling.
+- Add migrations with up/down support.
+- Add a query builder with parameter binding by default.
+- Explore a constrained model layer without pretending C has Eloquent-style
+  reflection.
+
+### Phase 5: Web App Essentials
+
+- Add signed cookies and encrypted session storage.
+- Add CSRF protection.
+- Add validation primitives.
+- Add password hashing and auth scaffolding.
+- Add file upload handling with size and type controls.
+
+### Phase 6: Background Work
+
+- Add Redis-backed queues.
+- Add scheduled jobs.
+- Add mail driver contracts.
+- Add cache contracts.
+- Add retries, dead-letter behavior, and job inspection commands.
+
+### Phase 7: Developer Experience
+
+- Build the `sealion` CLI.
+- Add project scaffolding.
+- Add migration generation.
+- Add test helpers for HTTP requests and database state.
+- Add containerized watch/rebuild workflow.
+- Add debug tooling for memory ownership and request leaks.
+
+### Phase 8: Production Contract
+
+- Define the official production image.
+- Add health checks and readiness checks.
+- Add structured logs suitable for container platforms.
+- Add deployment examples for a single-node app and a worker process.
+- Add backup, restore, and migration rollback guidance.
+
+### Phase 9: Ecosystem
+
+- Stabilize extension points.
+- Add first-party packages only where the core framework has repeated evidence.
+- Document compatibility rules.
+- Publish upgrade guides between framework versions.
+
+## First Milestone
+
+The first milestone is a containerized app that can:
+
+1. boot with one command,
+2. serve a route,
+3. return JSON,
+4. write one structured request log line,
+5. shut down cleanly.
+
+That milestone proves the core loop before the project adds database, auth, or
+template complexity.
