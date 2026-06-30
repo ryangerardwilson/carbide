@@ -12,7 +12,7 @@
       <div class="shell">
         <p class="eyebrow"><a href="index.html">Sealion docs</a></p>
         <h1>Directory structure</h1>
-        <p class="lead">The repo separates framework source, public headers, tests, examples, infrastructure, automation, and published documentation from the start.</p>
+        <p class="lead">The repo separates framework source, generated MVC app code, components, tests, infrastructure, automation, and published documentation from the start.</p>
       </div>
     </header>
 
@@ -33,7 +33,10 @@
 |-- src/
 |-- src/ui/
 |-- templates/default/
-|   |-- src/main.c
+|   |-- controller/
+|   |-- model/
+|   |-- src/
+|   |-- ui_components/
 |   `-- view/
 |-- tests/fixtures/
 |-- tests/integration/
@@ -57,7 +60,10 @@
           <li><strong>src:</strong> framework implementation.</li>
           <li><strong>src/ui:</strong> component rendering, utility parsing, token resolution, and CSS generation.</li>
           <li><strong>templates/default:</strong> starter app used by <code>sealion new</code> and <code>sealion init</code>.</li>
-          <li><strong>templates/default/view:</strong> editable starter HTML templates rendered by the generated C app.</li>
+          <li><strong>templates/default/model:</strong> generated Postgres-backed model code.</li>
+          <li><strong>templates/default/controller:</strong> generated request-flow handlers.</li>
+          <li><strong>templates/default/view:</strong> thin starter templates that import components and pass data into them.</li>
+          <li><strong>templates/default/ui_components:</strong> generated <code>.scales</code> components organized into <code>l1</code>, <code>l2</code>, and <code>l3</code>.</li>
           <li><strong>tests:</strong> fixtures, unit, integration, and regression coverage.</li>
           <li><strong>install.sh:</strong> GitHub URL installer.</li>
         </ul>

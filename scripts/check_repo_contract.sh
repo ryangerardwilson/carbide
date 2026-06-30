@@ -25,13 +25,26 @@ required_files=(
   "templates/default/Dockerfile"
   "templates/default/docker-compose.yml"
   "templates/default/sealion.toml"
+  "templates/default/src/app.h"
   "templates/default/src/main.c"
+  "templates/default/model/user.c"
+  "templates/default/model/session.c"
+  "templates/default/controller/auth_controller.c"
+  "templates/default/controller/page_controller.c"
   "templates/default/view/layout.html"
   "templates/default/view/home.html"
   "templates/default/view/register.html"
   "templates/default/view/login.html"
   "templates/default/view/dashboard.html"
   "templates/default/view/not_found.html"
+  "templates/default/ui_components/l1/base_styles.scales"
+  "templates/default/ui_components/l2/page_shell.scales"
+  "templates/default/ui_components/l2/auth_form.scales"
+  "templates/default/ui_components/l3/home_page.scales"
+  "templates/default/ui_components/l3/login_page.scales"
+  "templates/default/ui_components/l3/register_page.scales"
+  "templates/default/ui_components/l3/dashboard_page.scales"
+  "templates/default/ui_components/l3/not_found_page.scales"
   "templates/default/migrations/001_auth.sql"
 )
 
@@ -49,7 +62,13 @@ required_dirs=(
   "infra/schemas"
   "templates/default"
   "templates/default/src"
+  "templates/default/model"
+  "templates/default/controller"
   "templates/default/view"
+  "templates/default/ui_components"
+  "templates/default/ui_components/l1"
+  "templates/default/ui_components/l2"
+  "templates/default/ui_components/l3"
   "templates/default/migrations"
 )
 
@@ -88,15 +107,33 @@ grep -q "develop:" templates/default/docker-compose.yml
 grep -q "watch:" templates/default/docker-compose.yml
 grep -q "action: rebuild" templates/default/docker-compose.yml
 grep -q "path: ./src" templates/default/docker-compose.yml
+grep -q "path: ./model" templates/default/docker-compose.yml
+grep -q "path: ./controller" templates/default/docker-compose.yml
 grep -q "path: ./view" templates/default/docker-compose.yml
+grep -q "path: ./ui_components" templates/default/docker-compose.yml
 grep -q "path: ./Dockerfile" templates/default/docker-compose.yml
+grep -q "COPY model ./model" templates/default/Dockerfile
+grep -q "COPY controller ./controller" templates/default/Dockerfile
 grep -q "COPY view ./view" templates/default/Dockerfile
+grep -q "COPY ui_components ./ui_components" templates/default/Dockerfile
 grep -q "{{ title }}" templates/default/view/layout.html
-grep -q "{!! content !!}" templates/default/view/layout.html
-grep -q "{{ user_email }}" templates/default/view/dashboard.html
+grep -q '{% component "l1/base_styles" %}' templates/default/view/layout.html
+grep -q '{% component "l2/page_shell" %}' templates/default/view/layout.html
+grep -q "{!! content !!}" templates/default/ui_components/l2/page_shell.scales
+grep -q '{% component "l3/home_page" %}' templates/default/view/home.html
+grep -q '{% component "l3/login_page" %}' templates/default/view/login.html
+grep -q '{% component "l3/register_page" %}' templates/default/view/register.html
+grep -q '{% component "l3/dashboard_page" %}' templates/default/view/dashboard.html
+grep -q '{% component "l3/not_found_page" %}' templates/default/view/not_found.html
+grep -q "{{ user_email }}" templates/default/ui_components/l3/dashboard_page.scales
+grep -q '{% component "l2/auth_form" %}' templates/default/ui_components/l3/login_page.scales
+grep -q '{% component "l2/auth_form" %}' templates/default/ui_components/l3/register_page.scales
 grep -q "render_template_text" templates/default/src/main.c
 grep -q "respond_view" templates/default/src/main.c
+grep -q "ui_components/%s.scales" templates/default/src/main.c
 ! grep -q "<style>" templates/default/src/main.c
+! grep -R "<style>" templates/default/view >/dev/null
+! find templates/default/ui_components -name '*.html' -print -quit | grep -q .
 ! grep -R "views/" templates/default README.md docs >/dev/null
 grep -q "listening inside container" templates/default/src/main.c
 grep -q "open %s" templates/default/src/main.c

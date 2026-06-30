@@ -1,0 +1,15 @@
+<h1>{{ auth_title }}</h1>
+
+{!! error !!}
+
+<form method="post" action="{{ auth_action }}">
+  <label>Email</label>
+  <input name="email" type="email" value="{{ email_value }}" autocomplete="email" required>
+
+  <label>Password</label>
+  <input name="password" type="password" autocomplete="{{ password_autocomplete }}" required>
+
+  <button type="submit">{{ submit_label }}</button>
+</form>
+
+{!! auth_footer !!}

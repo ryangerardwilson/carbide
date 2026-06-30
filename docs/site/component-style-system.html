@@ -19,14 +19,16 @@
     <main class="shell">
       <section>
         <h2>Product Decision</h2>
-        <p>Sealion owns a small component styling system. It is Tailwind-inspired, but not Tailwind-compatible by default. Tailwind remains optional for apps that choose it.</p>
+        <p>Sealion owns a small component styling system. Starter components live in <code>.scales</code> files under <code>ui_components/l1</code>, <code>ui_components/l2</code>, and <code>ui_components/l3</code>. Tailwind remains optional for apps that choose it.</p>
       </section>
 
       <section>
         <h2>Authoring Model</h2>
-        <pre><code>sl_component("button")
-  .style("inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium bg-primary text-on-primary hover:bg-primary-strong")
-  .render(ctx);</code></pre>
+        <pre><code>view/dashboard.html
+{% component "l3/dashboard_page" %}
+
+ui_components/l3/dashboard_page.scales
+&lt;h1&gt;Dashboard&lt;/h1&gt;</code></pre>
       </section>
 
       <section>
@@ -39,6 +41,8 @@
         <h2>Regression Requirements</h2>
         <ul>
           <li>Valid utilities compile and unknown utilities fail CI.</li>
+          <li>View files stay import-only and do not own CSS.</li>
+          <li>Components use <code>.scales</code>, not <code>.html</code>.</li>
           <li>Generated CSS is deterministic.</li>
           <li>Missing tokens produce actionable errors.</li>
           <li>Components compile without Tailwind, Node, npm, or PostCSS.</li>
@@ -52,4 +56,3 @@
     </footer>
   </body>
 </html>
-

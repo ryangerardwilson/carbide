@@ -1,0 +1,9 @@
+<h1>{{ app_name }}</h1>
+<p class="muted">A Sealion starter app with Postgres-backed auth.</p>
+
+<nav class="nav">
+  <a class="button" href="/register">Create account</a>
+  <a class="button" href="/login">Log in</a>
+</nav>
+
+<p class="muted">Demo login: <code>admin@sealion.local</code> / <code>password</code></p>

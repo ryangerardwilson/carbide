@@ -43,11 +43,22 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |   `-- default/
 |       |-- Dockerfile
 |       |-- docker-compose.yml
+|       |-- controller/
+|       |   |-- auth_controller.c
+|       |   `-- page_controller.c
 |       |-- migrations/
 |       |   `-- 001_auth.sql
+|       |-- model/
+|       |   |-- session.c
+|       |   `-- user.c
 |       |-- sealion.toml
 |       |-- src/
+|       |   |-- app.h
 |       |   `-- main.c
+|       |-- ui_components/
+|       |   |-- l1/
+|       |   |-- l2/
+|       |   `-- l3/
 |       `-- view/
 |           |-- dashboard.html
 |           |-- home.html
@@ -81,8 +92,12 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
   generation.
 - `templates/default/`: generated starter app used by `sealion new` and
   `sealion init`.
-- `templates/default/view/`: editable starter HTML templates rendered by the
-  generated C app.
+- `templates/default/model/`: generated Postgres-backed model code.
+- `templates/default/controller/`: generated request-flow handlers.
+- `templates/default/view/`: thin starter templates that import components and
+  pass data into them.
+- `templates/default/ui_components/`: generated `.scales` components organized
+  into `l1`, `l2`, and `l3`.
 - `tests/fixtures/`: shared test fixtures.
 - `tests/integration/`: tests that use Postgres or containers.
 - `tests/regression/`: tests created after a bug or broken contract.

@@ -10,11 +10,16 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY src ./src
+COPY model ./model
+COPY controller ./controller
 COPY view ./view
+COPY ui_components ./ui_components
 
 RUN gcc -std=c11 -Wall -Wextra -Wpedantic -O2 \
   -I/usr/include/postgresql \
   src/main.c \
+  model/*.c \
+  controller/*.c \
   -o /usr/local/bin/sealion-app \
   -lpq -lcrypto
 

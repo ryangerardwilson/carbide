@@ -60,7 +60,10 @@ grep -q "develop:" "$tmp_dir/compose.config"
 grep -q "watch:" "$tmp_dir/compose.config"
 grep -q "action: rebuild" "$tmp_dir/compose.config"
 grep -q "/src" "$tmp_dir/compose.config"
+grep -q "/model" "$tmp_dir/compose.config"
+grep -q "/controller" "$tmp_dir/compose.config"
 grep -q "/view" "$tmp_dir/compose.config"
+grep -q "/ui_components" "$tmp_dir/compose.config"
 grep -q "/Dockerfile" "$tmp_dir/compose.config"
 SEALION_HTTP_PORT="$port" docker compose up -d --build
 

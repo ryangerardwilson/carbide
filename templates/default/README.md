@@ -25,13 +25,23 @@ The app listens on port 8080 inside the container. Your browser should use the
 host URL printed by the CLI and app logs.
 
 `sealion run dev` starts Docker Compose watch when your Compose version supports
-it. Edits under `src/`, `view/`, or to `Dockerfile` rebuild and replace the
-app container.
+it. Edits under `src/`, `model/`, `controller/`, `view/`, `ui_components/`, or
+to `Dockerfile` rebuild and replace the app container.
 
-## View
+## MVC and Components
 
-Edit page markup in `view/*.html`. Sealion renders escaped variables with
-`{{ name }}` and trusted raw slots with `{!! content !!}`.
+Generated apps start with an MVC shape:
+
+- `model/` owns Postgres-backed data access.
+- `controller/` owns request flow and response decisions.
+- `view/` owns thin templates that pass information into components.
+- `ui_components/l1/`, `ui_components/l2/`, and `ui_components/l3/` own UI
+  markup and styling.
+
+Edit component markup in `ui_components/**/*.scales`. View files in `view/`
+should only import components with `{% component "l3/example" %}` and pass data
+through variables. Sealion renders escaped variables with `{{ name }}`, trusted
+raw slots with `{!! content !!}`, and component imports from `.scales` files.
 
 Demo login:
 
@@ -45,6 +55,8 @@ password
 - C app container
 - Postgres service container
 - register, login, logout, and dashboard routes
-- editable HTML view files in `view/`
+- MVC directories for model, view, and controller code
+- `.scales` UI components under `ui_components/l1`, `ui_components/l2`, and
+  `ui_components/l3`
 - Postgres-backed users and sessions
 - checked-in local Docker Compose contract

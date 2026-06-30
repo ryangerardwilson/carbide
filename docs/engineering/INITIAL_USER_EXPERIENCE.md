@@ -30,12 +30,14 @@ The app listens on port 8080 inside the container. The browser URL is the host
 URL printed by the CLI and app logs.
 
 When Docker Compose supports file watch, `sealion run dev` starts the stack with
-Compose watch enabled. Edits under `src/`, `view/`, or to `Dockerfile` rebuild
-and replace the app container, which matches the current C compile model.
+Compose watch enabled. Edits under `src/`, `model/`, `controller/`, `view/`,
+`ui_components/`, or to `Dockerfile` rebuild and replace the app container.
 
-Generated apps keep page markup in `view/*.html`. The starter renderer supports
-escaped variables with `{{ name }}` and trusted raw slots with `{!! content !!}`
-so developers can edit HTML directly instead of writing C string literals.
+Generated apps keep page flow in `view/*.html`, but UI implementation belongs in
+`.scales` components under `ui_components/l1`, `ui_components/l2`, and
+`ui_components/l3`. The starter renderer supports escaped variables with
+`{{ name }}`, trusted raw slots with `{!! content !!}`, and component imports
+with `{% component "l3/example" %}`.
 
 The generated app includes:
 
@@ -43,7 +45,8 @@ The generated app includes:
 - a Postgres service container;
 - checked-in Docker Compose infrastructure;
 - register, login, logout, and dashboard routes;
-- editable HTML view files in `view/`;
+- MVC directories for model, view, and controller code;
+- `.scales` components under `ui_components/`;
 - Postgres-backed users and sessions;
 - a seeded demo account at `admin@sealion.local` with password `password`.
 

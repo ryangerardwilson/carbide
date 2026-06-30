@@ -18,7 +18,13 @@ services:
         - action: rebuild
           path: ./src
         - action: rebuild
+          path: ./model
+        - action: rebuild
+          path: ./controller
+        - action: rebuild
           path: ./view
+        - action: rebuild
+          path: ./ui_components
         - action: rebuild
           path: ./Dockerfile
 

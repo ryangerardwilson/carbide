@@ -1,0 +1,5 @@
+<main class="shell">
+  <section class="panel">
+    {!! content !!}
+  </section>
+</main>

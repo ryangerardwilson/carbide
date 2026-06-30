@@ -1,50 +1,25 @@
 #define _GNU_SOURCE
 
+#include "app.h"
+
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
-#include <libpq-fe.h>
 #include <netinet/in.h>
-#include <openssl/rand.h>
-#include <openssl/sha.h>
 #include <signal.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <sys/select.h>
+#include <sys/socket.h>
 #include <sys/time.h>
-#include <time.h>
 #include <unistd.h>
 
-#define APP_NAME "__PROJECT_NAME__"
-#define MAX_REQUEST 65536
-#define MAX_BODY 32768
-#define MAX_COOKIE 4096
-#define MAX_PATH 1024
-#define MAX_VIEW 32768
+#define MAX_COMPONENT_DEPTH 8
 
-typedef struct {
-  char method[8];
-  char path[MAX_PATH];
-  char cookie[MAX_COOKIE];
-  char *body;
-} Request;
+PGconn *db = NULL;
 
-typedef struct {
-  int id;
-  char email[256];
-} User;
-
-typedef struct {
-  const char *name;
-  const char *value;
-} ViewVar;
-
-static PGconn *db = NULL;
-
-static void fatal(const char *message) {
+void fatal(const char *message) {
   fprintf(stderr, "%s\n", message);
   exit(1);
 }
@@ -60,7 +35,7 @@ static void send_all(int client, const char *data, size_t len) {
   }
 }
 
-static void respond(int client, const char *status, const char *headers, const char *body) {
+void respond(int client, const char *status, const char *headers, const char *body) {
   char head[2048];
   size_t body_len = strlen(body);
   int n = snprintf(
@@ -80,7 +55,7 @@ static void respond(int client, const char *status, const char *headers, const c
   send_all(client, body, body_len);
 }
 
-static void redirect_to(int client, const char *location, const char *extra_headers) {
+void redirect_to(int client, const char *location, const char *extra_headers) {
   char headers[1024];
   char body[1024];
   snprintf(
@@ -173,7 +148,7 @@ static void copy_trimmed_key(char *out, size_t out_len, const char *start, size_
   out[len] = '\0';
 }
 
-static bool read_view_file(const char *path, char *out, size_t out_len) {
+static bool read_template_file(const char *path, char *out, size_t out_len) {
   FILE *file = fopen(path, "rb");
   if (!file) return false;
   size_t n = fread(out, 1, out_len - 1, file);
@@ -183,28 +158,109 @@ static bool read_view_file(const char *path, char *out, size_t out_len) {
   return ok;
 }
 
+static const char *first_token(const char *cursor, const char **component, const char **raw, const char **escaped) {
+  *component = strstr(cursor, "{% component");
+  *raw = strstr(cursor, "{!!");
+  *escaped = strstr(cursor, "{{");
+  const char *first = NULL;
+  if (*component) first = *component;
+  if (*raw && (!first || *raw < first)) first = *raw;
+  if (*escaped && (!first || *escaped < first)) first = *escaped;
+  return first;
+}
+
+static bool component_name_is_safe(const char *name) {
+  if (!name[0] || name[0] == '/' || strstr(name, "..")) return false;
+  for (const char *p = name; *p; p++) {
+    if (!(isalnum((unsigned char)*p) || *p == '_' || *p == '-' || *p == '/')) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool parse_component_import(const char *start, char *component_name, size_t component_name_len, const char **end_out) {
+  const char *p = start + strlen("{% component");
+  while (*p && isspace((unsigned char)*p)) p++;
+  if (*p != '"') return false;
+  p++;
+  const char *name_start = p;
+  while (*p && *p != '"') p++;
+  if (*p != '"') return false;
+  size_t len = (size_t)(p - name_start);
+  if (len >= component_name_len) return false;
+  memcpy(component_name, name_start, len);
+  component_name[len] = '\0';
+  p++;
+  while (*p && isspace((unsigned char)*p)) p++;
+  if (p[0] != '%' || p[1] != '}') return false;
+  if (!component_name_is_safe(component_name)) return false;
+  *end_out = p + 2;
+  return true;
+}
+
+static bool render_template_file(
+  const char *path,
+  const ViewVar *vars,
+  size_t var_count,
+  char *out,
+  size_t out_len,
+  int depth
+);
+
+static bool render_component(
+  const char *component_name,
+  const ViewVar *vars,
+  size_t var_count,
+  char *out,
+  size_t out_len,
+  int depth
+) {
+  char path[256];
+  if (depth >= MAX_COMPONENT_DEPTH) return false;
+  snprintf(path, sizeof(path), "ui_components/%s.scales", component_name);
+  return render_template_file(path, vars, var_count, out, out_len, depth + 1);
+}
+
 static bool render_template_text(
   const char *template_text,
   const ViewVar *vars,
   size_t var_count,
   char *out,
-  size_t out_len
+  size_t out_len,
+  int depth
 ) {
   const char *cursor = template_text;
   size_t used = 0;
   out[0] = '\0';
 
   while (*cursor) {
-    const char *escaped = strstr(cursor, "{{");
-    const char *raw = strstr(cursor, "{!!");
-    bool use_raw = raw && (!escaped || raw < escaped);
-    const char *start = use_raw ? raw : escaped;
+    const char *component;
+    const char *raw;
+    const char *escaped;
+    const char *start = first_token(cursor, &component, &raw, &escaped);
     if (!start) {
       return append_text(out, out_len, &used, cursor);
     }
 
     if (!append_bytes(out, out_len, &used, cursor, (size_t)(start - cursor))) return false;
 
+    if (start == component) {
+      char component_name[128];
+      char rendered[MAX_VIEW];
+      const char *end = NULL;
+      if (!parse_component_import(start, component_name, sizeof(component_name), &end)) {
+        return false;
+      }
+      if (!render_component(component_name, vars, var_count, rendered, sizeof(rendered), depth)) {
+        return false;
+      }
+      if (!append_text(out, out_len, &used, rendered)) return false;
+      cursor = end;
+      continue;
+    }
+
+    bool use_raw = start == raw;
     const char *token_start = start + (use_raw ? 3 : 2);
     const char *end = use_raw ? strstr(token_start, "!!}") : strstr(token_start, "}}");
     if (!end) {
@@ -226,18 +282,19 @@ static bool render_template_text(
   return true;
 }
 
-static bool render_view_file(
+static bool render_template_file(
   const char *path,
   const ViewVar *vars,
   size_t var_count,
   char *out,
-  size_t out_len
+  size_t out_len,
+  int depth
 ) {
   char template_text[MAX_VIEW];
-  if (!read_view_file(path, template_text, sizeof(template_text))) {
+  if (!read_template_file(path, template_text, sizeof(template_text))) {
     return false;
   }
-  return render_template_text(template_text, vars, var_count, out, out_len);
+  return render_template_text(template_text, vars, var_count, out, out_len, depth);
 }
 
 static bool render_page(
@@ -251,19 +308,21 @@ static bool render_page(
   char view_path[256];
   char content[MAX_VIEW];
   snprintf(view_path, sizeof(view_path), "view/%s.html", view_name);
-  if (!render_view_file(view_path, vars, var_count, content, sizeof(content))) {
+  if (!render_template_file(view_path, vars, var_count, content, sizeof(content), 0)) {
     return false;
   }
 
-  ViewVar layout_vars[] = {
-    {"title", title},
-    {"app_name", APP_NAME},
-    {"content", content},
-  };
-  return render_view_file("view/layout.html", layout_vars, 3, out, out_len);
+  ViewVar layout_vars[var_count + 3];
+  layout_vars[0] = (ViewVar){"title", title};
+  layout_vars[1] = (ViewVar){"app_name", APP_NAME};
+  layout_vars[2] = (ViewVar){"content", content};
+  for (size_t i = 0; i < var_count; i++) {
+    layout_vars[i + 3] = vars[i];
+  }
+  return render_template_file("view/layout.html", layout_vars, var_count + 3, out, out_len, 0);
 }
 
-static void respond_view(
+void respond_view(
   int client,
   const char *status,
   const char *view_name,
@@ -310,7 +369,7 @@ static void url_decode(char *out, size_t out_len, const char *in, size_t in_len)
   out[o] = '\0';
 }
 
-static bool form_value(const char *body, const char *key, char *out, size_t out_len) {
+bool form_value(const char *body, const char *key, char *out, size_t out_len) {
   size_t key_len = strlen(key);
   const char *p = body ? body : "";
   while (*p) {
@@ -325,338 +384,6 @@ static bool form_value(const char *body, const char *key, char *out, size_t out_
   }
   out[0] = '\0';
   return false;
-}
-
-static void random_hex(char *out, size_t byte_count) {
-  unsigned char bytes[64];
-  if (byte_count > sizeof(bytes)) byte_count = sizeof(bytes);
-  if (RAND_bytes(bytes, (int)byte_count) != 1) {
-    srand((unsigned int)time(NULL));
-    for (size_t i = 0; i < byte_count; i++) {
-      bytes[i] = (unsigned char)(rand() & 0xff);
-    }
-  }
-  for (size_t i = 0; i < byte_count; i++) {
-    sprintf(out + (i * 2), "%02x", bytes[i]);
-  }
-  out[byte_count * 2] = '\0';
-}
-
-static void password_hash(const char *password, const char *salt, char *out) {
-  char input[1024];
-  unsigned char digest[SHA256_DIGEST_LENGTH];
-  snprintf(input, sizeof(input), "%s:%s", salt, password);
-  SHA256((const unsigned char *)input, strlen(input), digest);
-  for (size_t i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-    sprintf(out + (i * 2), "%02x", digest[i]);
-  }
-  out[SHA256_DIGEST_LENGTH * 2] = '\0';
-}
-
-static void db_exec_or_die(const char *sql) {
-  PGresult *res = PQexec(db, sql);
-  ExecStatusType status = PQresultStatus(res);
-  if (status != PGRES_COMMAND_OK && status != PGRES_TUPLES_OK) {
-    fprintf(stderr, "database error: %s\nsql: %s\n", PQerrorMessage(db), sql);
-    PQclear(res);
-    exit(1);
-  }
-  PQclear(res);
-}
-
-static void ensure_schema(void) {
-  db_exec_or_die(
-    "CREATE TABLE IF NOT EXISTS users ("
-    "id SERIAL PRIMARY KEY,"
-    "email TEXT NOT NULL UNIQUE,"
-    "password_hash TEXT NOT NULL,"
-    "password_salt TEXT NOT NULL,"
-    "created_at TIMESTAMPTZ NOT NULL DEFAULT now()"
-    ")"
-  );
-  db_exec_or_die(
-    "CREATE TABLE IF NOT EXISTS sessions ("
-    "token TEXT PRIMARY KEY,"
-    "user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,"
-    "created_at TIMESTAMPTZ NOT NULL DEFAULT now(),"
-    "expires_at TIMESTAMPTZ NOT NULL"
-    ")"
-  );
-  db_exec_or_die("CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON sessions(user_id)");
-  db_exec_or_die("CREATE INDEX IF NOT EXISTS sessions_expires_at_idx ON sessions(expires_at)");
-  db_exec_or_die("DELETE FROM sessions WHERE expires_at < now()");
-}
-
-static void seed_admin(void) {
-  PGresult *count = PQexec(db, "SELECT count(*) FROM users");
-  if (PQresultStatus(count) != PGRES_TUPLES_OK) {
-    PQclear(count);
-    return;
-  }
-  int user_count = atoi(PQgetvalue(count, 0, 0));
-  PQclear(count);
-  if (user_count > 0) return;
-
-  char salt[33];
-  char hash[65];
-  random_hex(salt, 16);
-  password_hash("password", salt, hash);
-  const char *params[3] = {"admin@sealion.local", hash, salt};
-  PGresult *res = PQexecParams(
-    db,
-    "INSERT INTO users(email, password_hash, password_salt) VALUES($1, $2, $3)",
-    3,
-    NULL,
-    params,
-    NULL,
-    NULL,
-    0
-  );
-  if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-    fprintf(stderr, "could not seed admin: %s\n", PQerrorMessage(db));
-  }
-  PQclear(res);
-}
-
-static void connect_db(void) {
-  const char *database_url = getenv("DATABASE_URL");
-  if (!database_url) database_url = "postgres://sealion:sealion@localhost:5432/sealion";
-
-  for (int attempt = 1; attempt <= 30; attempt++) {
-    db = PQconnectdb(database_url);
-    if (PQstatus(db) == CONNECTION_OK) {
-      ensure_schema();
-      seed_admin();
-      return;
-    }
-    fprintf(stderr, "waiting for postgres (%d/30): %s", attempt, PQerrorMessage(db));
-    PQfinish(db);
-    db = NULL;
-    sleep(1);
-  }
-
-  fatal("could not connect to postgres");
-}
-
-static bool create_user(const char *email, const char *password, char *error, size_t error_len) {
-  if (strlen(email) < 3 || strchr(email, '@') == NULL) {
-    snprintf(error, error_len, "Enter a valid email address.");
-    return false;
-  }
-  if (strlen(password) < 6) {
-    snprintf(error, error_len, "Password must be at least 6 characters.");
-    return false;
-  }
-
-  char salt[33];
-  char hash[65];
-  random_hex(salt, 16);
-  password_hash(password, salt, hash);
-  const char *params[3] = {email, hash, salt};
-  PGresult *res = PQexecParams(
-    db,
-    "INSERT INTO users(email, password_hash, password_salt) VALUES($1, $2, $3)",
-    3,
-    NULL,
-    params,
-    NULL,
-    NULL,
-    0
-  );
-  if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-    snprintf(error, error_len, "That email is already registered.");
-    PQclear(res);
-    return false;
-  }
-  PQclear(res);
-  error[0] = '\0';
-  return true;
-}
-
-static bool verify_user(const char *email, const char *password, int *user_id) {
-  const char *params[1] = {email};
-  PGresult *res = PQexecParams(
-    db,
-    "SELECT id, password_hash, password_salt FROM users WHERE email = $1",
-    1,
-    NULL,
-    params,
-    NULL,
-    NULL,
-    0
-  );
-  if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) != 1) {
-    PQclear(res);
-    return false;
-  }
-  char hash[65];
-  password_hash(password, PQgetvalue(res, 0, 2), hash);
-  bool ok = strcmp(hash, PQgetvalue(res, 0, 1)) == 0;
-  if (ok) *user_id = atoi(PQgetvalue(res, 0, 0));
-  PQclear(res);
-  return ok;
-}
-
-static bool lookup_user_id(const char *email, int *user_id) {
-  const char *params[1] = {email};
-  PGresult *res = PQexecParams(db, "SELECT id FROM users WHERE email = $1", 1, NULL, params, NULL, NULL, 0);
-  if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) != 1) {
-    PQclear(res);
-    return false;
-  }
-  *user_id = atoi(PQgetvalue(res, 0, 0));
-  PQclear(res);
-  return true;
-}
-
-static bool create_session(int user_id, char *token, size_t token_len) {
-  char user_id_text[32];
-  random_hex(token, 32);
-  snprintf(user_id_text, sizeof(user_id_text), "%d", user_id);
-  const char *params[2] = {token, user_id_text};
-  PGresult *res = PQexecParams(
-    db,
-    "INSERT INTO sessions(token, user_id, expires_at) VALUES($1, $2::integer, now() + interval '7 days')",
-    2,
-    NULL,
-    params,
-    NULL,
-    NULL,
-    0
-  );
-  bool ok = PQresultStatus(res) == PGRES_COMMAND_OK;
-  PQclear(res);
-  if (!ok && token_len > 0) token[0] = '\0';
-  return ok;
-}
-
-static bool extract_session_cookie(const char *cookie, char *token, size_t token_len) {
-  const char *name = "sealion_session=";
-  const char *p = strstr(cookie, name);
-  if (!p) return false;
-  p += strlen(name);
-  size_t i = 0;
-  while (p[i] && p[i] != ';' && i + 1 < token_len) {
-    token[i] = p[i];
-    i++;
-  }
-  token[i] = '\0';
-  return i > 0;
-}
-
-static bool current_user(const Request *req, User *user) {
-  char token[129];
-  if (!extract_session_cookie(req->cookie, token, sizeof(token))) {
-    return false;
-  }
-  const char *params[1] = {token};
-  PGresult *res = PQexecParams(
-    db,
-    "SELECT users.id, users.email "
-    "FROM sessions JOIN users ON users.id = sessions.user_id "
-    "WHERE sessions.token = $1 AND sessions.expires_at > now()",
-    1,
-    NULL,
-    params,
-    NULL,
-    NULL,
-    0
-  );
-  if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) != 1) {
-    PQclear(res);
-    return false;
-  }
-  user->id = atoi(PQgetvalue(res, 0, 0));
-  snprintf(user->email, sizeof(user->email), "%s", PQgetvalue(res, 0, 1));
-  PQclear(res);
-  return true;
-}
-
-static void destroy_session(const char *cookie) {
-  char token[129];
-  if (!extract_session_cookie(cookie, token, sizeof(token))) return;
-  const char *params[1] = {token};
-  PGresult *res = PQexecParams(db, "DELETE FROM sessions WHERE token = $1", 1, NULL, params, NULL, NULL, 0);
-  PQclear(res);
-}
-
-static void handle_home(int client, const Request *req) {
-  User user;
-  if (current_user(req, &user)) {
-    redirect_to(client, "/dashboard", NULL);
-    return;
-  }
-  ViewVar vars[] = {{"app_name", APP_NAME}};
-  respond_view(client, "200 OK", "home", "Welcome", vars, 1);
-}
-
-static void handle_register_form(int client, const char *error) {
-  ViewVar vars[] = {{"error", error && error[0] ? error : ""}};
-  respond_view(client, "200 OK", "register", "Register", vars, 1);
-}
-
-static void handle_login_form(int client, const char *error) {
-  ViewVar vars[] = {{"error", error && error[0] ? error : ""}};
-  respond_view(client, "200 OK", "login", "Login", vars, 1);
-}
-
-static void handle_register(int client, const Request *req) {
-  char email[256];
-  char password[256];
-  char error[512];
-  form_value(req->body, "email", email, sizeof(email));
-  form_value(req->body, "password", password, sizeof(password));
-  if (!create_user(email, password, error, sizeof(error))) {
-    char error_html[768];
-    snprintf(error_html, sizeof(error_html), "<p class=\"error\">%s</p>", error);
-    handle_register_form(client, error_html);
-    return;
-  }
-  int user_id = 0;
-  lookup_user_id(email, &user_id);
-  char token[129];
-  if (!create_session(user_id, token, sizeof(token))) {
-    handle_login_form(client, "<p class=\"error\">Account created, but login failed. Try logging in.</p>");
-    return;
-  }
-  char cookie[512];
-  snprintf(cookie, sizeof(cookie), "Set-Cookie: sealion_session=%s; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800\r\n", token);
-  redirect_to(client, "/dashboard", cookie);
-}
-
-static void handle_login(int client, const Request *req) {
-  char email[256];
-  char password[256];
-  int user_id = 0;
-  form_value(req->body, "email", email, sizeof(email));
-  form_value(req->body, "password", password, sizeof(password));
-  if (!verify_user(email, password, &user_id)) {
-    handle_login_form(client, "<p class=\"error\">Email or password is incorrect.</p>");
-    return;
-  }
-  char token[129];
-  if (!create_session(user_id, token, sizeof(token))) {
-    handle_login_form(client, "<p class=\"error\">Could not create a session.</p>");
-    return;
-  }
-  char cookie[512];
-  snprintf(cookie, sizeof(cookie), "Set-Cookie: sealion_session=%s; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800\r\n", token);
-  redirect_to(client, "/dashboard", cookie);
-}
-
-static void handle_dashboard(int client, const Request *req) {
-  User user;
-  if (!current_user(req, &user)) {
-    redirect_to(client, "/login", NULL);
-    return;
-  }
-  ViewVar vars[] = {{"user_email", user.email}};
-  respond_view(client, "200 OK", "dashboard", "Dashboard", vars, 1);
-}
-
-static void handle_logout(int client, const Request *req) {
-  destroy_session(req->cookie);
-  redirect_to(client, "/", "Set-Cookie: sealion_session=deleted; HttpOnly; SameSite=Lax; Path=/; Max-Age=0\r\n");
 }
 
 static int parse_content_length(const char *headers) {
@@ -783,7 +510,7 @@ static void handle_client(int client) {
   } else if (strcmp(req.method, "POST") == 0 && strcmp(req.path, "/logout") == 0) {
     handle_logout(client, &req);
   } else {
-    respond_view(client, "404 Not Found", "not_found", "Not found", NULL, 0);
+    handle_not_found(client);
   }
 
   close(client);

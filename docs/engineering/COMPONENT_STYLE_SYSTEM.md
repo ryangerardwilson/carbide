@@ -31,6 +31,21 @@ validates, and compiles those strings through framework-owned C tooling.
 
 ## Authoring Model
 
+Starter app components live in `.scales` files:
+
+```text
+ui_components/
+|-- l1/
+|-- l2/
+`-- l3/
+```
+
+Views import components and pass data through variables:
+
+```html
+{% component "l3/dashboard_page" %}
+```
+
 Components can attach a style specification to rendered markup:
 
 ```c
@@ -88,6 +103,9 @@ Tailwind for generated apps, framework examples, CI, or documentation.
 
 The component style system needs dedicated regression coverage:
 
+- view files stay import-only and do not own CSS;
+- components use `.scales`, not `.html`;
+- L1/L2/L3 component directories exist in generated apps;
 - utility parser accepts valid specs and rejects unknown utilities;
 - generated CSS is deterministic;
 - token references fail when missing;
@@ -106,4 +124,3 @@ The first component-style milestone is a button component that:
 4. uses theme tokens,
 5. fails CI on an unknown utility,
 6. does not require Tailwind or Node.
-
