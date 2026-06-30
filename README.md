@@ -138,9 +138,11 @@ Compose watch enabled. Edits under `src/`, `model/`, `controller/`, `view/`,
 Generated apps use an MVC starter layout. `model/` owns Postgres state,
 `controller/` owns request flow, and `view/` owns thin templates that import
 components. UI implementation lives in `.scales` files under
-`ui_components/l1`, `ui_components/l2`, and `ui_components/l3`. The starter
-renderer supports escaped variables with `{{ name }}`, trusted raw slots with
-`{!! content !!}`, and component imports with `{% component "l3/example" %}`.
+`ui_components/l1`, `ui_components/l2`, and `ui_components/l3`. Views pass
+props into components with a Blade-like call syntax:
+`{% component "l3/example" title=page_title label="Save" %}`. Components
+receive only the props passed by the caller. The starter renderer supports
+escaped variables with `{{ name }}` and trusted raw slots with `{!! content !!}`.
 
 ## Roadmap
 

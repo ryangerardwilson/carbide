@@ -25,10 +25,11 @@
       <section>
         <h2>Authoring Model</h2>
         <pre><code>view/dashboard.html
-{% component "l3/dashboard_page" %}
+{% component "l3/dashboard_page" user_email=user_email %}
 
 ui_components/l3/dashboard_page.scales
 &lt;h1&gt;Dashboard&lt;/h1&gt;</code></pre>
+        <p>Components receive only props passed by their caller. If an L3 component uses an L2 component, it forwards the required props explicitly.</p>
       </section>
 
       <section>
@@ -42,6 +43,7 @@ ui_components/l3/dashboard_page.scales
         <ul>
           <li>Valid utilities compile and unknown utilities fail CI.</li>
           <li>View files stay import-only and do not own CSS.</li>
+          <li>View and component calls pass required props explicitly.</li>
           <li>Components use <code>.scales</code>, not <code>.html</code>.</li>
           <li>Generated CSS is deterministic.</li>
           <li>Missing tokens produce actionable errors.</li>

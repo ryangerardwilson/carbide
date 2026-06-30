@@ -39,9 +39,11 @@ Generated apps start with an MVC shape:
   markup and styling.
 
 Edit component markup in `ui_components/**/*.scales`. View files in `view/`
-should only import components with `{% component "l3/example" %}` and pass data
-through variables. Sealion renders escaped variables with `{{ name }}`, trusted
-raw slots with `{!! content !!}`, and component imports from `.scales` files.
+should only import components and pass props, for example
+`{% component "l3/example" title=page_title label="Save" %}`. Components receive
+only the props passed by their caller. Sealion renders escaped variables with
+`{{ name }}`, trusted raw slots with `{!! content !!}`, and component imports
+from `.scales` files.
 
 Demo login:
 

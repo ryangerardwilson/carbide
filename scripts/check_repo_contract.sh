@@ -118,16 +118,16 @@ grep -q "COPY view ./view" templates/default/Dockerfile
 grep -q "COPY ui_components ./ui_components" templates/default/Dockerfile
 grep -q "{{ title }}" templates/default/view/layout.html
 grep -q '{% component "l1/base_styles" %}' templates/default/view/layout.html
-grep -q '{% component "l2/page_shell" %}' templates/default/view/layout.html
+grep -q '{% component "l2/page_shell" content=content %}' templates/default/view/layout.html
 grep -q "{!! content !!}" templates/default/ui_components/l2/page_shell.scales
-grep -q '{% component "l3/home_page" %}' templates/default/view/home.html
-grep -q '{% component "l3/login_page" %}' templates/default/view/login.html
-grep -q '{% component "l3/register_page" %}' templates/default/view/register.html
-grep -q '{% component "l3/dashboard_page" %}' templates/default/view/dashboard.html
+grep -q '{% component "l3/home_page" app_name=app_name %}' templates/default/view/home.html
+grep -q '{% component "l3/login_page" auth_title=auth_title auth_action=auth_action email_value=email_value password_autocomplete=password_autocomplete submit_label=submit_label error=error auth_footer=auth_footer %}' templates/default/view/login.html
+grep -q '{% component "l3/register_page" auth_title=auth_title auth_action=auth_action email_value=email_value password_autocomplete=password_autocomplete submit_label=submit_label error=error auth_footer=auth_footer %}' templates/default/view/register.html
+grep -q '{% component "l3/dashboard_page" user_email=user_email %}' templates/default/view/dashboard.html
 grep -q '{% component "l3/not_found_page" %}' templates/default/view/not_found.html
 grep -q "{{ user_email }}" templates/default/ui_components/l3/dashboard_page.scales
-grep -q '{% component "l2/auth_form" %}' templates/default/ui_components/l3/login_page.scales
-grep -q '{% component "l2/auth_form" %}' templates/default/ui_components/l3/register_page.scales
+grep -q '{% component "l2/auth_form" auth_title=auth_title auth_action=auth_action email_value=email_value password_autocomplete=password_autocomplete submit_label=submit_label error=error auth_footer=auth_footer %}' templates/default/ui_components/l3/login_page.scales
+grep -q '{% component "l2/auth_form" auth_title=auth_title auth_action=auth_action email_value=email_value password_autocomplete=password_autocomplete submit_label=submit_label error=error auth_footer=auth_footer %}' templates/default/ui_components/l3/register_page.scales
 grep -q "render_template_text" templates/default/src/main.c
 grep -q "respond_view" templates/default/src/main.c
 grep -q "ui_components/%s.scales" templates/default/src/main.c

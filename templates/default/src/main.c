@@ -16,6 +16,9 @@
 #include <unistd.h>
 
 #define MAX_COMPONENT_DEPTH 8
+#define MAX_COMPONENT_PROPS 24
+#define MAX_PROP_NAME 64
+#define MAX_PROP_VALUE 512
 
 PGconn *db = NULL;
 
@@ -135,6 +138,16 @@ static const char *view_var_value(const ViewVar *vars, size_t var_count, const c
   return "";
 }
 
+static bool find_view_var(const ViewVar *vars, size_t var_count, const char *name, const char **value) {
+  for (size_t i = 0; i < var_count; i++) {
+    if (strcmp(vars[i].name, name) == 0) {
+      *value = vars[i].value ? vars[i].value : "";
+      return true;
+    }
+  }
+  return false;
+}
+
 static void copy_trimmed_key(char *out, size_t out_len, const char *start, size_t len) {
   while (len > 0 && isspace((unsigned char)*start)) {
     start++;
@@ -179,8 +192,30 @@ static bool component_name_is_safe(const char *name) {
   return true;
 }
 
-static bool parse_component_import(const char *start, char *component_name, size_t component_name_len, const char **end_out) {
+static bool prop_name_is_safe(const char *name) {
+  if (!name[0]) return false;
+  for (const char *p = name; *p; p++) {
+    if (!(isalnum((unsigned char)*p) || *p == '_')) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool parse_component_import(
+  const char *start,
+  const ViewVar *source_vars,
+  size_t source_var_count,
+  char *component_name,
+  size_t component_name_len,
+  ViewVar *props,
+  size_t *prop_count,
+  char prop_names[MAX_COMPONENT_PROPS][MAX_PROP_NAME],
+  char prop_literals[MAX_COMPONENT_PROPS][MAX_PROP_VALUE],
+  const char **end_out
+) {
   const char *p = start + strlen("{% component");
+  *prop_count = 0;
   while (*p && isspace((unsigned char)*p)) p++;
   if (*p != '"') return false;
   p++;
@@ -192,11 +227,55 @@ static bool parse_component_import(const char *start, char *component_name, size
   memcpy(component_name, name_start, len);
   component_name[len] = '\0';
   p++;
-  while (*p && isspace((unsigned char)*p)) p++;
-  if (p[0] != '%' || p[1] != '}') return false;
   if (!component_name_is_safe(component_name)) return false;
-  *end_out = p + 2;
-  return true;
+
+  for (;;) {
+    while (*p && isspace((unsigned char)*p)) p++;
+    if (p[0] == '%' && p[1] == '}') {
+      *end_out = p + 2;
+      return true;
+    }
+    if (*prop_count >= MAX_COMPONENT_PROPS) return false;
+
+    const char *name_start = p;
+    while (*p && (isalnum((unsigned char)*p) || *p == '_')) p++;
+    size_t prop_name_len = (size_t)(p - name_start);
+    if (prop_name_len == 0 || prop_name_len >= MAX_PROP_NAME) return false;
+    memcpy(prop_names[*prop_count], name_start, prop_name_len);
+    prop_names[*prop_count][prop_name_len] = '\0';
+    if (!prop_name_is_safe(prop_names[*prop_count])) return false;
+
+    while (*p && isspace((unsigned char)*p)) p++;
+    if (*p != '=') return false;
+    p++;
+    while (*p && isspace((unsigned char)*p)) p++;
+
+    const char *value = NULL;
+    if (*p == '"') {
+      p++;
+      const char *literal_start = p;
+      while (*p && *p != '"') p++;
+      if (*p != '"') return false;
+      size_t literal_len = (size_t)(p - literal_start);
+      if (literal_len >= MAX_PROP_VALUE) return false;
+      memcpy(prop_literals[*prop_count], literal_start, literal_len);
+      prop_literals[*prop_count][literal_len] = '\0';
+      value = prop_literals[*prop_count];
+      p++;
+    } else {
+      char source_name[MAX_PROP_NAME];
+      const char *source_start = p;
+      while (*p && (isalnum((unsigned char)*p) || *p == '_')) p++;
+      size_t source_len = (size_t)(p - source_start);
+      if (source_len == 0 || source_len >= sizeof(source_name)) return false;
+      memcpy(source_name, source_start, source_len);
+      source_name[source_len] = '\0';
+      if (!find_view_var(source_vars, source_var_count, source_name, &value)) return false;
+    }
+
+    props[*prop_count] = (ViewVar){prop_names[*prop_count], value};
+    (*prop_count)++;
+  }
 }
 
 static bool render_template_file(
@@ -247,12 +326,27 @@ static bool render_template_text(
 
     if (start == component) {
       char component_name[128];
+      char prop_names[MAX_COMPONENT_PROPS][MAX_PROP_NAME];
+      char prop_literals[MAX_COMPONENT_PROPS][MAX_PROP_VALUE];
+      ViewVar props[MAX_COMPONENT_PROPS];
+      size_t prop_count = 0;
       char rendered[MAX_VIEW];
       const char *end = NULL;
-      if (!parse_component_import(start, component_name, sizeof(component_name), &end)) {
+      if (!parse_component_import(
+        start,
+        vars,
+        var_count,
+        component_name,
+        sizeof(component_name),
+        props,
+        &prop_count,
+        prop_names,
+        prop_literals,
+        &end
+      )) {
         return false;
       }
-      if (!render_component(component_name, vars, var_count, rendered, sizeof(rendered), depth)) {
+      if (!render_component(component_name, props, prop_count, rendered, sizeof(rendered), depth)) {
         return false;
       }
       if (!append_text(out, out_len, &used, rendered)) return false;
