@@ -4,22 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Frontend Contract | Sealion</title>
-    <meta name="description" content="Sealion's Bun/React/Tailwind frontend, C API backend, and Postgres database contract.">
+    <meta name="description" content="Sealion's Bun/React/Tailwind frontend, Go API backend, and Postgres database contract.">
     <link rel="stylesheet" href="assets/styles.css">
   </head>
   <body>
     <header class="hero">
       <div class="shell">
         <p class="eyebrow"><a href="index.html">Sealion docs</a></p>
-        <h1>Bun frontend, C API backend, Postgres database.</h1>
-        <p class="lead">The default Sealion UI uses React, Bun, and Tailwind in a container while the framework keeps auth, sessions, and data access in C.</p>
+        <h1>Bun frontend, Go API backend, Postgres database.</h1>
+        <p class="lead">The default Sealion UI uses React, Bun, and Tailwind in a container while the framework keeps auth, sessions, and data access in Go.</p>
       </div>
     </header>
 
     <main class="shell">
       <section>
         <h2>Runtime Model</h2>
-        <pre><code>browser -> frontend container -> /api proxy -> backend C container -> Postgres</code></pre>
+        <pre><code>browser -> frontend container -> /api proxy -> backend Go container -> Postgres</code></pre>
         <p>The frontend is the public entrypoint. It proxies <code>/api</code> and <code>/health</code> to the backend so browser requests stay same-origin.</p>
       </section>
 
@@ -35,7 +35,7 @@
         |-- main.jsx
         |-- server.jsx
         `-- styles.css</code></pre>
-        <p>The web app lives inside <code>view/web</code>. React owns page flow, forms, and dashboard rendering. The C backend owns JSON responses, HttpOnly cookies, sessions, validation, and Postgres access.</p>
+        <p>The web app lives inside <code>view/web</code>. React owns page flow, forms, and dashboard rendering. The Go backend owns JSON responses, HttpOnly cookies, sessions, validation, and Postgres access.</p>
       </section>
 
       <section>

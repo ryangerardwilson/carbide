@@ -12,7 +12,7 @@
       <div class="shell">
         <p class="eyebrow"><a href="index.html">Sealion docs</a></p>
         <h1>Directory structure</h1>
-        <p class="lead">The repo separates framework source, generated Bun/React/Tailwind frontend code, C backend code, tests, infrastructure, automation, and published documentation from the start.</p>
+        <p class="lead">The repo separates framework source, generated Bun/React/Tailwind frontend code, Go backend code, tests, infrastructure, automation, and published documentation from the start.</p>
       </div>
     </header>
 
@@ -55,8 +55,8 @@
           <li><strong>docs/engineering:</strong> source-of-truth engineering plans.</li>
           <li><strong>docs/site:</strong> static GitHub Pages artifact.</li>
           <li><strong>examples:</strong> generated or hand-written sample apps.</li>
-          <li><strong>include/sealion:</strong> public C headers.</li>
-          <li><strong>include/sealion/ui:</strong> public component and style-system APIs.</li>
+          <li><strong>include/sealion:</strong> reserved public framework API surface.</li>
+          <li><strong>include/sealion/ui:</strong> reserved public frontend helper API surface.</li>
           <li><strong>infra:</strong> Compose templates and infrastructure schemas.</li>
           <li><strong>scripts:</strong> repo-owned checks and maintenance commands.</li>
           <li><strong>src:</strong> framework implementation.</li>
@@ -64,7 +64,7 @@
           <li><strong>templates/default:</strong> starter app used by <code>sealion new</code> and <code>sealion init</code>.</li>
           <li><strong>templates/default/model:</strong> generated Postgres-backed model code.</li>
           <li><strong>templates/default/controller:</strong> generated request-flow handlers.</li>
-          <li><strong>templates/default/src:</strong> generated C HTTP/API server.</li>
+          <li><strong>templates/default/src:</strong> generated Go HTTP/API server.</li>
           <li><strong>templates/default/view/web:</strong> generated Bun/React/Tailwind web app, browser UI, frontend container source, and API proxy.</li>
           <li><strong>tests:</strong> fixtures, unit, integration, and regression coverage.</li>
           <li><strong>go.mod:</strong> Go module definition for the CLI.</li>

@@ -1,7 +1,7 @@
 # CI/CD Regression Test Plan
 
 Sealion's test strategy starts with repository contracts and grows toward full
-C runtime, Postgres, container, and infrastructure regression coverage.
+Go backend, Postgres, container, and infrastructure regression coverage.
 
 ## Required Gates
 
@@ -15,7 +15,7 @@ Runs on every pull request:
 - documentation site contract checks;
 - generated Docker stack smoke test with registration-first, Postgres-backed
   JSON auth;
-- future C compile, unit, sanitizer, and integration checks.
+- future backend unit, integration, and compatibility checks.
 
 ### Main Branch Gate
 
@@ -29,8 +29,8 @@ Runs after every push to `main`:
 
 Runs before a tagged framework release:
 
-- full compile matrix;
-- sanitizer matrix;
+- supported Go version matrix;
+- race and compatibility matrix;
 - Postgres integration matrix;
 - generated project smoke tests;
 - migration up/down tests;
@@ -47,7 +47,7 @@ Initial checks:
 
 - required directories exist;
 - README keeps the core product contracts: Bun/React/Tailwind frontend
-  container, C backend container, Postgres-only database, infrastructure as
+  container, Go backend container, Postgres-only database, infrastructure as
   code, local Compose first, and Postgres-backed queues;
 - install script, CLI, and default template files exist;
 - the Go CLI builds and its deterministic helpers and output renderer pass unit
@@ -56,20 +56,21 @@ Initial checks:
 - custom Pages domain is present in `docs/site/CNAME`;
 - workflow files exist.
 
-### C Compile And ABI
+### Backend Build And API
 
-Purpose: catch broken public headers, incompatible symbols, and build drift.
+Purpose: catch broken backend builds, incompatible API behavior, and build
+drift.
 
 Future checks:
 
-- compile `src/` with strict warnings;
-- compile public examples against installed headers;
-- verify exported symbols for public framework APIs;
-- fail on accidental ABI changes outside release workflows.
+- build generated backend code with the pinned Go version;
+- run backend unit tests with strict failure behavior;
+- verify public API routes, cookies, and JSON response shapes;
+- fail on accidental generated API contract changes outside release workflows.
 
 ### Unit Tests
 
-Purpose: keep core C behavior deterministic.
+Purpose: keep core backend behavior deterministic.
 
 Future checks:
 
@@ -77,19 +78,19 @@ Future checks:
 - request parsing;
 - response generation;
 - middleware ordering;
-- memory ownership helpers;
 - configuration parsing;
 - logging shape.
 
-### Sanitizer Tests
+### Compatibility And Race Tests
 
-Purpose: make C memory failures visible early.
+Purpose: make concurrency and generated app compatibility failures visible
+early.
 
 Future checks:
 
-- AddressSanitizer build;
-- UndefinedBehaviorSanitizer build;
-- leak detection for request lifecycle tests;
+- Go race detector for backend packages that can run without containers;
+- generated app compatibility tests across supported Go versions;
+- request lifecycle tests under concurrent auth and session traffic;
 - failure artifacts for reproducible debugging.
 
 ### Postgres Integration
@@ -125,7 +126,7 @@ Future checks:
 - generated Compose config declares file-watch rebuilds for `view/web` source,
   view web package/config files, backend source, model, controller, and
   Dockerfile changes;
-- generated apps include a Bun/React/Tailwind frontend container, C
+- generated apps include a Bun/React/Tailwind frontend container, Go
   backend/API container, and Postgres database container;
 - Bun frontend proxies `/api` and `/health` to the backend;
 - `/api/me` reports anonymous and authenticated state correctly;
@@ -157,7 +158,7 @@ Future checks:
   aligned renderer instead of scattered raw prints;
 - `sealion run dev` streams frontend, backend, database, and watch output
   through timestamped service-tagged rows after the stack is ready;
-- `sealion logs follow` reattaches to live container logs and preserves
+- `sealion follow logs` reattaches to live container logs and preserves
   timestamped, service-tagged rendering;
 - `sealion run dev` writes `.sealion/log/dev.jsonl`, and `sealion logs` can
   query it by service, text, limit, and JSON output;

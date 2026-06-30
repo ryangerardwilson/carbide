@@ -39,6 +39,10 @@ services:
     develop:
       watch:
         - action: rebuild
+          path: ./go.mod
+        - action: rebuild
+          path: ./go.sum
+        - action: rebuild
           path: ./src
         - action: rebuild
           path: ./model

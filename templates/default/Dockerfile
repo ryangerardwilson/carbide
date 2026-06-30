@@ -1,26 +1,22 @@
-FROM debian:bookworm-slim
+FROM golang:1.26-bookworm AS build
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
-    build-essential \
-    ca-certificates \
-    curl \
-    libpq-dev \
-    libssl-dev \
-  && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
 
-WORKDIR /app
 COPY src ./src
 COPY model ./model
 COPY controller ./controller
 
-RUN gcc -std=c11 -Wall -Wextra -Wpedantic -O2 \
-  -I/usr/include/postgresql \
-  src/main.c \
-  model/*.c \
-  controller/*.c \
-  -o /usr/local/bin/sealion-app \
-  -lpq -lcrypto
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags "-s -w" -o /out/sealion-app ./src
+
+FROM debian:bookworm-slim
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates curl \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /out/sealion-app /usr/local/bin/sealion-app
 
 EXPOSE 8080
 

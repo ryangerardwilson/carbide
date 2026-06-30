@@ -27,7 +27,7 @@ var commit = ""
 const devLogPath = ".sealion/log/dev.jsonl"
 
 const helpText = `Sealion
-Containerized full-stack apps with React, C, and Postgres.
+Containerized full-stack apps with React, Go, and Postgres.
 
 global actions:
   sealion help
@@ -59,8 +59,8 @@ features:
   cd demo && sealion stop dev
 
   follow live dev logs
-  # sealion logs follow [service <name>] [containing <text>]
-  sealion logs follow
+  # sealion follow logs [service <name>] [containing <text>]
+  sealion follow logs
 
   inspect structured dev logs
   # sealion logs [service <name>] [containing <text>] [limit <count>] [json]
@@ -121,7 +121,6 @@ type logQuery struct {
 	contains string
 	limit    int
 	json     bool
-	follow   bool
 }
 
 type composeServiceStatus struct {
@@ -192,6 +191,11 @@ func (a app) run(args []string) error {
 			return a.commandStopDev()
 		}
 		return errors.New("usage: sealion stop dev")
+	case "follow":
+		if len(args) >= 2 && args[1] == "logs" {
+			return a.commandFollowLogs(args[2:])
+		}
+		return errors.New("usage: sealion follow logs [service <name>] [containing <text>]")
 	case "logs":
 		return a.commandLogs(args[1:])
 	default:
@@ -533,7 +537,7 @@ func (a app) runDevStreams(compose composeCommand, env []string, watch bool, log
 		r.Rows(
 			outputRow{"logs", "detached"},
 			outputRow{"dev", "running"},
-			outputRow{"follow", "sealion logs follow"},
+			outputRow{"follow", "sealion follow logs"},
 			outputRow{"stop", "sealion stop dev"},
 		)
 		return nil
@@ -1100,9 +1104,6 @@ func (a app) commandLogs(args []string) error {
 	if err != nil {
 		return err
 	}
-	if query.follow {
-		return a.commandLogsFollow(query)
-	}
 	entries, err := readStructuredLogEntries(devLogPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -1130,12 +1131,19 @@ func (a app) commandLogs(args []string) error {
 	return nil
 }
 
-func (a app) commandLogsFollow(query logQuery) error {
+func (a app) commandFollowLogs(args []string) error {
+	if !isFile("sealion.toml") {
+		return errors.New("run this inside a Sealion project")
+	}
+	query, err := parseLogQuery(args)
+	if err != nil {
+		return err
+	}
 	if query.json {
-		return errors.New("sealion logs follow does not support json")
+		return errors.New("sealion follow logs does not support json")
 	}
 	if query.limit != 80 {
-		return errors.New("sealion logs follow does not support limit")
+		return errors.New("sealion follow logs does not support limit")
 	}
 
 	compose, err := findCompose()
@@ -1208,24 +1216,22 @@ func parseLogQuery(args []string) (logQuery, error) {
 	query := logQuery{limit: 80}
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
-		case "follow":
-			query.follow = true
 		case "service":
 			i++
 			if i >= len(args) || args[i] == "" {
-				return query, errors.New("usage: sealion logs [follow] [service <name>] [containing <text>] [limit <count>] [json]")
+				return query, errors.New("usage: sealion logs [service <name>] [containing <text>] [limit <count>] [json]")
 			}
 			query.service = args[i]
 		case "containing":
 			i++
 			if i >= len(args) || args[i] == "" {
-				return query, errors.New("usage: sealion logs [follow] [service <name>] [containing <text>] [limit <count>] [json]")
+				return query, errors.New("usage: sealion logs [service <name>] [containing <text>] [limit <count>] [json]")
 			}
 			query.contains = args[i]
 		case "limit":
 			i++
 			if i >= len(args) {
-				return query, errors.New("usage: sealion logs [follow] [service <name>] [containing <text>] [limit <count>] [json]")
+				return query, errors.New("usage: sealion logs [service <name>] [containing <text>] [limit <count>] [json]")
 			}
 			limit, err := strconv.Atoi(args[i])
 			if err != nil || limit < 1 {

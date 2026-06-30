@@ -12,7 +12,7 @@
       <div class="shell">
         <p class="eyebrow"><a href="index.html">Sealion docs</a></p>
         <h1>CI/CD regression plan</h1>
-        <p class="lead">The test system starts with repository contracts and grows into C runtime, Postgres, container, IaC, security, and documentation regression suites.</p>
+        <p class="lead">The test system starts with repository contracts and grows into Go backend, Postgres, container, IaC, security, and documentation regression suites.</p>
       </div>
     </header>
 
@@ -26,7 +26,7 @@
           <li>Shell syntax checks for repo-owned scripts.</li>
           <li>Documentation site contract checks.</li>
           <li>Generated Docker stack smoke test with registration-first, Postgres-backed auth.</li>
-          <li>Future C compile, unit, sanitizer, and integration checks.</li>
+          <li>Future backend unit, integration, and compatibility checks.</li>
         </ul>
         <h3>Main Branch Gate</h3>
         <ul>
@@ -41,9 +41,9 @@
         <ul>
           <li><strong>Repository contract:</strong> protects required files, docs, workflows, and product constraints.</li>
           <li><strong>CLI scaffold:</strong> tests the Go CLI, shared output renderer, <code>sealion new</code>, <code>sealion init</code>, compact <code>run dev</code> output, detach-without-teardown on <code>Ctrl+C</code>, explicit <code>stop dev</code> teardown, TTY-only per-container progress behavior including no-color terminals, timestamped service-log streaming, live log follow, structured log querying, placeholder replacement, and empty-directory enforcement.</li>
-          <li><strong>C compile and ABI:</strong> protects public headers, examples, symbols, and release compatibility.</li>
+          <li><strong>Backend build and API:</strong> protects generated backend builds, public API behavior, and release compatibility.</li>
           <li><strong>Unit tests:</strong> protects router, request, response, middleware, config, and logging behavior.</li>
-          <li><strong>Sanitizers:</strong> exposes memory ownership, undefined behavior, and leaks.</li>
+          <li><strong>Compatibility and race tests:</strong> exposes concurrency and generated app compatibility failures.</li>
           <li><strong>Postgres integration:</strong> tests readiness, pooling, migrations, transactions, and parameterized queries.</li>
           <li><strong>Container and IaC:</strong> validates Compose generation, frontend/backend/database separation, health checks, file-watch rebuilds for <code>view/web</code>, backend, model, controller, and Dockerfile changes, external URL logs, registration-first JSON auth, and environment schemas.</li>
           <li><strong>Frontend:</strong> protects the Bun/React/Tailwind container, same-origin API proxy, lockfile install path, and dashboard app shell.</li>

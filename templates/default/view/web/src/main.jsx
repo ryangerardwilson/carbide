@@ -77,7 +77,7 @@ function AuthForm({ mode, onSubmit, busy, error, onMode }) {
           {isRegister ? 'Create the first account' : 'Log in to the dashboard'}
         </h1>
         <p className={`mt-3 ${mutedClass}`}>
-          React owns this interface. The C backend owns auth, sessions, and Postgres state.
+          React owns this interface. The Go backend owns auth, sessions, and Postgres state.
         </p>
       </div>
 
@@ -132,7 +132,7 @@ function Dashboard({ user, onLogout, busy }) {
     <main className="mx-auto max-w-6xl px-6 py-8 sm:px-10 lg:py-14">
       <header className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className={eyebrowClass}>Bun frontend + C API + Postgres</p>
+          <p className={eyebrowClass}>Bun frontend + Go API + Postgres</p>
           <h1 className="m-0 text-5xl leading-none text-[#16211b] sm:text-6xl">{APP_NAME}</h1>
         </div>
         <button className={buttonClass} type="button" onClick={onLogout} disabled={busy}>
@@ -146,7 +146,7 @@ function Dashboard({ user, onLogout, busy }) {
       >
         {[
           ['Frontend', 'React + Bun container'],
-          ['Backend', 'C API container'],
+          ['Backend', 'Go API container'],
           ['Database', 'Postgres container']
         ].map(([label, value]) => (
           <div className="bg-white p-6" key={label}>
@@ -161,7 +161,7 @@ function Dashboard({ user, onLogout, busy }) {
         <h2 className="m-0 text-3xl leading-tight text-[#16211b]">Logged in as {user.email}</h2>
         <p className={`mt-4 ${mutedClass}`}>
           The browser talks to <code className="bg-emerald-50 px-1.5 py-0.5">/api</code> on the
-          same origin. Bun proxies those requests to the C backend, and the backend persists the
+          same origin. Bun proxies those requests to the Go backend, and the backend persists the
           session in Postgres.
         </p>
       </section>
@@ -243,10 +243,10 @@ function App() {
           {APP_NAME}
         </p>
         <h1 className="m-0 max-w-4xl text-[clamp(42px,7vw,82px)] leading-none">
-          Containerized full stack development, with C where it matters.
+          Containerized full stack development with a Go API backend.
         </h1>
         <p className="mt-5 max-w-2xl text-lg text-white/80">
-          Run one command. Get a React and Bun frontend, a C API backend, Tailwind styling, and a
+          Run one command. Get a React and Bun frontend, a Go API backend, Tailwind styling, and a
           Postgres database wired together with same-origin auth.
         </p>
       </section>

@@ -47,18 +47,19 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |   `-- default/
 |       |-- Dockerfile
 |       |-- docker-compose.yml
+|       |-- go.mod
+|       |-- go.sum
 |       |-- controller/
-|       |   |-- auth_controller.c
-|       |   `-- page_controller.c
+|       |   |-- auth_controller.go
+|       |   `-- page_controller.go
 |       |-- migrations/
 |       |   `-- 001_auth.sql
 |       |-- model/
-|       |   |-- session.c
-|       |   `-- user.c
+|       |   |-- session.go
+|       |   `-- user.go
 |       |-- sealion.toml
 |       |-- src/
-|       |   |-- app.h
-|       |   `-- main.c
+|       |   `-- main.go
 |       `-- view/
 |           `-- web/
 |               |-- Dockerfile
@@ -87,8 +88,8 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 - `docs/engineering/`: source-of-truth engineering plans.
 - `docs/site/`: static GitHub Pages artifact.
 - `examples/`: generated or hand-written sample apps.
-- `include/sealion/`: public C headers.
-- `include/sealion/ui/`: public component and style-system APIs.
+- `include/sealion/`: reserved public framework API surface.
+- `include/sealion/ui/`: reserved public frontend helper API surface.
 - `infra/compose/`: local Compose templates and generated examples.
 - `infra/schemas/`: schemas for infrastructure, environment, and app metadata.
 - `scripts/`: repo-owned checks and maintenance commands.
@@ -99,13 +100,13 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
   `sealion init`.
 - `templates/default/model/`: generated Postgres-backed model code.
 - `templates/default/controller/`: generated request-flow handlers.
-- `templates/default/src/`: generated C HTTP/API server.
+- `templates/default/src/`: generated Go HTTP/API server.
 - `templates/default/view/web/`: generated Bun/React/Tailwind web app,
   frontend container source, browser UI, and same-origin API proxy.
 - `tests/fixtures/`: shared test fixtures.
 - `tests/integration/`: tests that use Postgres or containers.
 - `tests/regression/`: tests created after a bug or broken contract.
-- `tests/unit/`: small deterministic C tests.
+- `tests/unit/`: small deterministic unit tests.
 - `go.mod`: Go module definition for the CLI.
 - `install.sh`: GitHub URL installer that builds the Go CLI and places
   `sealion` on the user's PATH.

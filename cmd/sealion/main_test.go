@@ -275,12 +275,8 @@ func TestParseLogQuery(t *testing.T) {
 		t.Fatalf("query = %#v", query)
 	}
 
-	query, err = parseLogQuery([]string{"follow", "service", "frontend"})
-	if err != nil {
-		t.Fatalf("parseLogQuery follow returned %v", err)
-	}
-	if !query.follow || query.service != "frontend" {
-		t.Fatalf("follow query = %#v", query)
+	if _, err = parseLogQuery([]string{"follow", "service", "frontend"}); err == nil {
+		t.Fatalf("parseLogQuery should reject follow as a logs option")
 	}
 }
 

@@ -1,27 +1,27 @@
 # Frontend Contract
 
-Sealion's default app uses a Bun/React/Tailwind frontend, C API backend, and
+Sealion's default app uses a Bun/React/Tailwind frontend, Go API backend, and
 Postgres database. The frontend is a mandatory Bun container in the default
 local topology, not a host-installed JavaScript tooling requirement.
 
 ## Product Decision
 
-The default Sealion UI should be React served by Bun, not a custom Blade-like C
+The default Sealion UI should be React served by Bun, not a custom Blade-like
 template system.
 
 This keeps frontend authoring inside a mature ecosystem while preserving the
-core Sealion bet: C owns backend logic, auth, sessions, database access, and
+core Sealion bet: Go owns backend logic, auth, sessions, database access, and
 the framework runtime contract.
 
 ## Runtime Model
 
 ```text
-browser -> frontend container -> /api proxy -> backend C container -> Postgres
+browser -> frontend container -> /api proxy -> backend Go container -> Postgres
 ```
 
 - `frontend` owns Bun, React, Tailwind, browser routes, forms, dashboard UI,
   and the same-origin proxy.
-- `backend` owns C API routes, auth, session cookies, validation, and JSON.
+- `backend` owns Go API routes, auth, session cookies, validation, and JSON.
 - `db` owns durable Postgres state.
 
 The frontend is the public entrypoint. It proxies `/api` and `/health` to the
@@ -70,7 +70,7 @@ The default React starter should keep those boundaries in component structure.
 The frontend contract needs dedicated regression coverage:
 
 - generated apps include a Bun/React/Tailwind frontend container;
-- generated apps include a C backend/API container;
+- generated apps include a Go backend/API container;
 - generated apps include a Postgres database container;
 - Bun frontend proxies `/api` and `/health` to the backend;
 - auth uses same-origin cookies without CORS setup;

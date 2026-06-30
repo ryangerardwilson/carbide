@@ -1,21 +1,21 @@
 # Sealion
 
 Sealion is an experimental, Laravel-inspired full-stack framework with a React
-frontend container, a C backend container, and a mandatory Postgres database.
+frontend container, a Go backend container, and a mandatory Postgres database.
 
 The goal is not to copy Laravel line by line. The goal is to find the smallest
 set of conventions, tools, and runtime guarantees that make building web apps in
-C feel coherent, productive, and safe enough to be practical.
+containers feel coherent, productive, and safe enough to be practical.
 
 ## Product Bet
 
-C is a difficult language for high-level web application development, and
-rebuilding the whole browser UI stack in C is not the best first product bet.
-Sealion now keeps C where it is strongest and uses React for the default
-frontend:
+The product bet is Docker-first convention over host setup: React owns the
+browser, Go owns the application API, and Postgres owns durable relational
+state. Sealion should make that full-stack default feel boring, inspectable, and
+fast to start:
 
 - one Bun/React/Tailwind frontend container
-- one C backend/API container
+- one Go backend/API container
 - one mandatory Postgres service container
 - one project layout
 - one API request lifecycle
@@ -29,14 +29,14 @@ Sealion should make the hard parts visible instead of hiding them behind magic.
 ## Core Principles
 
 - **Container-first:** every app runs through generated containers, not host
-  Bun, host compiler setup, or hidden local services.
+  Bun, host backend toolchains, or hidden local services.
 - **Go CLI:** `sealion` is a compiled Go CLI. It owns scaffolding, upgrades,
   local port selection, structured terminal output, queryable dev logs, and the
   Docker Compose development lifecycle.
 - **React default frontend:** the browser UI lives in the frontend container.
   Bun, React, and Tailwind are required inside that container, not on the
   developer's host machine.
-- **C backend:** auth, sessions, validation, API routes, and business logic
+- **Go backend:** auth, sessions, validation, API routes, and business logic
   live in the backend container.
 - **Postgres-only:** Sealion targets Postgres as the mandatory database, not as
   one interchangeable adapter among many.
@@ -46,7 +46,7 @@ Sealion should make the hard parts visible instead of hiding them behind magic.
 - **Infrastructure as code:** every supported runtime dependency, service
   boundary, volume, network, secret contract, environment variable, health
   check, and deploy target must be described in checked-in code.
-- **Explicit ownership:** request memory, response memory, and database handles
+- **Explicit ownership:** requests, responses, sessions, and database handles
   must have clear lifetimes.
 - **Convention over configuration:** defaults should cover normal apps without
   requiring boilerplate.
@@ -63,8 +63,8 @@ Sealion should make the hard parts visible instead of hiding them behind magic.
 - Full Laravel API compatibility.
 - Requiring host-installed Bun, Node, or npm.
 - Rebuilding React, Bun, Tailwind, or Blade from scratch.
-- A general-purpose C package manager.
-- ORM magic that depends on runtime reflection C does not have.
+- A general-purpose language package manager.
+- ORM magic that hides SQL, migrations, or operational behavior.
 - Supporting multiple databases, web servers, or deployment targets in the
   first versions.
 
@@ -74,7 +74,7 @@ The default Sealion app runs as three containers:
 
 1. the frontend container, which owns Bun, React, Tailwind, browser routing,
    the API proxy, and the public host port;
-2. the backend container, which owns C API routes, auth, sessions, application
+2. the backend container, which owns Go API routes, auth, sessions, application
    code, migrations, logs, and framework tooling;
 3. the Postgres database container, which owns durable relational state through
    a mounted volume or managed persistent storage.
@@ -135,8 +135,8 @@ sealion stop dev
 ```
 
 The installer currently builds the `sealion` CLI with Go, so Go must be
-available on the host machine. Generated apps still run Bun, C compilation, and
-Postgres inside containers.
+available on the host machine. Generated apps still run Bun, the Go backend
+build, and Postgres inside containers.
 
 `sealion new <project-name>` creates a new project directory. `sealion init`
 initializes the current directory only when it is empty. `sealion run dev`
@@ -147,7 +147,7 @@ port when 8080 is already in use. Set `SEALION_HTTP_PORT=<port>` to choose the
 host port explicitly.
 
 `Ctrl+C` in `sealion run dev` detaches from live log streaming and leaves the
-containers running. `sealion logs follow` attaches to live container logs again.
+containers running. `sealion follow logs` attaches to live container logs again.
 `sealion stop dev` stops the local development stack. `sealion help` prints the
 command reference. `sealion upgrade` upgrades the installed CLI when a newer
 GitHub commit is available. `sealion logs` reads the structured dev log file
@@ -174,7 +174,7 @@ the whole local system from one command.
 Generated apps use an MVC shape. `view/web/` owns the Bun server, Tailwind
 build, browser UI, and same-origin `/api` calls. `model/` owns
 Postgres state, `controller/` owns request flow and JSON responses, and `src/`
-owns the C HTTP/API server.
+owns the Go HTTP/API server.
 
 ## Roadmap
 
@@ -185,12 +185,12 @@ owns the C HTTP/API server.
   connection environment variables.
 - Define the default three-container Compose topology for local development.
 - Define the mandatory infrastructure-as-code file layout and validation rules.
-- Choose compiler, libc, build system, and test runner.
+- Choose Go version, build system, and test runner.
 - Create the canonical app directory layout.
 - Define the request, response, app, and service lifecycle contracts.
 - Define the install URL, `sealion new`, `sealion init`, and `sealion run dev`
   command contracts.
-- Publish a Bun-served React login/dashboard starter backed by Tailwind, a C
+- Publish a Bun-served React login/dashboard starter backed by Tailwind, a Go
   API, and Postgres.
 - Replace the prototype shell CLI with a compiled Go CLI.
 
@@ -214,7 +214,7 @@ owns the C HTTP/API server.
 
 - Keep the Bun/React frontend container as the public local-development
   entrypoint.
-- Proxy `/api` and `/health` to the C backend to preserve same-origin cookies.
+- Proxy `/api` and `/health` to the Go backend to preserve same-origin cookies.
 - Define the frontend component layout for app screens, reusable patterns, and
   primitives.
 - Make Tailwind the mandatory generated styling path.
@@ -227,8 +227,8 @@ owns the C HTTP/API server.
 - Add migrations with up/down support.
 - Add a query builder with parameter binding by default.
 - Add schema inspection helpers for Postgres-specific capabilities.
-- Explore a constrained model layer without pretending C has Eloquent-style
-  reflection.
+- Explore a constrained model layer without pretending every Eloquent pattern
+  maps cleanly into a containerized Go backend.
 
 ### Phase 5: Web App Essentials
 
@@ -256,7 +256,7 @@ owns the C HTTP/API server.
 - Add infrastructure generation, validation, and diff commands.
 - Add test helpers for HTTP requests and database state.
 - Add containerized watch/rebuild workflow.
-- Add debug tooling for memory ownership and request leaks.
+- Add debug tooling for request lifecycle and connection leaks.
 
 ### Phase 8: Production Contract
 

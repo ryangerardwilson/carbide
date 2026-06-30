@@ -37,12 +37,13 @@ required_files=(
   "templates/default/view/web/src/server.jsx"
   "templates/default/view/web/src/styles.css"
   "templates/default/sealion.toml"
-  "templates/default/src/app.h"
-  "templates/default/src/main.c"
-  "templates/default/model/user.c"
-  "templates/default/model/session.c"
-  "templates/default/controller/auth_controller.c"
-  "templates/default/controller/page_controller.c"
+  "templates/default/go.mod"
+  "templates/default/go.sum"
+  "templates/default/src/main.go"
+  "templates/default/model/user.go"
+  "templates/default/model/session.go"
+  "templates/default/controller/auth_controller.go"
+  "templates/default/controller/page_controller.go"
   "templates/default/migrations/001_auth.sql"
 )
 
@@ -98,6 +99,7 @@ grep -q "Postgres-backed queues" README.md
 grep -q "sealion new" README.md
 grep -q "sealion run dev" README.md
 grep -q "sealion stop dev" README.md
+grep -q "sealion follow logs" README.md
 grep -q "sealion logs" README.md
 ! grep -q "command_format" bin/sealion
 ! grep -q "sealion format" bin/sealion
@@ -123,14 +125,21 @@ grep -q "context: ./view/web" templates/default/docker-compose.yml
 grep -q "path: ./view/web/src" templates/default/docker-compose.yml
 grep -q "path: ./view/web/package.json" templates/default/docker-compose.yml
 grep -q "path: ./view/web/bun.lock" templates/default/docker-compose.yml
+grep -q "path: ./go.mod" templates/default/docker-compose.yml
+grep -q "path: ./go.sum" templates/default/docker-compose.yml
 grep -q "path: ./src" templates/default/docker-compose.yml
 grep -q "path: ./model" templates/default/docker-compose.yml
 grep -q "path: ./controller" templates/default/docker-compose.yml
 grep -q "path: ./Dockerfile" templates/default/docker-compose.yml
+grep -q "FROM golang:" templates/default/Dockerfile
+grep -q "go mod download" templates/default/Dockerfile
+grep -q "go build" templates/default/Dockerfile
 grep -q "COPY model ./model" templates/default/Dockerfile
 grep -q "COPY controller ./controller" templates/default/Dockerfile
 ! grep -q "COPY view ./view" templates/default/Dockerfile
 ! grep -q "COPY ui_components ./ui_components" templates/default/Dockerfile
+! grep -q "gcc" templates/default/Dockerfile
+! grep -q "libpq-dev" templates/default/Dockerfile
 ! test -d templates/default/frontend
 ! test -f templates/default/view/web/package-lock.json
 ! test -f templates/default/view/web/vite.config.js
@@ -143,22 +152,25 @@ grep -q "Bun.serve" templates/default/view/web/src/server.jsx
 grep -q "proxying /api and /health" templates/default/view/web/src/server.jsx
 grep -q '@import "tailwindcss";' templates/default/view/web/src/styles.css
 grep -q '/api/${mode}' templates/default/view/web/src/main.jsx
-grep -q "Bun frontend + C API + Postgres" templates/default/view/web/src/main.jsx
+grep -q "Bun frontend + Go API + Postgres" templates/default/view/web/src/main.jsx
 grep -q "React + Bun container" templates/default/view/web/src/main.jsx
-grep -q "respond_json" templates/default/src/main.c
-grep -q "/api/login" templates/default/src/main.c
-grep -q "/api/me" templates/default/src/main.c
-grep -q "handle_api_dashboard" templates/default/src/main.c
+grep -q "github.com/jackc/pgx/v5" templates/default/go.mod
+grep -q "package main" templates/default/src/main.go
+grep -q "/api/login" templates/default/controller/page_controller.go
+grep -q "/api/me" templates/default/controller/page_controller.go
+grep -q "handleDashboard" templates/default/controller/page_controller.go
+grep -q "CreateUser" templates/default/model/user.go
+grep -q "CreateSession" templates/default/model/session.go
 ! grep -R "admin@sealion.local" templates/default README.md docs >/dev/null
 ! grep -R "Demo login" templates/default README.md docs >/dev/null
-! grep -q "seed_admin" templates/default/model/user.c
-! grep -q "render_template_text" templates/default/src/main.c
-! grep -q "respond_view" templates/default/src/main.c
-! grep -q "<style>" templates/default/src/main.c
+! find templates/default -name '*.c' -o -name '*.h' | grep -q .
+! grep -R "seed_admin" templates/default >/dev/null
+! grep -R "render_template_text" templates/default >/dev/null
+! grep -R "respond_view" templates/default >/dev/null
 ! find templates/default -path '*/ui_components/*' -print -quit | grep -q .
 ! grep -R "views/" templates/default README.md docs >/dev/null
-grep -q "API listening inside backend container" templates/default/src/main.c
-grep -q "frontend proxies API calls" templates/default/src/main.c
+grep -q "API listening inside backend container" templates/default/src/main.go
+grep -q "frontend proxies API calls" templates/default/src/main.go
 grep -q "compose.supports(\"--watch\")" cmd/sealion/main.go
 grep -q "newRenderer" cmd/sealion/main.go
 grep -q "runDevStreams" cmd/sealion/main.go
@@ -173,15 +185,19 @@ grep -q "composeLogsArgs" cmd/sealion/main.go
 grep -q "openDevLogSink" cmd/sealion/main.go
 grep -q "openAppendDevLogSink" cmd/sealion/main.go
 grep -q "commandLogs" cmd/sealion/main.go
+grep -q "commandFollowLogs" cmd/sealion/main.go
 grep -q ".sealion/log/dev.jsonl" cmd/sealion/main.go
+grep -q "sealion follow logs" cmd/sealion/main.go
+! grep -q "sealion logs follow" cmd/sealion/main.go
 ! grep -q 'outputRow{"login"' cmd/sealion/main.go
 ! grep -q 'outputRow{"mode"' cmd/sealion/main.go
 
 grep -q "$domain" docs/site/index.html
 grep -q "Bun frontend" docs/site/index.html
 grep -q "Initial user experience" docs/site/index.html
-grep -q "Bun frontend, C API backend, Postgres database" docs/site/component-style-system.html
+grep -q "Bun frontend, Go API backend, Postgres database" docs/site/component-style-system.html
 grep -q "Tailwind is required" docs/site/component-style-system.html
+grep -q "sealion follow logs" docs/site/initial-user-experience.html
 grep -q "Install, create, run, register" docs/site/initial-user-experience.html
 grep -q "CI/CD regression plan" docs/site/ci-cd-regression-tests.html
 grep -q "Directory structure" docs/site/repo-structure.html
