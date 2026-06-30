@@ -118,6 +118,7 @@ grep -q "frontend:" templates/default/docker-compose.yml
 grep -q "backend:" templates/default/docker-compose.yml
 grep -q "db:" templates/default/docker-compose.yml
 grep -q 'PUBLIC_URL: "http://localhost:${SEALION_HTTP_PORT:-8080}"' templates/default/docker-compose.yml
+test "$(grep -c 'PUBLIC_URL: "http://localhost:${SEALION_HTTP_PORT:-8080}"' templates/default/docker-compose.yml)" -eq 2
 grep -q "develop:" templates/default/docker-compose.yml
 grep -q "watch:" templates/default/docker-compose.yml
 grep -q "action: rebuild" templates/default/docker-compose.yml
@@ -149,7 +150,10 @@ grep -q '"@tailwindcss/cli": "4.3.2"' templates/default/view/web/package.json
 grep -q '"tailwindcss": "4.3.2"' templates/default/view/web/package.json
 grep -q '"react": "19.2.7"' templates/default/view/web/package.json
 grep -q "Bun.serve" templates/default/view/web/src/server.jsx
-grep -q "proxying /api and /health" templates/default/view/web/src/server.jsx
+grep -q "browser entrypoint" templates/default/view/web/src/server.jsx
+grep -q "listening inside container" templates/default/view/web/src/server.jsx
+grep -q "proxying /api and /health to backend service" templates/default/view/web/src/server.jsx
+! grep -q "Bun frontend listening on http://localhost" templates/default/view/web/src/server.jsx
 grep -q '@import "tailwindcss";' templates/default/view/web/src/styles.css
 grep -q '/api/${mode}' templates/default/view/web/src/main.jsx
 grep -q "Bun frontend + Go API + Postgres" templates/default/view/web/src/main.jsx
@@ -169,8 +173,10 @@ grep -q "CreateSession" templates/default/model/session.go
 ! grep -R "respond_view" templates/default >/dev/null
 ! find templates/default -path '*/ui_components/*' -print -quit | grep -q .
 ! grep -R "views/" templates/default README.md docs >/dev/null
-grep -q "API listening inside backend container" templates/default/src/main.go
-grep -q "frontend proxies API calls" templates/default/src/main.go
+grep -q "backend listening on container port" templates/default/src/main.go
+grep -q "public API URL is" templates/default/src/main.go
+! grep -q "API listening inside backend container" templates/default/src/main.go
+! grep -q "frontend proxies API calls" templates/default/src/main.go
 grep -q "compose.supports(\"--watch\")" cmd/sealion/main.go
 grep -q "newRenderer" cmd/sealion/main.go
 grep -q "runDevStreams" cmd/sealion/main.go

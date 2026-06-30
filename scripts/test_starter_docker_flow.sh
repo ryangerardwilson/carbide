@@ -84,11 +84,13 @@ grep -q "/_bun/client/" "$tmp_dir/home.html"
 curl -fsS "http://localhost:$port/api/me" > "$tmp_dir/me-anon.json"
 grep -q '"authenticated":false' "$tmp_dir/me-anon.json"
 docker compose logs backend > "$tmp_dir/backend.log"
-grep -q "API listening inside backend container on :8080" "$tmp_dir/backend.log"
-grep -q "frontend proxies API calls from http://localhost:$port/api" "$tmp_dir/backend.log"
+grep -q "backend listening on container port 8080" "$tmp_dir/backend.log"
+grep -q "public API URL is http://localhost:$port/api" "$tmp_dir/backend.log"
 docker compose logs frontend > "$tmp_dir/frontend.log"
-grep -q "Sealion Bun frontend listening" "$tmp_dir/frontend.log"
-grep -q "proxying /api and /health to http://backend:8080" "$tmp_dir/frontend.log"
+grep -q "Sealion Bun frontend listening inside container on :8080" "$tmp_dir/frontend.log"
+grep -q "browser entrypoint http://localhost:$port" "$tmp_dir/frontend.log"
+grep -q "proxying /api and /health to backend service http://backend:8080" "$tmp_dir/frontend.log"
+! grep -q "Bun frontend listening on http://localhost:8080" "$tmp_dir/frontend.log"
 if ! docker compose run --rm --no-deps frontend bun run build > "$tmp_dir/frontend-build.log" 2>&1; then
   cat "$tmp_dir/frontend-build.log" >&2
   exit 1

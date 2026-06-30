@@ -2,6 +2,7 @@ import appShell from '../index.html';
 
 const port = Number(Bun.env.FRONTEND_PORT || Bun.env.PORT || 8080);
 const backendUrl = Bun.env.BACKEND_URL || 'http://backend:8080';
+const publicUrl = Bun.env.PUBLIC_URL || '';
 const backendOrigin = new URL(backendUrl);
 
 function proxyToBackend(request) {
@@ -51,5 +52,8 @@ const server = Bun.serve({
   }
 });
 
-console.log(`Sealion Bun frontend listening on http://localhost:${server.port}`);
-console.log(`proxying /api and /health to ${backendUrl}`);
+console.log(`Sealion Bun frontend listening inside container on :${server.port}`);
+if (publicUrl) {
+  console.log(`browser entrypoint ${publicUrl}`);
+}
+console.log(`proxying /api and /health to backend service ${backendUrl}`);

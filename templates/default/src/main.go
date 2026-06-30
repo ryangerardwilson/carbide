@@ -40,9 +40,9 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	fmt.Printf("%s API listening inside backend container on :%d\n", appName, port)
+	fmt.Printf("%s backend listening on container port %d\n", appName, port)
 	if publicURL != "" {
-		fmt.Printf("frontend proxies API calls from %s/api\n", publicURL)
+		fmt.Printf("public API URL is %s/api\n", publicURL)
 	}
 
 	errs := make(chan error, 1)
