@@ -1,10 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import './styles.css';
+import './tailwind.css';
 
-const APP_NAME = import.meta.env.VITE_APP_NAME || '__PROJECT_NAME__';
+const APP_NAME = '__PROJECT_NAME__';
 const DEMO_EMAIL = 'admin@sealion.local';
 const DEMO_PASSWORD = 'password';
+
+const buttonClass =
+  'inline-flex min-h-11 items-center justify-center bg-teal-700 px-5 font-bold text-white transition hover:bg-teal-800 disabled:opacity-65';
+const linkButtonClass =
+  'inline bg-transparent p-0 font-bold text-teal-700 underline-offset-4 hover:underline';
+const inputClass =
+  'min-h-12 w-full border border-emerald-900/20 bg-white px-3 py-2 text-[#16211b] outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/15';
+const eyebrowClass = 'mb-2 text-xs font-extrabold uppercase tracking-normal text-teal-700';
+const mutedClass = 'text-[#5d6f64]';
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -59,25 +68,28 @@ function AuthForm({ mode, onSubmit, busy, error, onMode }) {
 
   return (
     <form
-      className="auth-form"
+      className="grid min-h-svh content-center gap-5 border-l border-emerald-950/10 bg-[#fbfdfb] px-7 py-10 sm:px-10 lg:px-14"
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit({ email, password });
       }}
     >
       <div>
-        <p className="eyebrow">Sealion starter</p>
-        <h1>{isRegister ? 'Create your account' : 'Log in to the dashboard'}</h1>
-        <p className="muted">
+        <p className={eyebrowClass}>Sealion starter</p>
+        <h1 className="m-0 text-[34px] leading-tight text-[#16211b]">
+          {isRegister ? 'Create your account' : 'Log in to the dashboard'}
+        </h1>
+        <p className={`mt-3 ${mutedClass}`}>
           React owns this interface. The C backend owns auth, sessions, and Postgres state.
         </p>
       </div>
 
-      {error ? <p className="error">{error}</p> : null}
+      {error ? <p className="m-0 bg-rose-50 px-3 py-2 text-rose-800">{error}</p> : null}
 
-      <label>
+      <label className="grid gap-2 font-bold text-[#16211b]">
         Email
         <input
+          className={inputClass}
           name="email"
           type="email"
           value={email}
@@ -87,9 +99,10 @@ function AuthForm({ mode, onSubmit, busy, error, onMode }) {
         />
       </label>
 
-      <label>
+      <label className="grid gap-2 font-bold text-[#16211b]">
         Password
         <input
+          className={inputClass}
           name="password"
           type="password"
           value={password}
@@ -99,20 +112,25 @@ function AuthForm({ mode, onSubmit, busy, error, onMode }) {
         />
       </label>
 
-      <button type="submit" disabled={busy}>
+      <button className={buttonClass} type="submit" disabled={busy}>
         {busy ? 'Working...' : isRegister ? 'Create account' : 'Log in'}
       </button>
 
-      <p className="switcher">
+      <p className={`m-0 ${mutedClass}`}>
         {isRegister ? 'Already registered?' : 'Need an account?'}{' '}
-        <button type="button" onClick={() => onMode(isRegister ? 'login' : 'register')}>
+        <button
+          className={linkButtonClass}
+          type="button"
+          onClick={() => onMode(isRegister ? 'login' : 'register')}
+        >
           {isRegister ? 'Log in' : 'Create one'}
         </button>
       </p>
 
       {!isRegister ? (
-        <p className="hint">
-          Demo login: <code>{DEMO_EMAIL}</code> / <code>{DEMO_PASSWORD}</code>
+        <p className={`m-0 ${mutedClass}`}>
+          Demo login: <code className="bg-emerald-50 px-1.5 py-0.5">{DEMO_EMAIL}</code> /{' '}
+          <code className="bg-emerald-50 px-1.5 py-0.5">{DEMO_PASSWORD}</code>
         </p>
       ) : null}
     </form>
@@ -121,38 +139,40 @@ function AuthForm({ mode, onSubmit, busy, error, onMode }) {
 
 function Dashboard({ user, onLogout, busy }) {
   return (
-    <main className="workspace">
-      <header className="topbar">
+    <main className="mx-auto max-w-6xl px-6 py-8 sm:px-10 lg:py-14">
+      <header className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="eyebrow">React frontend + C API + Postgres</p>
-          <h1>{APP_NAME}</h1>
+          <p className={eyebrowClass}>Bun frontend + C API + Postgres</p>
+          <h1 className="m-0 text-5xl leading-none text-[#16211b] sm:text-6xl">{APP_NAME}</h1>
         </div>
-        <button type="button" onClick={onLogout} disabled={busy}>
+        <button className={buttonClass} type="button" onClick={onLogout} disabled={busy}>
           {busy ? 'Logging out...' : 'Log out'}
         </button>
       </header>
 
-      <section className="status-grid" aria-label="Application status">
-        <div>
-          <span>Frontend</span>
-          <strong>React container</strong>
-        </div>
-        <div>
-          <span>Backend</span>
-          <strong>C API container</strong>
-        </div>
-        <div>
-          <span>Database</span>
-          <strong>Postgres container</strong>
-        </div>
+      <section
+        className="mb-9 grid gap-px overflow-hidden border border-emerald-950/10 bg-emerald-950/10 md:grid-cols-3"
+        aria-label="Application status"
+      >
+        {[
+          ['Frontend', 'React + Bun container'],
+          ['Backend', 'C API container'],
+          ['Database', 'Postgres container']
+        ].map(([label, value]) => (
+          <div className="bg-white p-6" key={label}>
+            <span className="mb-1 block text-sm text-[#6b7e72]">{label}</span>
+            <strong className="text-[#16211b]">{value}</strong>
+          </div>
+        ))}
       </section>
 
-      <section className="dashboard-panel">
-        <p className="eyebrow">Session</p>
-        <h2>Logged in as {user.email}</h2>
-        <p>
-          The browser talks to <code>/api</code> on the same origin. Vite proxies those requests
-          to the C backend, and the backend persists the session in Postgres.
+      <section className="max-w-3xl border border-emerald-950/10 bg-white p-6">
+        <p className={eyebrowClass}>Session</p>
+        <h2 className="m-0 text-3xl leading-tight text-[#16211b]">Logged in as {user.email}</h2>
+        <p className={`mt-4 ${mutedClass}`}>
+          The browser talks to <code className="bg-emerald-50 px-1.5 py-0.5">/api</code> on the
+          same origin. Bun proxies those requests to the C backend, and the backend persists the
+          session in Postgres.
         </p>
       </section>
     </main>
@@ -213,9 +233,11 @@ function App() {
 
   if (loading) {
     return (
-      <main className="centered">
-        <p className="eyebrow">Sealion</p>
-        <h1>Loading app state</h1>
+      <main className="grid min-h-svh place-items-center px-8 text-center">
+        <div>
+          <p className={eyebrowClass}>Sealion</p>
+          <h1 className="m-0 text-4xl leading-tight text-[#16211b]">Loading app state</h1>
+        </div>
       </main>
     );
   }
@@ -225,13 +247,17 @@ function App() {
   }
 
   return (
-    <main className="auth-shell">
-      <section className="product-pane">
-        <p className="eyebrow">__PROJECT_NAME__</p>
-        <h1>Containerized full stack development, with C where it matters.</h1>
-        <p>
-          Run one command. Get a React frontend, a C API backend, and a Postgres database
-          wired together with same-origin auth.
+    <main className="grid min-h-svh bg-[#f6f8f5] lg:grid-cols-[minmax(0,1fr)_minmax(360px,480px)]">
+      <section className="grid min-h-[42svh] content-end bg-[linear-gradient(150deg,#0f766e_0%,#1b3f3a_48%,#16211b_100%)] px-8 py-10 text-white sm:px-12 lg:min-h-svh lg:px-[7vw] lg:py-[7vw]">
+        <p className="mb-3 text-xs font-extrabold uppercase tracking-normal text-white/75">
+          {APP_NAME}
+        </p>
+        <h1 className="m-0 max-w-4xl text-[clamp(42px,7vw,82px)] leading-none">
+          Containerized full stack development, with C where it matters.
+        </h1>
+        <p className="mt-5 max-w-2xl text-lg text-white/80">
+          Run one command. Get a React and Bun frontend, a C API backend, Tailwind styling, and a
+          Postgres database wired together with same-origin auth.
         </p>
       </section>
 

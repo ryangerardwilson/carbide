@@ -14,7 +14,7 @@ rebuilding the whole browser UI stack in C is not the best first product bet.
 Sealion now keeps C where it is strongest and uses React for the default
 frontend:
 
-- one React frontend container
+- one Bun/React/Tailwind frontend container
 - one C backend/API container
 - one mandatory Postgres service container
 - one project layout
@@ -29,9 +29,9 @@ Sealion should make the hard parts visible instead of hiding them behind magic.
 ## Core Principles
 
 - **Container-first:** every app runs through generated containers, not host
-  Node, host compiler setup, or hidden local services.
+  Bun, host compiler setup, or hidden local services.
 - **React default frontend:** the browser UI lives in the frontend container.
-  Node, npm, Vite, and React are required inside that container, not on the
+  Bun, React, and Tailwind are required inside that container, not on the
   developer's host machine.
 - **C backend:** auth, sessions, validation, API routes, and business logic
   live in the backend container.
@@ -58,8 +58,8 @@ Sealion should make the hard parts visible instead of hiding them behind magic.
 
 - Native host installs before the container contract is stable.
 - Full Laravel API compatibility.
-- Requiring host-installed Node or npm.
-- Rebuilding React, Vite, or Blade from scratch.
+- Requiring host-installed Bun, Node, or npm.
+- Rebuilding React, Bun, Tailwind, or Blade from scratch.
 - A general-purpose C package manager.
 - ORM magic that depends on runtime reflection C does not have.
 - Supporting multiple databases, web servers, or deployment targets in the
@@ -69,8 +69,8 @@ Sealion should make the hard parts visible instead of hiding them behind magic.
 
 The default Sealion app runs as three containers:
 
-1. the frontend container, which owns React, Vite, browser routing, and the
-   public host port;
+1. the frontend container, which owns Bun, React, Tailwind, browser routing,
+   the API proxy, and the public host port;
 2. the backend container, which owns C API routes, auth, sessions, application
    code, migrations, logs, and framework tooling;
 3. the Postgres database container, which owns durable relational state through
@@ -147,9 +147,10 @@ Compose watch enabled. Edits under `frontend/src/`, `src/`, `model/`,
 `controller/`, frontend package/config files, or `Dockerfile` rebuild and
 replace the relevant container.
 
-Generated apps use a React-plus-C shape. `frontend/` owns browser UI and calls
-same-origin `/api` endpoints. `model/` owns Postgres state, `controller/` owns
-request flow and JSON responses, and `src/` owns the C HTTP/API server.
+Generated apps use a React-plus-C shape. `frontend/` owns the Bun server,
+Tailwind build, browser UI, and same-origin `/api` calls. `model/` owns
+Postgres state, `controller/` owns request flow and JSON responses, and `src/`
+owns the C HTTP/API server.
 `sealion format` remains available for projects that opt into `.skin` and
 `.scale` files later, but the default starter no longer requires a custom
 Blade-like template language.
@@ -168,7 +169,8 @@ Blade-like template language.
 - Define the request, response, app, and service lifecycle contracts.
 - Define the install URL, `sealion new`, `sealion init`, and `sealion run dev`
   command contracts.
-- Publish a React login/dashboard starter backed by a C API and Postgres.
+- Publish a Bun-served React login/dashboard starter backed by Tailwind, a C
+  API, and Postgres.
 
 ### Phase 1: HTTP Core
 
@@ -188,11 +190,12 @@ Blade-like template language.
 
 ### Phase 3: Frontend And Assets
 
-- Keep the React frontend container as the public local-development entrypoint.
+- Keep the Bun/React frontend container as the public local-development
+  entrypoint.
 - Proxy `/api` and `/health` to the C backend to preserve same-origin cookies.
 - Define the frontend component layout for app screens, reusable patterns, and
   primitives.
-- Keep Tailwind optional; generated apps should work with plain checked-in CSS.
+- Make Tailwind the mandatory generated styling path.
 - Add a production frontend build/serve contract after the dev loop is stable.
 - Keep `.skin`/`.scale` as an optional future server-rendered mode, not the
   default starter path.

@@ -61,6 +61,7 @@ grep -q "watch:" "$tmp_dir/compose.config"
 grep -q "action: rebuild" "$tmp_dir/compose.config"
 grep -q "/frontend/src" "$tmp_dir/compose.config"
 grep -q "/frontend/package.json" "$tmp_dir/compose.config"
+grep -q "/frontend/bun.lock" "$tmp_dir/compose.config"
 grep -q "/src" "$tmp_dir/compose.config"
 grep -q "/model" "$tmp_dir/compose.config"
 grep -q "/controller" "$tmp_dir/compose.config"
@@ -77,18 +78,20 @@ done
 curl -fsS "http://localhost:$port/health" >/dev/null
 curl -fsS "http://localhost:$port/" > "$tmp_dir/home.html"
 grep -q '<div id="root"></div>' "$tmp_dir/home.html"
-grep -q "/src/main.jsx" "$tmp_dir/home.html"
+grep -q "/_bun/client/" "$tmp_dir/home.html"
 curl -fsS "http://localhost:$port/api/me" > "$tmp_dir/me-anon.json"
 grep -q '"authenticated":false' "$tmp_dir/me-anon.json"
 docker compose logs backend > "$tmp_dir/backend.log"
 grep -q "API listening inside backend container on :8080" "$tmp_dir/backend.log"
 grep -q "frontend proxies API calls from http://localhost:$port/api" "$tmp_dir/backend.log"
 docker compose logs frontend > "$tmp_dir/frontend.log"
-grep -q "Local:" "$tmp_dir/frontend.log"
-if ! docker compose run --rm --no-deps frontend npm run build > "$tmp_dir/frontend-build.log" 2>&1; then
+grep -q "Sealion Bun frontend listening" "$tmp_dir/frontend.log"
+grep -q "proxying /api and /health to http://backend:8080" "$tmp_dir/frontend.log"
+if ! docker compose run --rm --no-deps frontend bun run build > "$tmp_dir/frontend-build.log" 2>&1; then
   cat "$tmp_dir/frontend-build.log" >&2
   exit 1
 fi
+grep -q "tailwind:build" "$tmp_dir/frontend-build.log"
 
 python3 - "$port" <<'PY' &
 import socket
@@ -139,6 +142,7 @@ grep -q 'admin@sealion.local' "$tmp_dir/me-auth.json"
 
 curl -fsS -b "$tmp_dir/cookies" "http://localhost:$port/dashboard" > "$tmp_dir/dashboard-shell.html"
 grep -q '<div id="root"></div>' "$tmp_dir/dashboard-shell.html"
+grep -q "/_bun/client/" "$tmp_dir/dashboard-shell.html"
 
 curl -fsS -b "$tmp_dir/cookies" -X POST "http://localhost:$port/api/logout" > "$tmp_dir/logout.json"
 grep -q '"ok":true' "$tmp_dir/logout.json"

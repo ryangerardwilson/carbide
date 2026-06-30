@@ -1,6 +1,8 @@
 .env
 build/
+frontend/build/
 frontend/dist/
 frontend/node_modules/
+frontend/src/tailwind.css
 *.o
 sealion-app

@@ -1,13 +1,13 @@
 # Frontend Contract
 
-Sealion's default app uses a React frontend, C API backend, and Postgres
-database. The frontend is a mandatory container in the default local topology,
-not a host-installed Node requirement.
+Sealion's default app uses a Bun/React/Tailwind frontend, C API backend, and
+Postgres database. The frontend is a mandatory Bun container in the default
+local topology, not a host-installed JavaScript tooling requirement.
 
 ## Product Decision
 
-The default Sealion UI should be React, not a custom Blade-like C template
-system.
+The default Sealion UI should be React served by Bun, not a custom Blade-like C
+template system.
 
 This keeps frontend authoring inside a mature ecosystem while preserving the
 core Sealion bet: C owns backend logic, auth, sessions, database access, and
@@ -19,7 +19,8 @@ the framework runtime contract.
 browser -> frontend container -> /api proxy -> backend C container -> Postgres
 ```
 
-- `frontend` owns React, Vite, browser routes, forms, dashboard UI, and CSS.
+- `frontend` owns Bun, React, Tailwind, browser routes, forms, dashboard UI,
+  and the same-origin proxy.
 - `backend` owns C API routes, auth, session cookies, validation, and JSON.
 - `db` owns durable Postgres state.
 
@@ -33,12 +34,12 @@ Generated apps start with:
 ```text
 frontend/
 |-- Dockerfile
+|-- bun.lock
 |-- index.html
 |-- package.json
-|-- package-lock.json
-|-- vite.config.js
 `-- src/
     |-- main.jsx
+    |-- server.jsx
     `-- styles.css
 ```
 
@@ -48,8 +49,9 @@ so the backend can own HttpOnly cookies.
 
 ## Styling
 
-Generated apps use plain checked-in CSS first. Tailwind remains optional for
-projects that choose it, but it is not required by the framework starter.
+Generated apps use Tailwind as the mandatory styling path. `styles.css` is the
+Tailwind input file, and the container builds generated CSS with the checked-in
+Bun lockfile.
 
 Future component conventions can still use L1/L2/L3 language:
 
@@ -70,14 +72,16 @@ available for projects that contain `.skin` and `.scale` files.
 
 The frontend contract needs dedicated regression coverage:
 
-- generated apps include a React frontend container;
+- generated apps include a Bun/React/Tailwind frontend container;
 - generated apps include a C backend/API container;
 - generated apps include a Postgres database container;
-- frontend proxies `/api` and `/health` to the backend;
+- Bun frontend proxies `/api` and `/health` to the backend;
 - auth uses same-origin cookies without CORS setup;
 - login returns JSON and sets a session cookie;
 - `/api/me` reports authenticated and anonymous states correctly;
 - `/dashboard` is served by the React app shell;
 - frontend and backend watch paths are present in Compose;
-- generated frontend builds from `npm ci` using a lockfile;
+- generated frontend installs with `bun install --frozen-lockfile` and builds
+  with `bun run build`;
+- Tailwind is present and required in the generated frontend;
 - `.skin`/`.scale` files are not required by the default starter.

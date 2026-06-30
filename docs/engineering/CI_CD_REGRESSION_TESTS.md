@@ -44,9 +44,9 @@ Purpose: make the repo shape itself hard to accidentally break.
 Initial checks:
 
 - required directories exist;
-- README keeps the core product contracts: React frontend container, C backend
-  container, Postgres-only database, infrastructure as code, local Compose
-  first, and Postgres-backed queues;
+- README keeps the core product contracts: Bun/React/Tailwind frontend
+  container, C backend container, Postgres-only database, infrastructure as
+  code, local Compose first, and Postgres-backed queues;
 - install script, CLI, and default template files exist;
 - documentation site files exist;
 - custom Pages domain is present in `docs/site/CNAME`;
@@ -109,6 +109,8 @@ Future checks:
 
 - generated Compose file validates;
 - frontend and backend containers build from a clean checkout;
+- frontend installs with Bun from `bun.lock`;
+- Tailwind is a required generated frontend dependency and build step;
 - frontend, backend, and Postgres run as separate services;
 - health checks converge;
 - generated backend logs the external frontend URL used for API proxying;
@@ -116,9 +118,9 @@ Future checks:
 - generated Compose config declares file-watch rebuilds for frontend source,
   frontend package/config files, backend source, model, controller, and
   Dockerfile changes;
-- generated apps include a React frontend container, C backend/API container,
-  and Postgres database container;
-- frontend proxies `/api` and `/health` to the backend;
+- generated apps include a Bun/React/Tailwind frontend container, C
+  backend/API container, and Postgres database container;
+- Bun frontend proxies `/api` and `/health` to the backend;
 - `/api/me` reports anonymous and authenticated state correctly;
 - `/dashboard` is served by the React app shell;
 - `sealion format` rewrites compact passover arrays and is idempotent when

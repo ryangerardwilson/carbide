@@ -12,7 +12,7 @@
       <div class="shell">
         <p class="eyebrow"><a href="index.html">Sealion docs</a></p>
         <h1>Install, create, run, log in.</h1>
-        <p class="lead">The first Sealion app should boot with one command and include a React frontend, C API backend, Postgres-backed auth, logout, and dashboard flow by default.</p>
+        <p class="lead">The first Sealion app should boot with one command and include a Bun/React/Tailwind frontend, C API backend, Postgres-backed auth, logout, and dashboard flow by default.</p>
       </div>
     </header>
 
@@ -27,13 +27,13 @@ sealion run dev</code></pre>
         <p>If port 8080 is already in use, <code>sealion run dev</code> selects another local port. To choose one explicitly, run <code>SEALION_HTTP_PORT=18080 sealion run dev</code>.</p>
         <p>The frontend listens on port 8080 inside its container. Your browser should use the host URL printed by the CLI.</p>
         <p>When Docker Compose supports file watch, <code>sealion run dev</code> starts the stack with Compose watch enabled. Edits under <code>frontend/src/</code>, <code>src/</code>, <code>model/</code>, <code>controller/</code>, frontend package/config files, or to <code>Dockerfile</code> rebuild and replace the relevant container.</p>
-        <p>Generated apps keep browser UI in <code>frontend/src/</code>. React owns page flow, forms, and dashboard rendering. The C backend owns <code>/api</code> routes, auth, sessions, validation, and Postgres access.</p>
+        <p>Generated apps keep browser UI in <code>frontend/src/</code>. Bun owns the frontend server and API proxy, Tailwind owns styling, React owns page flow, forms, and dashboard rendering. The C backend owns <code>/api</code> routes, auth, sessions, validation, and Postgres access.</p>
       </section>
 
       <section>
         <h2>Generated App</h2>
         <ul>
-          <li>React frontend container.</li>
+          <li>Bun/React/Tailwind frontend container.</li>
           <li>C backend/API container.</li>
           <li>Postgres service container.</li>
           <li>Checked-in Docker Compose infrastructure.</li>

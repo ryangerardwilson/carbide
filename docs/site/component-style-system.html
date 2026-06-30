@@ -4,15 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Frontend Contract | Sealion</title>
-    <meta name="description" content="Sealion's React frontend, C API backend, and Postgres database contract.">
+    <meta name="description" content="Sealion's Bun/React/Tailwind frontend, C API backend, and Postgres database contract.">
     <link rel="stylesheet" href="assets/styles.css">
   </head>
   <body>
     <header class="hero">
       <div class="shell">
         <p class="eyebrow"><a href="index.html">Sealion docs</a></p>
-        <h1>React frontend, C API backend, Postgres database.</h1>
-        <p class="lead">The default Sealion UI uses React in a container while the framework keeps auth, sessions, and data access in C.</p>
+        <h1>Bun frontend, C API backend, Postgres database.</h1>
+        <p class="lead">The default Sealion UI uses React, Bun, and Tailwind in a container while the framework keeps auth, sessions, and data access in C.</p>
       </div>
     </header>
 
@@ -27,28 +27,29 @@
         <h2>Generated Frontend</h2>
         <pre><code>frontend/
 |-- Dockerfile
+|-- bun.lock
 |-- index.html
 |-- package.json
-|-- package-lock.json
-|-- vite.config.js
 `-- src/
     |-- main.jsx
+    |-- server.jsx
     `-- styles.css</code></pre>
         <p>React owns page flow, forms, and dashboard rendering. The C backend owns JSON responses, HttpOnly cookies, sessions, validation, and Postgres access.</p>
       </section>
 
       <section>
         <h2>Styling</h2>
-        <p>The starter uses plain checked-in CSS. Tailwind remains optional for apps that choose it, but it is not required by the framework starter.</p>
+        <p>The starter uses Tailwind as the required styling path. The frontend container installs with Bun and builds generated CSS from the checked-in Tailwind input.</p>
       </section>
 
       <section>
         <h2>Regression Requirements</h2>
         <ul>
           <li>Generated apps include frontend, backend, and database containers.</li>
-          <li>The frontend proxies <code>/api</code> and <code>/health</code> to the backend.</li>
+          <li>The Bun frontend proxies <code>/api</code> and <code>/health</code> to the backend.</li>
           <li>Auth uses same-origin cookies without CORS setup.</li>
-          <li>Frontend builds from <code>npm ci</code> using a lockfile.</li>
+          <li>Frontend installs with <code>bun install --frozen-lockfile</code> and builds with <code>bun run build</code>.</li>
+          <li>Tailwind is required in the generated frontend.</li>
           <li><code>.skin</code> and <code>.scale</code> files are optional, not required by the default starter.</li>
         </ul>
       </section>

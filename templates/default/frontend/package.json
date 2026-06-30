@@ -4,15 +4,16 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 8080"
+    "dev": "bun run tailwind:build && bun --hot src/server.jsx",
+    "build": "bun run tailwind:build && bun build --target=bun --production --outdir=build/server src/server.jsx",
+    "start": "NODE_ENV=production bun src/server.jsx",
+    "tailwind:build": "tailwindcss -i ./src/styles.css -o ./src/tailwind.css --minify"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "6.0.3",
-    "vite": "8.1.0",
+    "@tailwindcss/cli": "4.3.2",
     "react": "19.2.7",
-    "react-dom": "19.2.7"
+    "react-dom": "19.2.7",
+    "tailwindcss": "4.3.2"
   },
   "devDependencies": {}
 }

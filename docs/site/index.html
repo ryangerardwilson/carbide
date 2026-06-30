@@ -4,14 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sealion Documentation</title>
-    <meta name="description" content="Sealion is an experimental Laravel-inspired framework with React, C, and Postgres containers.">
+    <meta name="description" content="Sealion is an experimental Laravel-inspired framework with Bun, React, Tailwind, C, and Postgres containers.">
     <link rel="stylesheet" href="assets/styles.css">
   </head>
   <body>
     <header class="hero">
       <div class="shell">
         <p class="eyebrow">Sealion docs</p>
-        <h1>React frontend. C API backend. Postgres database.</h1>
+        <h1>Bun frontend. C API backend. Postgres database.</h1>
         <p class="lead">Sealion starts with three mandatory containers, checked-in infrastructure, and regression tests that protect the framework before it grows.</p>
         <nav class="nav" aria-label="Documentation">
           <a href="initial-user-experience.html">Initial user experience</a>
@@ -37,9 +37,9 @@ sealion run dev</code></pre>
         <section>
           <h2>Product Contract</h2>
           <ul>
-            <li>Apps run through a React frontend container, C backend container, and Postgres container.</li>
+            <li>Apps run through a Bun/React/Tailwind frontend container, C backend container, and Postgres container.</li>
             <li>Postgres is mandatory, not one adapter among many.</li>
-            <li>The frontend is the public entrypoint and proxies <code>/api</code> to the backend.</li>
+            <li>The Bun frontend is the public entrypoint and proxies <code>/api</code> to the backend.</li>
             <li>Infrastructure belongs in version-controlled code.</li>
             <li>The default starter includes register, login, logout, and dashboard.</li>
             <li>The first IaC target is generated Docker Compose for local development.</li>
@@ -50,7 +50,7 @@ sealion run dev</code></pre>
           <h2>First Milestone</h2>
           <ol>
             <li>Boot with one command.</li>
-            <li>Serve the React app.</li>
+            <li>Serve the React app through Bun.</li>
             <li>Proxy <code>/api</code> to the C backend.</li>
             <li>Log in with a Postgres-backed session.</li>
             <li>Open the dashboard.</li>

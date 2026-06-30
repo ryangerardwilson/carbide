@@ -21,17 +21,18 @@ SEALION_HTTP_PORT=18080 sealion run dev
 
 The generated app runs as three Docker Compose services:
 
-- `frontend`: React and Vite. This is the public browser entrypoint.
+- `frontend`: Bun, React, and Tailwind. This is the public browser entrypoint.
 - `backend`: C HTTP/API server. It owns auth, sessions, validation, and JSON
   API responses.
 - `db`: Postgres. It owns durable users and sessions.
 
-The browser uses one origin. The frontend proxies `/api` and `/health` to the C
-backend over the Compose network, so cookies work without CORS setup.
+The browser uses one origin. The Bun frontend proxies `/api` and `/health` to
+the C backend over the Compose network, so cookies work without CORS setup.
 
 ## Where Code Lives
 
-- `frontend/src/` owns React screens, forms, dashboard UI, and CSS.
+- `frontend/src/` owns the Bun frontend server, React screens, forms,
+  dashboard UI, and Tailwind CSS input.
 - `src/` owns the C HTTP/API server.
 - `controller/` owns API request handlers.
 - `model/` owns Postgres-backed data access.
@@ -52,10 +53,10 @@ password
 
 ## Included
 
-- React frontend container
+- Bun + React + Tailwind frontend container
 - C backend/API container
 - Postgres service container
-- same-origin `/api` proxy from frontend to backend
+- same-origin `/api` proxy from the Bun frontend to the C backend
 - register, login, logout, and dashboard experience
 - Postgres-backed users and sessions
 - checked-in local Docker Compose contract

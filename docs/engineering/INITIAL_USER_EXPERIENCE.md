@@ -3,7 +3,7 @@
 The first Sealion experience should feel close to Laravel's default product
 loop: install one command, create an app, run one dev command, and land in a
 working browser experience with auth already present. The default UI is now a
-React frontend container backed by a C API container and Postgres.
+Bun/React/Tailwind frontend container backed by a C API container and Postgres.
 
 ## Happy Path
 
@@ -35,14 +35,15 @@ Compose watch enabled. Edits under `frontend/src/`, `src/`, `model/`,
 `controller/`, frontend package/config files, or to `Dockerfile` rebuild and
 replace the relevant container.
 
-Generated apps keep browser UI in `frontend/src/`. React owns page flow, forms,
-and dashboard rendering. The C backend owns `/api` routes, auth, sessions,
+Generated apps keep browser UI in `frontend/src/`. Bun owns the frontend server
+and API proxy, Tailwind owns styling, and React owns page flow, forms, and
+dashboard rendering. The C backend owns `/api` routes, auth, sessions,
 validation, and Postgres access. The frontend proxies `/api` and `/health` to
 the backend so cookies remain same-origin.
 
 The generated app includes:
 
-- a React frontend container;
+- a Bun/React/Tailwind frontend container;
 - a C backend/API container;
 - a Postgres service container;
 - checked-in Docker Compose infrastructure;
@@ -64,7 +65,7 @@ Upgrades the installed CLI when a newer GitHub commit is available.
 ### `sealion format`
 
 Formats `.skin` and `.scale` files when a project contains them. In the default
-React starter, it is a harmless no-op.
+Bun/React/Tailwind starter, it is a harmless no-op.
 
 ### `sealion new <project-name>`
 

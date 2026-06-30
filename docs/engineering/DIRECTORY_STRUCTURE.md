@@ -48,12 +48,12 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |       |   `-- page_controller.c
 |       |-- frontend/
 |       |   |-- Dockerfile
+|       |   |-- bun.lock
 |       |   |-- index.html
 |       |   |-- package.json
-|       |   |-- package-lock.json
-|       |   |-- vite.config.js
 |       |   `-- src/
 |       |       |-- main.jsx
+|       |       |-- server.jsx
 |       |       `-- styles.css
 |       |-- migrations/
 |       |   `-- 001_auth.sql
@@ -90,8 +90,8 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
   generation.
 - `templates/default/`: generated starter app used by `sealion new` and
   `sealion init`.
-- `templates/default/frontend/`: generated React/Vite frontend container and
-  browser UI.
+- `templates/default/frontend/`: generated Bun/React/Tailwind frontend
+  container, browser UI, and same-origin API proxy.
 - `templates/default/model/`: generated Postgres-backed model code.
 - `templates/default/controller/`: generated request-flow handlers.
 - `templates/default/src/`: generated C HTTP/API server.

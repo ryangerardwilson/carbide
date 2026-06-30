@@ -1,12 +1,13 @@
-FROM node:24-bookworm-slim
+FROM oven/bun:1.3.14-debian
 
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
-COPY index.html vite.config.js ./
+COPY index.html ./
 COPY src ./src
+RUN bun run tailwind:build
 
 EXPOSE 8080
 
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["bun", "run", "dev"]

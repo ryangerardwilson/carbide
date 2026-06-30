@@ -5,7 +5,7 @@ services:
     build:
       context: ./frontend
     environment:
-      VITE_APP_NAME: "__PROJECT_NAME__"
+      BACKEND_URL: http://backend:8080
     ports:
       - "${SEALION_HTTP_PORT:-8080}:8080"
     depends_on:
@@ -20,9 +20,7 @@ services:
         - action: rebuild
           path: ./frontend/package.json
         - action: rebuild
-          path: ./frontend/package-lock.json
-        - action: rebuild
-          path: ./frontend/vite.config.js
+          path: ./frontend/bun.lock
         - action: rebuild
           path: ./frontend/Dockerfile
 
