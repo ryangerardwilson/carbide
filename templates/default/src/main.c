@@ -668,18 +668,34 @@ static int parse_content_length(const char *headers) {
 }
 
 static void parse_cookie_header(const char *headers, char *cookie, size_t cookie_len) {
-  const char *p = strcasestr(headers, "\r\nCookie:");
-  if (!p) {
-    cookie[0] = '\0';
-    return;
+  const char *name = "sealion_session=";
+  size_t name_len = strlen(name);
+  const char *p = headers;
+  cookie[0] = '\0';
+
+  while ((p = strcasestr(p, "\r\nCookie:")) != NULL) {
+    p += strlen("\r\nCookie:");
+    while (*p == ' ' || *p == '\t') p++;
+    const char *line_end = strstr(p, "\r\n");
+    if (!line_end) line_end = p + strlen(p);
+
+    const char *item = p;
+    while (item < line_end) {
+      while (item < line_end && (*item == ' ' || *item == '\t' || *item == ';')) item++;
+      const char *item_end = item;
+      while (item_end < line_end && *item_end != ';') item_end++;
+      while (item_end > item && (item_end[-1] == ' ' || item_end[-1] == '\t')) item_end--;
+
+      if ((size_t)(item_end - item) > name_len && strncmp(item, name, name_len) == 0) {
+        size_t value_len = (size_t)(item_end - item);
+        if (value_len >= cookie_len) value_len = cookie_len - 1;
+        memcpy(cookie, item, value_len);
+        cookie[value_len] = '\0';
+      }
+
+      item = item_end < line_end ? item_end + 1 : line_end;
+    }
   }
-  p += strlen("\r\nCookie:");
-  while (*p == ' ') p++;
-  const char *end = strstr(p, "\r\n");
-  size_t len = end ? (size_t)(end - p) : strlen(p);
-  if (len >= cookie_len) len = cookie_len - 1;
-  memcpy(cookie, p, len);
-  cookie[len] = '\0';
 }
 
 static bool read_request(int client, Request *req, char *buffer, size_t buffer_len) {

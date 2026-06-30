@@ -110,6 +110,18 @@ grep -q "sealion_session" "$tmp_dir/cookies"
 grep -q "window.location.replace('/dashboard')" "$tmp_dir/login.body"
 grep -q 'href="/dashboard"' "$tmp_dir/login.body"
 
+session_token="$(awk '$6 == "sealion_session" {print $7}' "$tmp_dir/cookies" | tail -n 1)"
+long_cookie="$(
+  python3 - <<'PY'
+print("x" * 5000)
+PY
+)"
+curl \
+  -fsS \
+  -H "Cookie: unrelated=${long_cookie}; sealion_session=${session_token}" \
+  "http://localhost:$port/dashboard" > "$tmp_dir/dashboard-long-cookie.html"
+grep -q "<h1>Dashboard</h1>" "$tmp_dir/dashboard-long-cookie.html"
+
 curl -fsS -b "$tmp_dir/cookies" "http://localhost:$port/dashboard" > "$tmp_dir/dashboard.html"
 grep -q "<h1>Dashboard</h1>" "$tmp_dir/dashboard.html"
 grep -q "You are logged in as" "$tmp_dir/dashboard.html"
