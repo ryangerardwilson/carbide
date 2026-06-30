@@ -16,6 +16,7 @@ strict framework can remove many repeated decisions:
 - one project layout
 - one request lifecycle
 - one database migration path
+- one checked-in infrastructure contract
 - one CLI entry point
 - one opinionated set of security defaults
 
@@ -28,6 +29,9 @@ Sealion should make the hard parts visible instead of hiding them behind magic.
   one interchangeable adapter among many.
 - **Separate runtime boundaries:** the app container and database container are
   separate services with separate lifecycles, health checks, logs, and storage.
+- **Infrastructure as code:** every runtime dependency, service boundary,
+  volume, network, secret contract, environment variable, health check, and
+  deploy target must be described in checked-in code.
 - **Explicit ownership:** request memory, response memory, and database handles
   must have clear lifetimes.
 - **Convention over configuration:** defaults should cover normal apps without
@@ -63,6 +67,27 @@ backed-up, restored, and upgraded. Local development can use a generated Compose
 file, but the architectural contract is service separation rather than a single
 container running both processes.
 
+## Infrastructure As Code Contract
+
+Sealion apps must be reproducible from the repository. Runtime behavior should
+not depend on manual console setup, undocumented shell history, or hidden
+machine state.
+
+At minimum, each app must keep these contracts in version control:
+
+- container definitions for the app and required services;
+- service networking, health checks, restart policy, and readiness rules;
+- Postgres image version, volume, backup, restore, and migration policy;
+- environment variable schema with required, optional, and secret values;
+- deployment manifests or generated deployment targets for supported platforms;
+- framework and app version gates for infrastructure changes.
+
+The Sealion CLI should generate and validate these files instead of asking
+developers to maintain ad hoc infrastructure by hand. Local Compose files can be
+the first implementation, but the product contract is broader: infrastructure is
+part of the application source, and changes to it must be reviewable, diffable,
+and recoverable.
+
 ## Roadmap
 
 ### Phase 0: Project Contract
@@ -71,6 +96,7 @@ container running both processes.
 - Define the official Postgres image, version policy, storage contract, and
   connection environment variables.
 - Define the default two-container Compose topology for local development.
+- Define the mandatory infrastructure-as-code file layout and validation rules.
 - Choose compiler, libc, build system, formatter, and test runner.
 - Create the canonical app directory layout.
 - Define the request, response, app, and service lifecycle contracts.
@@ -130,6 +156,7 @@ container running both processes.
 - Build the `sealion` CLI.
 - Add project scaffolding.
 - Add migration generation.
+- Add infrastructure generation, validation, and diff commands.
 - Add test helpers for HTTP requests and database state.
 - Add containerized watch/rebuild workflow.
 - Add debug tooling for memory ownership and request leaks.
@@ -137,6 +164,7 @@ container running both processes.
 ### Phase 8: Production Contract
 
 - Define the official production image.
+- Define production infrastructure-as-code outputs for supported deploy targets.
 - Add health checks and readiness checks.
 - Add structured logs suitable for container platforms.
 - Add deployment examples for a single-node app and a worker process.
