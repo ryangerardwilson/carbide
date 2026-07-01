@@ -7,6 +7,16 @@ trap 'rm -rf "$tmp_dir"' EXIT
 
 export CARBIDE_HOME="$repo_root"
 
+"$repo_root/bin/carbide" > "$tmp_dir/no-args.out"
+grep -q "Carbide 0.1.0-dev" "$tmp_dir/no-args.out"
+grep -q "Usage:" "$tmp_dir/no-args.out"
+grep -q "Available commands:" "$tmp_dir/no-args.out"
+grep -q "carbide <command> \\[arguments\\]" "$tmp_dir/no-args.out"
+grep -q "run dev" "$tmp_dir/no-args.out"
+grep -q "follow logs" "$tmp_dir/no-args.out"
+! grep -q "features:" "$tmp_dir/no-args.out"
+! grep -q "raw.githubusercontent.com/ryangerardwilson/carbide" "$tmp_dir/no-args.out"
+
 "$repo_root/bin/carbide" help > "$tmp_dir/help.out"
 grep -q "carbide help" "$tmp_dir/help.out"
 grep -q "carbide upgrade" "$tmp_dir/help.out"

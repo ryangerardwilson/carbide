@@ -57,6 +57,38 @@ func TestValidatePort(t *testing.T) {
 	}
 }
 
+func TestBareCommandPrintsCommandList(t *testing.T) {
+	var out bytes.Buffer
+	a := app{stdout: &out}
+
+	if err := a.run(nil); err != nil {
+		t.Fatalf("run returned %v", err)
+	}
+
+	got := out.String()
+	for _, want := range []string{
+		"Carbide 0.1.0-dev",
+		"Usage:",
+		"carbide <command> [arguments]",
+		"Options:",
+		"Available commands:",
+		"run dev",
+		"follow logs",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("bare command output = %q, missing %q", got, want)
+		}
+	}
+	for _, unwanted := range []string{
+		"features:",
+		"raw.githubusercontent.com/ryangerardwilson/carbide",
+	} {
+		if strings.Contains(got, unwanted) {
+			t.Fatalf("bare command output = %q, should not contain %q", got, unwanted)
+		}
+	}
+}
+
 func TestRendererPlainOutput(t *testing.T) {
 	var out bytes.Buffer
 	newRenderer(&out).Message(

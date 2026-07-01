@@ -30,6 +30,27 @@ const defaultTerminalWidth = 80
 const progressStateColumnWidth = 8
 const minimumProgressFrameWidth = 4
 
+const commandListText = `Carbide %s
+
+Usage:
+  carbide <command> [arguments]
+
+Options:
+  help       Show detailed help
+  version    Print the installed version
+
+Available commands:
+  new        Create a new Carbide project
+  init       Initialize the current empty directory
+  run dev    Start the local Docker development stack
+  status     Show local development containers
+  stop dev   Stop local development containers
+  follow logs
+             Follow live development logs
+  logs       Read structured development logs
+  upgrade    Upgrade the installed CLI
+`
+
 const helpText = `Carbide
 Containerized full-stack apps with React, Go, and Postgres.
 
@@ -184,7 +205,7 @@ func Main() {
 
 func (a app) run(args []string) error {
 	if len(args) == 0 {
-		a.printHelp()
+		a.printCommandList()
 		return nil
 	}
 
@@ -240,6 +261,15 @@ func (a app) run(args []string) error {
 	default:
 		return fmt.Errorf("unknown command: %s", args[0])
 	}
+}
+
+func (a app) printCommandList() {
+	text := fmt.Sprintf(commandListText, version)
+	if shouldStyleOutput(a.stdout) {
+		fmt.Fprintf(a.stdout, "\033[38;5;245m%s\033[0m", text)
+		return
+	}
+	fmt.Fprint(a.stdout, text)
 }
 
 func (a app) printHelp() {
