@@ -158,6 +158,8 @@ Future checks:
   aligned renderer instead of scattered raw prints;
 - `sealion run dev` streams frontend, backend, database, and watch output
   through timestamped service-tagged rows after the stack is ready;
+- `sealion status` prints a stable table of services, container names,
+  published host ports, internal container ports, and status;
 - `sealion follow logs` reattaches to live container logs and preserves
   timestamped, service-tagged rendering;
 - `sealion run dev` writes `.sealion/log/dev.jsonl`, and `sealion logs` can

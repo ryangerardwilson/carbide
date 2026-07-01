@@ -83,16 +83,38 @@ func TestRendererIndentsMultilineValues(t *testing.T) {
 	}
 }
 
+func TestRendererTable(t *testing.T) {
+	var out bytes.Buffer
+	newRenderer(&out).Table(
+		[]string{"service", "container", "ports"},
+		[]tableRow{
+			{"frontend", "demo-frontend-1", "localhost:8082"},
+			{"backend", "demo-backend-1", "-"},
+		},
+	)
+
+	got := out.String()
+	for _, want := range []string{
+		"service   container        ports",
+		"frontend  demo-frontend-1  localhost:8082",
+		"backend   demo-backend-1   -",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("table output = %q, missing %q", got, want)
+		}
+	}
+}
+
 func TestServiceProgressFrame(t *testing.T) {
 	tests := []struct {
 		state string
 		step  int
 		want  string
 	}{
-		{"starting", 0, "[Cooooooooo]"},
-		{"starting", 1, "[ coooooooo]"},
-		{"stopping", 0, "[oooooooooC]"},
-		{"stopping", 1, "[ooooooooc ]"},
+		{"starting", 0, "[C o  o  o ]"},
+		{"starting", 1, "[-c o  o  o]"},
+		{"stopping", 0, "[ o  o  o D]"},
+		{"stopping", 1, "[o  o  o d-]"},
 		{"ready", 0, "[##########]"},
 		{"stopped", 0, "[          ]"},
 		{"failed", 0, "[!!!!!!!!!!]"},
@@ -158,7 +180,7 @@ func TestServiceProgressRunsWithoutColor(t *testing.T) {
 	}
 
 	got := out.String()
-	if !strings.Contains(got, "[Cooooooooooooooooo] starting") {
+	if !strings.Contains(got, "[C o  o  o  o  o  o] starting") {
 		t.Fatalf("progress output missing starting frame: %q", got)
 	}
 	if !strings.Contains(got, "[##################] ready") {
@@ -184,7 +206,7 @@ func TestServiceStopProgressRunsWithoutColor(t *testing.T) {
 	}
 
 	got := out.String()
-	if !strings.Contains(got, "[oooooooooooooooooC] stopping") {
+	if !strings.Contains(got, "[o  o  o  o  o  o D] stopping") {
 		t.Fatalf("stop progress output missing stopping frame: %q", got)
 	}
 	if !strings.Contains(got, "[                  ] stopped") {
@@ -282,9 +304,9 @@ func TestParseLogQuery(t *testing.T) {
 
 func TestParseComposeServiceStatuses(t *testing.T) {
 	statuses, err := parseComposeServiceStatuses(`[
-{"Service":"frontend","State":"running","Health":""},
-{"Service":"backend","State":"running","Health":"healthy"},
-{"Service":"db","State":"created","Health":"starting"}
+{"Service":"frontend","Name":"demo-frontend-1","State":"running","Health":"","Publishers":[{"URL":"0.0.0.0","TargetPort":8080,"PublishedPort":8082,"Protocol":"tcp"},{"URL":"::","TargetPort":8080,"PublishedPort":8082,"Protocol":"tcp"}]},
+{"Service":"backend","Name":"demo-backend-1","State":"running","Health":"healthy","Publishers":[{"URL":"","TargetPort":8080,"PublishedPort":0,"Protocol":"tcp"}]},
+{"Service":"db","Name":"demo-db-1","State":"created","Health":"starting","Publishers":[{"URL":"","TargetPort":5432,"PublishedPort":0,"Protocol":"tcp"}]}
 ]`)
 	if err != nil {
 		t.Fatalf("parseComposeServiceStatuses returned %v", err)
@@ -297,6 +319,23 @@ func TestParseComposeServiceStatuses(t *testing.T) {
 	}
 	if serviceProgressState(statuses["db"]) != "starting" {
 		t.Fatalf("db status = %#v", statuses["db"])
+	}
+
+	snapshots, err := parseComposeServiceSnapshots(`[
+{"Service":"frontend","Name":"demo-frontend-1","State":"running","Health":"","Publishers":[{"URL":"0.0.0.0","TargetPort":8080,"PublishedPort":8082,"Protocol":"tcp"},{"URL":"::","TargetPort":8080,"PublishedPort":8082,"Protocol":"tcp"}]},
+{"Service":"backend","Name":"demo-backend-1","State":"running","Health":"healthy","Publishers":[{"URL":"","TargetPort":8080,"PublishedPort":0,"Protocol":"tcp"}]}
+]`)
+	if err != nil {
+		t.Fatalf("parseComposeServiceSnapshots returned %v", err)
+	}
+	if got := composePublishedPorts(snapshots["frontend"]); got != "localhost:8082" {
+		t.Fatalf("frontend published ports = %q", got)
+	}
+	if got := composeInternalPorts(snapshots["backend"]); got != "8080/tcp" {
+		t.Fatalf("backend internal ports = %q", got)
+	}
+	if got := composeServiceStatusText(snapshots["backend"]); got != "running (healthy)" {
+		t.Fatalf("backend status text = %q", got)
 	}
 
 	statuses, err = parseComposeServiceStatuses(`{"Service":"backend","State":"exited","Health":""}`)

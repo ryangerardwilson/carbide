@@ -98,6 +98,7 @@ grep -q "generated Docker Compose setup" README.md
 grep -q "Postgres-backed queues" README.md
 grep -q "sealion new" README.md
 grep -q "sealion run dev" README.md
+grep -q "sealion status" README.md
 grep -q "sealion stop dev" README.md
 grep -q "sealion follow logs" README.md
 grep -q "sealion logs" README.md
@@ -179,12 +180,17 @@ grep -q "public API URL is" templates/default/src/main.go
 ! grep -q "frontend proxies API calls" templates/default/src/main.go
 grep -q "compose.supports(\"--watch\")" cmd/sealion/main.go
 grep -q "newRenderer" cmd/sealion/main.go
+grep -q "func (r renderer) Table" cmd/sealion/main.go
 grep -q "runDevStreams" cmd/sealion/main.go
+grep -q "commandStatus" cmd/sealion/main.go
 grep -q "commandStopDev" cmd/sealion/main.go
 grep -q "RunServiceProgress" cmd/sealion/main.go
 grep -q "RunServiceStopProgress" cmd/sealion/main.go
 grep -q "serviceProgressFrame" cmd/sealion/main.go
 grep -q "composeServiceStatuses" cmd/sealion/main.go
+grep -q "composeServiceSnapshots" cmd/sealion/main.go
+grep -q "composePublishedPorts" cmd/sealion/main.go
+grep -q "composeInternalPorts" cmd/sealion/main.go
 grep -q "streamLogOutput" cmd/sealion/main.go
 grep -q "parseComposeLogLine" cmd/sealion/main.go
 grep -q "composeLogsArgs" cmd/sealion/main.go
@@ -194,6 +200,7 @@ grep -q "commandLogs" cmd/sealion/main.go
 grep -q "commandFollowLogs" cmd/sealion/main.go
 grep -q ".sealion/log/dev.jsonl" cmd/sealion/main.go
 grep -q "sealion follow logs" cmd/sealion/main.go
+grep -q "sealion status" cmd/sealion/main.go
 ! grep -q "sealion logs follow" cmd/sealion/main.go
 ! grep -q 'outputRow{"login"' cmd/sealion/main.go
 ! grep -q 'outputRow{"mode"' cmd/sealion/main.go
@@ -204,6 +211,7 @@ grep -q "Initial user experience" docs/site/index.html
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/component-style-system.html
 grep -q "Tailwind is required" docs/site/component-style-system.html
 grep -q "sealion follow logs" docs/site/initial-user-experience.html
+grep -q "sealion status" docs/site/initial-user-experience.html
 grep -q "Install, create, run, register" docs/site/initial-user-experience.html
 grep -q "CI/CD regression plan" docs/site/ci-cd-regression-tests.html
 grep -q "Directory structure" docs/site/repo-structure.html

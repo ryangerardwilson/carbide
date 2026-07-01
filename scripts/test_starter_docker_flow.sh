@@ -91,6 +91,12 @@ grep -q "Sealion Bun frontend listening inside container on :8080" "$tmp_dir/fro
 grep -q "browser entrypoint http://localhost:$port" "$tmp_dir/frontend.log"
 grep -q "proxying /api and /health to backend service http://backend:8080" "$tmp_dir/frontend.log"
 ! grep -q "Bun frontend listening on http://localhost:8080" "$tmp_dir/frontend.log"
+SEALION_HOME="$repo_root" "$repo_root/bin/sealion" status > "$tmp_dir/status.out"
+grep -q "Sealion status" "$tmp_dir/status.out"
+grep -Eq "^service[[:space:]]+container[[:space:]]+ports[[:space:]]+internal[[:space:]]+status" "$tmp_dir/status.out"
+grep -Eq "^frontend[[:space:]]+demo-frontend-1[[:space:]]+localhost:$port[[:space:]]+8080/tcp[[:space:]]+running" "$tmp_dir/status.out"
+grep -Eq "^backend[[:space:]]+demo-backend-1[[:space:]]+-[[:space:]]+8080/tcp[[:space:]]+running \\(healthy\\)" "$tmp_dir/status.out"
+grep -Eq "^db[[:space:]]+demo-db-1[[:space:]]+-[[:space:]]+5432/tcp[[:space:]]+running \\(healthy\\)" "$tmp_dir/status.out"
 if ! docker compose run --rm --no-deps frontend bun run build > "$tmp_dir/frontend-build.log" 2>&1; then
   cat "$tmp_dir/frontend-build.log" >&2
   exit 1

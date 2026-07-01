@@ -131,6 +131,7 @@ curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/sealion/main/insta
 sealion new demo
 cd demo
 sealion run dev
+sealion status
 sealion stop dev
 ```
 
@@ -148,11 +149,13 @@ host port explicitly.
 
 `Ctrl+C` in `sealion run dev` detaches from live log streaming and leaves the
 containers running. `sealion follow logs` attaches to live container logs again.
-`sealion stop dev` stops the local development stack. `sealion help` prints the
-command reference. `sealion upgrade` upgrades the installed CLI when a newer
-GitHub commit is available. `sealion logs` reads the structured dev log file
-written by `sealion run dev`; examples include `sealion logs service backend`
-and `sealion logs containing "/api/login" json`.
+`sealion status` prints a table of Compose services, container names, published
+host ports, internal container ports, and status. `sealion stop dev` stops the
+local development stack. `sealion help` prints the command reference.
+`sealion upgrade` upgrades the installed CLI when a newer GitHub commit is
+available. `sealion logs` reads the structured dev log file written by
+`sealion run dev`; examples include `sealion logs service backend` and
+`sealion logs containing "/api/login" json`.
 
 When Docker Compose supports file watch, `sealion run dev` starts the stack with
 quiet Compose output, watch enabled, and live logs streamed below the startup
@@ -160,14 +163,14 @@ summary. Edits under `view/web/src/`, `src/`, `model/`, `controller/`, view
 package/config files, or `Dockerfile` rebuild and replace the relevant
 container.
 
-CLI output is rendered through a small Go output layer: headings, aligned labels,
-TTY-only color, terminal-only Pacman-style per-container startup and shutdown
-animation, timestamped log rows, and plain text when piped or captured by
-scripts. `sealion run dev` prints only the working app/API URLs before the
-startup animation and log stream. Logs begin only after Compose reports the
-stack ready. `NO_COLOR` disables ANSI color without disabling the terminal
-startup or shutdown animation. Every streamed frontend, backend, database, and
-watch event is also written as JSONL to
+CLI output is rendered through a small Go output layer: headings, aligned
+labels, compact tables, TTY-only color, terminal-only ILoveCandy-style
+per-container startup and shutdown animation, timestamped log rows, and plain
+text when piped or captured by scripts. `sealion run dev` prints only the
+working app/API URLs before the startup animation and log stream. Logs begin
+only after Compose reports the stack ready. `NO_COLOR` disables ANSI color
+without disabling the terminal startup or shutdown animation. Every streamed
+frontend, backend, database, and watch event is also written as JSONL to
 `.sealion/log/dev.jsonl` so humans, scripts, and AI agents can inspect or query
 the whole local system from one command.
 

@@ -54,6 +54,10 @@ features:
   # sealion run dev
   cd demo && sealion run dev
 
+  inspect local development containers
+  # sealion status
+  cd demo && sealion status
+
   stop the local development stack
   # sealion stop dev
   cd demo && sealion stop dev
@@ -92,6 +96,8 @@ type outputRow struct {
 	value string
 }
 
+type tableRow []string
+
 type runningProcess struct {
 	name string
 	cmd  *exec.Cmd
@@ -127,6 +133,23 @@ type composeServiceStatus struct {
 	service string
 	state   string
 	health  string
+}
+
+type composeServicePort struct {
+	URL           string `json:"URL"`
+	TargetPort    int    `json:"TargetPort"`
+	PublishedPort int    `json:"PublishedPort"`
+	Protocol      string `json:"Protocol"`
+}
+
+type composeServiceSnapshot struct {
+	Service    string               `json:"Service"`
+	Name       string               `json:"Name"`
+	State      string               `json:"State"`
+	Health     string               `json:"Health"`
+	Status     string               `json:"Status"`
+	Ports      string               `json:"Ports"`
+	Publishers []composeServicePort `json:"Publishers"`
 }
 
 func main() {
@@ -186,6 +209,11 @@ func (a app) run(args []string) error {
 			return a.commandRunDev()
 		}
 		return errors.New("usage: sealion run dev")
+	case "status":
+		if len(args) == 1 {
+			return a.commandStatus()
+		}
+		return errors.New("usage: sealion status")
 	case "stop":
 		if len(args) == 2 && args[1] == "dev" {
 			return a.commandStopDev()
@@ -456,6 +484,49 @@ func (a app) commandStopDev() error {
 	return nil
 }
 
+func (a app) commandStatus() error {
+	if !isFile("sealion.toml") {
+		return errors.New("run this inside a Sealion project")
+	}
+
+	compose, err := findCompose()
+	if err != nil {
+		return err
+	}
+
+	env := setEnv(os.Environ(), "COMPOSE_MENU", "false")
+	services := composeServices(compose, env)
+	snapshots, err := composeServiceSnapshots(compose, env)
+	if err != nil {
+		return err
+	}
+
+	seen := map[string]bool{}
+	rows := make([]tableRow, 0, len(services))
+	for _, service := range services {
+		snapshot, ok := snapshots[service]
+		if !ok {
+			rows = append(rows, tableRow{service, "-", "-", "-", "not running"})
+			continue
+		}
+		seen[service] = true
+		rows = append(rows, composeStatusRow(snapshot))
+	}
+	for service, snapshot := range snapshots {
+		if !seen[service] {
+			rows = append(rows, composeStatusRow(snapshot))
+		}
+	}
+
+	r := newRenderer(a.stdout)
+	r.Title("Sealion status", "local stack")
+	r.Table(
+		[]string{"service", "container", "ports", "internal", "status"},
+		rows,
+	)
+	return nil
+}
+
 func (a app) printDevHeader(r renderer, port int) {
 	r.Title("Sealion dev", "local stack")
 	r.Rows(
@@ -675,6 +746,50 @@ func (r renderer) Rows(rows ...outputRow) {
 	}
 }
 
+func (r renderer) Table(headers []string, rows []tableRow) {
+	widths := make([]int, len(headers))
+	for index, header := range headers {
+		widths[index] = len(header)
+	}
+	for _, row := range rows {
+		for index := range headers {
+			value := ""
+			if index < len(row) {
+				value = row[index]
+			}
+			if len(value) > widths[index] {
+				widths[index] = len(value)
+			}
+		}
+	}
+
+	writeCells := func(cells []string, header bool) {
+		for index := range headers {
+			value := ""
+			if index < len(cells) {
+				value = cells[index]
+			}
+			if index > 0 {
+				fmt.Fprint(r.out, "  ")
+			}
+			padded := value
+			if index < len(headers)-1 {
+				padded += strings.Repeat(" ", widths[index]-len(value))
+			}
+			if header {
+				padded = r.paint("2;38;5;245", padded)
+			}
+			fmt.Fprint(r.out, padded)
+		}
+		fmt.Fprintln(r.out)
+	}
+
+	writeCells(headers, true)
+	for _, row := range rows {
+		writeCells([]string(row), false)
+	}
+}
+
 func (r renderer) Row(row outputRow) {
 	r.writeRow(row, len(row.key))
 }
@@ -872,11 +987,13 @@ func pacmanFrame(width int, step int) string {
 	for i := 0; i < width; i++ {
 		switch {
 		case i == position:
-			b.WriteByte(pacmanMouth(step))
+			b.WriteByte(pacmanMouth(step, "right"))
 		case i < position:
-			b.WriteByte(' ')
-		default:
+			b.WriteByte('-')
+		case isCandyPosition(i - position):
 			b.WriteByte('o')
+		default:
+			b.WriteByte(' ')
 		}
 	}
 	b.WriteByte(']')
@@ -893,19 +1010,32 @@ func reversePacmanFrame(width int, step int) string {
 	for i := 0; i < width; i++ {
 		switch {
 		case i == position:
-			b.WriteByte(pacmanMouth(step))
+			b.WriteByte(pacmanMouth(step, "left"))
 		case i > position:
-			b.WriteByte(' ')
-		default:
+			b.WriteByte('-')
+		case isCandyPosition(position - i):
 			b.WriteByte('o')
+		default:
+			b.WriteByte(' ')
 		}
 	}
 	b.WriteByte(']')
 	return b.String()
 }
 
-func pacmanMouth(step int) byte {
-	if step%2 == 0 {
+func isCandyPosition(distance int) bool {
+	return distance > 1 && (distance-2)%3 == 0
+}
+
+func pacmanMouth(step int, direction string) byte {
+	open := step%2 == 0
+	if direction == "left" {
+		if open {
+			return 'D'
+		}
+		return 'd'
+	}
+	if open {
 		return 'C'
 	}
 	return 'c'
@@ -1489,41 +1619,49 @@ func defaultComposeServices() []string {
 }
 
 func composeServiceStatuses(compose composeCommand, env []string) map[string]composeServiceStatus {
+	snapshots, err := composeServiceSnapshots(compose, env)
+	if err != nil {
+		return nil
+	}
+	return composeStatusesFromSnapshots(snapshots)
+}
+
+func composeServiceSnapshots(compose composeCommand, env []string) (map[string]composeServiceSnapshot, error) {
 	output, err := runComposeCaptured(compose, env, "ps", "--format", "json")
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	statuses, err := parseComposeServiceStatuses(output)
-	if err != nil {
-		return nil
-	}
-	return statuses
+	return parseComposeServiceSnapshots(output)
 }
 
 func parseComposeServiceStatuses(output string) (map[string]composeServiceStatus, error) {
-	type psRecord struct {
-		Service string
-		State   string
-		Health  string
+	snapshots, err := parseComposeServiceSnapshots(output)
+	if err != nil {
+		return nil, err
 	}
+	return composeStatusesFromSnapshots(snapshots), nil
+}
 
-	parseRecords := func(records []psRecord) map[string]composeServiceStatus {
-		statuses := map[string]composeServiceStatus{}
+func parseComposeServiceSnapshots(output string) (map[string]composeServiceSnapshot, error) {
+	parseRecords := func(records []composeServiceSnapshot) map[string]composeServiceSnapshot {
+		snapshots := map[string]composeServiceSnapshot{}
 		for _, record := range records {
 			service := strings.TrimSpace(record.Service)
 			if service == "" {
 				continue
 			}
-			statuses[service] = composeServiceStatus{
-				service: service,
-				state:   strings.TrimSpace(record.State),
-				health:  strings.TrimSpace(record.Health),
-			}
+			record.Service = service
+			record.Name = strings.TrimSpace(record.Name)
+			record.State = strings.TrimSpace(record.State)
+			record.Health = strings.TrimSpace(record.Health)
+			record.Status = strings.TrimSpace(record.Status)
+			record.Ports = strings.TrimSpace(record.Ports)
+			snapshots[service] = record
 		}
-		return statuses
+		return snapshots
 	}
 
-	var records []psRecord
+	var records []composeServiceSnapshot
 	if err := json.Unmarshal([]byte(output), &records); err == nil {
 		return parseRecords(records), nil
 	}
@@ -1534,7 +1672,7 @@ func parseComposeServiceStatuses(output string) (map[string]composeServiceStatus
 		if line == "" {
 			continue
 		}
-		var record psRecord
+		var record composeServiceSnapshot
 		if err := json.Unmarshal([]byte(line), &record); err != nil {
 			return nil, err
 		}
@@ -1544,6 +1682,97 @@ func parseComposeServiceStatuses(output string) (map[string]composeServiceStatus
 		return nil, err
 	}
 	return parseRecords(records), nil
+}
+
+func composeStatusesFromSnapshots(snapshots map[string]composeServiceSnapshot) map[string]composeServiceStatus {
+	statuses := map[string]composeServiceStatus{}
+	for service, snapshot := range snapshots {
+		statuses[service] = composeServiceStatus{
+			service: service,
+			state:   snapshot.State,
+			health:  snapshot.Health,
+		}
+	}
+	return statuses
+}
+
+func composeStatusRow(snapshot composeServiceSnapshot) tableRow {
+	return tableRow{
+		snapshot.Service,
+		statusValue(snapshot.Name),
+		composePublishedPorts(snapshot),
+		composeInternalPorts(snapshot),
+		composeServiceStatusText(snapshot),
+	}
+}
+
+func statusValue(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "-"
+	}
+	return value
+}
+
+func composePublishedPorts(snapshot composeServiceSnapshot) string {
+	seen := map[string]bool{}
+	var ports []string
+	for _, publisher := range snapshot.Publishers {
+		if publisher.PublishedPort <= 0 {
+			continue
+		}
+		host := strings.TrimSpace(publisher.URL)
+		if host == "" || host == "0.0.0.0" || host == "::" {
+			host = "localhost"
+		}
+		value := fmt.Sprintf("%s:%d", host, publisher.PublishedPort)
+		if !seen[value] {
+			seen[value] = true
+			ports = append(ports, value)
+		}
+	}
+	if len(ports) == 0 {
+		return "-"
+	}
+	return strings.Join(ports, ", ")
+}
+
+func composeInternalPorts(snapshot composeServiceSnapshot) string {
+	seen := map[string]bool{}
+	var ports []string
+	for _, publisher := range snapshot.Publishers {
+		if publisher.TargetPort <= 0 {
+			continue
+		}
+		protocol := strings.TrimSpace(publisher.Protocol)
+		if protocol == "" {
+			protocol = "tcp"
+		}
+		value := fmt.Sprintf("%d/%s", publisher.TargetPort, protocol)
+		if !seen[value] {
+			seen[value] = true
+			ports = append(ports, value)
+		}
+	}
+	if len(ports) == 0 && strings.TrimSpace(snapshot.Ports) != "" {
+		return strings.TrimSpace(snapshot.Ports)
+	}
+	if len(ports) == 0 {
+		return "-"
+	}
+	return strings.Join(ports, ", ")
+}
+
+func composeServiceStatusText(snapshot composeServiceSnapshot) string {
+	state := strings.TrimSpace(strings.ToLower(snapshot.State))
+	health := strings.TrimSpace(strings.ToLower(snapshot.Health))
+	if state == "" {
+		return statusValue(snapshot.Status)
+	}
+	if health != "" {
+		return fmt.Sprintf("%s (%s)", state, health)
+	}
+	return state
 }
 
 func composeLogsArgs(compose composeCommand) []string {

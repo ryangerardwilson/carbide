@@ -30,8 +30,9 @@
           <pre><code>curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/sealion/main/install.sh | bash
 sealion new demo
 cd demo
-sealion run dev</code></pre>
-          <p>The installer builds the Go CLI. <code>sealion help</code> prints the command reference. <code>sealion upgrade</code> updates the installed CLI when a newer GitHub commit is available. <code>Ctrl+C</code> detaches from live dev logs; <code>sealion follow logs</code> attaches again; <code>sealion stop dev</code> stops the stack.</p>
+sealion run dev
+sealion status</code></pre>
+          <p>The installer builds the Go CLI. <code>sealion help</code> prints the command reference. <code>sealion upgrade</code> updates the installed CLI when a newer GitHub commit is available. <code>Ctrl+C</code> detaches from live dev logs; <code>sealion follow logs</code> attaches again; <code>sealion status</code> prints the container table; <code>sealion stop dev</code> stops the stack.</p>
         </section>
 
         <section>
@@ -43,7 +44,7 @@ sealion run dev</code></pre>
             <li>Infrastructure belongs in version-controlled code.</li>
             <li>The default starter opens account creation first, then supports login, logout, and dashboard.</li>
             <li>The first IaC target is generated Docker Compose for local development.</li>
-            <li>The CLI is implemented in Go and renders colored, aligned, script-safe output with Pacman-style per-container startup/shutdown animation, timestamped logs, live log follow, and queryable structured dev logs.</li>
+            <li>The CLI is implemented in Go and renders colored, aligned, script-safe output with ILoveCandy-style per-container startup/shutdown animation, status tables, timestamped logs, live log follow, and queryable structured dev logs.</li>
           </ul>
         </section>
 

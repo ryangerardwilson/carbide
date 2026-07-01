@@ -11,6 +11,7 @@ export SEALION_HOME="$repo_root"
 grep -q "sealion help" "$tmp_dir/help.out"
 grep -q "sealion upgrade" "$tmp_dir/help.out"
 grep -q "sealion run dev" "$tmp_dir/help.out"
+grep -q "sealion status" "$tmp_dir/help.out"
 grep -q "sealion stop dev" "$tmp_dir/help.out"
 grep -q "sealion follow logs" "$tmp_dir/help.out"
 grep -q "sealion logs service backend" "$tmp_dir/help.out"
@@ -162,9 +163,13 @@ if [ "${1:-}" = "compose" ] && [ "${2:-}" = "config" ] && [ "${3:-}" = "--servic
 fi
 
 if [ "${1:-}" = "compose" ] && [ "${2:-}" = "ps" ] && [ "${3:-}" = "--format" ] && [ "${4:-}" = "json" ]; then
-  printf '{"Service":"frontend","State":"running","Health":"healthy"}\n'
-  printf '{"Service":"backend","State":"running","Health":"healthy"}\n'
-  printf '{"Service":"db","State":"running","Health":"healthy"}\n'
+  status_port="8082"
+  if [ -n "${FAKE_DOCKER_PORT_FILE:-}" ] && [ -s "$FAKE_DOCKER_PORT_FILE" ]; then
+    status_port="$(cat "$FAKE_DOCKER_PORT_FILE")"
+  fi
+  printf '{"Service":"frontend","Name":"demo-frontend-1","State":"running","Health":"healthy","Publishers":[{"URL":"0.0.0.0","TargetPort":8080,"PublishedPort":%s,"Protocol":"tcp"},{"URL":"::","TargetPort":8080,"PublishedPort":%s,"Protocol":"tcp"}]}\n' "$status_port" "$status_port"
+  printf '{"Service":"backend","Name":"demo-backend-1","State":"running","Health":"healthy","Publishers":[{"URL":"","TargetPort":8080,"PublishedPort":0,"Protocol":"tcp"}]}\n'
+  printf '{"Service":"db","Name":"demo-db-1","State":"running","Health":"healthy","Publishers":[{"URL":"","TargetPort":5432,"PublishedPort":0,"Protocol":"tcp"}]}\n'
   exit 0
 fi
 
@@ -250,6 +255,12 @@ PY
   PATH="$fake_bin:$PATH" "$repo_root/bin/sealion" logs json containing listening > "$tmp_dir/logs-json.out"
   grep -q '"service":"frontend"' "$tmp_dir/logs-json.out"
   grep -q '"message":"listening on :8080"' "$tmp_dir/logs-json.out"
+  PATH="$fake_bin:$PATH" FAKE_DOCKER_PORT_FILE="$port_file" "$repo_root/bin/sealion" status > "$tmp_dir/status.out"
+  grep -q "Sealion status" "$tmp_dir/status.out"
+  grep -Eq "^service[[:space:]]+container[[:space:]]+ports[[:space:]]+internal[[:space:]]+status" "$tmp_dir/status.out"
+  grep -Eq "^frontend[[:space:]]+demo-frontend-1[[:space:]]+localhost:[0-9]+[[:space:]]+8080/tcp[[:space:]]+running \\(healthy\\)" "$tmp_dir/status.out"
+  grep -Eq "^backend[[:space:]]+demo-backend-1[[:space:]]+-[[:space:]]+8080/tcp[[:space:]]+running \\(healthy\\)" "$tmp_dir/status.out"
+  grep -Eq "^db[[:space:]]+demo-db-1[[:space:]]+-[[:space:]]+5432/tcp[[:space:]]+running \\(healthy\\)" "$tmp_dir/status.out"
   grep -q -- "--quiet-build" "$args_file"
   grep -q -- "--quiet-pull" "$args_file"
   grep -q "compose logs -f --tail 80 --no-color" "$args_file"
