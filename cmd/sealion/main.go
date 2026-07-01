@@ -19,12 +19,16 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"unsafe"
 )
 
 var version = "0.1.0-dev"
 var commit = ""
 
 const devLogPath = ".sealion/log/dev.jsonl"
+const defaultTerminalWidth = 80
+const progressStateColumnWidth = 8
+const minimumProgressFrameWidth = 4
 
 const helpText = `Sealion
 Containerized full-stack apps with React, Go, and Postgres.
@@ -89,6 +93,7 @@ type renderer struct {
 	out         io.Writer
 	styled      bool
 	interactive bool
+	termWidth   int
 }
 
 type outputRow struct {
@@ -687,10 +692,18 @@ func waitForProcesses(remaining int, processes []runningProcess, results <-chan 
 
 func newRenderer(out io.Writer) renderer {
 	interactive := isTerminalOutput(out)
+	termWidth := 0
+	if interactive {
+		termWidth = terminalColumns(out)
+		if termWidth == 0 {
+			termWidth = terminalColumnsFromEnv()
+		}
+	}
 	return renderer{
 		out:         out,
 		interactive: interactive,
 		styled:      interactive && os.Getenv("NO_COLOR") == "",
+		termWidth:   termWidth,
 	}
 }
 
@@ -930,19 +943,42 @@ func (r renderer) rewriteServiceProgress(mode string, services []string, statuse
 
 func (r renderer) writeServiceProgress(mode string, services []string, statuses map[string]composeServiceStatus, step int) {
 	width := rowTextWidth(services)
+	frameWidth := r.serviceProgressFrameWidth(width)
 	for index, service := range services {
 		status := statuses[service]
 		state := progressState(mode, status)
-		frame := serviceProgressFrame(18, step+index, state)
+		frame := serviceProgressFrame(frameWidth, step+index, state)
+		stateLabel := padRight(state, progressStateColumnWidth)
 		fmt.Fprintf(
 			r.out,
-			"\r%s%s  %s %s\033[K\n",
+			"\r\033[K%s%s  %s %s\n",
 			r.formatService(service),
 			strings.Repeat(" ", width-len(service)),
 			r.paint(serviceProgressColor(state), frame),
-			r.paint("2;38;5;245", state),
+			r.paint("2;38;5;245", stateLabel),
 		)
 	}
+}
+
+func (r renderer) serviceProgressFrameWidth(serviceWidth int) int {
+	termWidth := r.currentTerminalWidth()
+	frameWidth := termWidth - serviceWidth - progressStateColumnWidth - 5
+	if frameWidth < minimumProgressFrameWidth {
+		return minimumProgressFrameWidth
+	}
+	return frameWidth
+}
+
+func (r renderer) currentTerminalWidth() int {
+	if r.interactive {
+		if width := terminalColumns(r.out); width > 0 {
+			return width
+		}
+	}
+	if r.termWidth > 0 {
+		return r.termWidth
+	}
+	return defaultTerminalWidth
 }
 
 func progressDoneState(mode string) string {
@@ -1088,6 +1124,13 @@ func rowTextWidth(values []string) int {
 		}
 	}
 	return width
+}
+
+func padRight(value string, width int) string {
+	if len(value) >= width {
+		return value
+	}
+	return value + strings.Repeat(" ", width-len(value))
 }
 
 func (r renderer) formatKey(key string) string {
@@ -1475,6 +1518,39 @@ func isTerminalOutput(w io.Writer) bool {
 	return info.Mode()&os.ModeCharDevice != 0
 }
 
+type terminalWindowSize struct {
+	rows    uint16
+	columns uint16
+	xpixels uint16
+	ypixels uint16
+}
+
+func terminalColumns(w io.Writer) int {
+	file, ok := w.(*os.File)
+	if !ok {
+		return 0
+	}
+	var size terminalWindowSize
+	_, _, errno := syscall.Syscall(
+		syscall.SYS_IOCTL,
+		file.Fd(),
+		uintptr(syscall.TIOCGWINSZ),
+		uintptr(unsafe.Pointer(&size)),
+	)
+	if errno != 0 || size.columns == 0 {
+		return 0
+	}
+	return int(size.columns)
+}
+
+func terminalColumnsFromEnv() int {
+	columns, err := strconv.Atoi(os.Getenv("COLUMNS"))
+	if err != nil || columns <= 0 {
+		return 0
+	}
+	return columns
+}
+
 func ensureProjectName(name string) error {
 	if name == "" || strings.HasPrefix(name, ".") || strings.ContainsAny(name, `/\`) {
 		return errors.New("project name must be a simple directory name")
@@ -1820,10 +1896,22 @@ func normalizeServiceName(name string) string {
 func stripANSI(value string) string {
 	var out strings.Builder
 	inEscape := false
+	inCSI := false
 	for i := 0; i < len(value); i++ {
 		ch := value[i]
 		if inEscape {
-			if ch >= '@' && ch <= '~' {
+			if !inCSI && ch == '[' {
+				inCSI = true
+				continue
+			}
+			if inCSI {
+				if ch >= '@' && ch <= '~' {
+					inEscape = false
+					inCSI = false
+				}
+				continue
+			}
+			if ch >= 0x30 && ch <= 0x7e {
 				inEscape = false
 			}
 			continue

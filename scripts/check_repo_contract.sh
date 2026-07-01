@@ -186,7 +186,9 @@ grep -q "commandStatus" cmd/sealion/main.go
 grep -q "commandStopDev" cmd/sealion/main.go
 grep -q "RunServiceProgress" cmd/sealion/main.go
 grep -q "RunServiceStopProgress" cmd/sealion/main.go
+grep -q "serviceProgressFrameWidth" cmd/sealion/main.go
 grep -q "serviceProgressFrame" cmd/sealion/main.go
+grep -q "terminalColumns" cmd/sealion/main.go
 grep -q "composeServiceStatuses" cmd/sealion/main.go
 grep -q "composeServiceSnapshots" cmd/sealion/main.go
 grep -q "composePublishedPorts" cmd/sealion/main.go

@@ -146,14 +146,14 @@ Future checks:
   Compose build output by default;
 - `sealion run dev` prints only the working app/API URLs before the log stream,
   with no port-busy, demo-login, mode, status, stop, or watch-summary rows;
-- `sealion run dev` shows TTY-only per-container startup animation while
+- `sealion run dev` shows full-width TTY-only per-container startup animation while
   Compose starts containers, without leaking progress control text into
   captured output, and without treating `NO_COLOR` as a request to disable
   terminal animation;
 - `Ctrl+C` during `sealion run dev` detaches from live logs without running
   `docker compose down`;
 - `sealion stop dev` is the explicit teardown path, runs `docker compose down`,
-  and shows TTY-only per-container shutdown animation;
+  and shows full-width TTY-only per-container shutdown animation;
 - CLI success, error, version, upgrade, and dev-stack output use the shared
   aligned renderer instead of scattered raw prints;
 - `sealion run dev` streams frontend, backend, database, and watch output

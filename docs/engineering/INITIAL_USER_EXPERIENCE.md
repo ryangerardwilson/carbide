@@ -44,13 +44,14 @@ package/config files, `go.mod`, `go.sum`, or `Dockerfile` rebuild and replace
 the relevant container.
 
 The CLI presents output as aligned rows and compact tables with TTY-only color
-and terminal-only ILoveCandy-style per-container startup and shutdown animation
-while Docker Compose builds, starts, waits for, or stops containers. Captured
-or piped output remains plain text for tests, scripts, and AI agents. Before
-startup, `sealion run dev` prints only the working app and API URLs. Logs begin
-only after Compose reports the stack ready. `Ctrl+C` detaches from live log
-streaming and leaves the containers running. `sealion follow logs` attaches to
-live container logs again. `sealion status` prints the current service table.
+and full-width terminal-only ILoveCandy-style per-container startup and
+shutdown animation while Docker Compose builds, starts, waits for, or stops
+containers. Captured or piped output remains plain text for tests, scripts, and
+AI agents. Before startup, `sealion run dev` prints only the working app and API
+URLs. Logs begin only after Compose reports the stack ready. `Ctrl+C` detaches
+from live log streaming and leaves the containers running. `sealion follow
+logs` attaches to live container logs again. `sealion status` prints the current
+service table.
 `sealion stop dev` stops the local development stack. Frontend, backend,
 database, and watch events appear in one timestamped, service-tagged stream and
 are mirrored to `.sealion/log/dev.jsonl`. `NO_COLOR` disables ANSI color

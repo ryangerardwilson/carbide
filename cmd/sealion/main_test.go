@@ -164,7 +164,7 @@ func TestServiceStopProgressState(t *testing.T) {
 
 func TestServiceProgressRunsWithoutColor(t *testing.T) {
 	var out bytes.Buffer
-	r := renderer{out: &out, interactive: true}
+	r := renderer{out: &out, interactive: true, termWidth: 52}
 
 	err := r.RunServiceProgress(
 		[]string{"backend"},
@@ -180,17 +180,31 @@ func TestServiceProgressRunsWithoutColor(t *testing.T) {
 	}
 
 	got := out.String()
-	if !strings.Contains(got, "[C o  o  o  o  o  o] starting") {
-		t.Fatalf("progress output missing starting frame: %q", got)
+	lines := visibleTerminalLines(got)
+	starting := terminalLineContaining(t, lines, "starting")
+	ready := terminalLineContaining(t, lines, "ready")
+	wantFrameWidth := 52 - len("backend") - progressStateColumnWidth - 5
+
+	wantStarting := "backend  " + serviceProgressFrame(wantFrameWidth, 0, "starting") + " " + padRight("starting", progressStateColumnWidth)
+	if starting != wantStarting {
+		t.Fatalf("starting progress line = %q, want %q", starting, wantStarting)
 	}
-	if !strings.Contains(got, "[##################] ready") {
-		t.Fatalf("progress output missing ready frame: %q", got)
+	if len(starting) != 52 {
+		t.Fatalf("starting progress line width = %d, want 52: %q", len(starting), starting)
+	}
+
+	wantReady := "backend  " + serviceProgressFrame(wantFrameWidth, 0, "ready") + " " + padRight("ready", progressStateColumnWidth)
+	if ready != wantReady {
+		t.Fatalf("ready progress line = %q, want %q", ready, wantReady)
+	}
+	if len(ready) != 52 {
+		t.Fatalf("ready progress line width = %d, want 52: %q", len(ready), ready)
 	}
 }
 
 func TestServiceStopProgressRunsWithoutColor(t *testing.T) {
 	var out bytes.Buffer
-	r := renderer{out: &out, interactive: true}
+	r := renderer{out: &out, interactive: true, termWidth: 52}
 
 	err := r.RunServiceStopProgress(
 		[]string{"backend"},
@@ -206,12 +220,61 @@ func TestServiceStopProgressRunsWithoutColor(t *testing.T) {
 	}
 
 	got := out.String()
-	if !strings.Contains(got, "[o  o  o  o  o  o D] stopping") {
-		t.Fatalf("stop progress output missing stopping frame: %q", got)
+	lines := visibleTerminalLines(got)
+	stopping := terminalLineContaining(t, lines, "stopping")
+	stopped := terminalLineContaining(t, lines, "stopped")
+	wantFrameWidth := 52 - len("backend") - progressStateColumnWidth - 5
+
+	wantStopping := "backend  " + serviceProgressFrame(wantFrameWidth, 0, "stopping") + " " + padRight("stopping", progressStateColumnWidth)
+	if stopping != wantStopping {
+		t.Fatalf("stopping progress line = %q, want %q", stopping, wantStopping)
 	}
-	if !strings.Contains(got, "[                  ] stopped") {
-		t.Fatalf("stop progress output missing stopped frame: %q", got)
+	if len(stopping) != 52 {
+		t.Fatalf("stopping progress line width = %d, want 52: %q", len(stopping), stopping)
 	}
+
+	wantStopped := "backend  " + serviceProgressFrame(wantFrameWidth, 0, "stopped") + " " + padRight("stopped", progressStateColumnWidth)
+	if stopped != wantStopped {
+		t.Fatalf("stopped progress line = %q, want %q", stopped, wantStopped)
+	}
+	if len(stopped) != 52 {
+		t.Fatalf("stopped progress line width = %d, want 52: %q", len(stopped), stopped)
+	}
+}
+
+func TestServiceProgressFrameWidthUsesTerminalWidth(t *testing.T) {
+	r := renderer{termWidth: 80}
+	if got := r.serviceProgressFrameWidth(len("frontend")); got != 59 {
+		t.Fatalf("serviceProgressFrameWidth = %d, want 59", got)
+	}
+
+	r = renderer{termWidth: 20}
+	if got := r.serviceProgressFrameWidth(len("frontend")); got != minimumProgressFrameWidth {
+		t.Fatalf("narrow serviceProgressFrameWidth = %d, want %d", got, minimumProgressFrameWidth)
+	}
+}
+
+func visibleTerminalLines(output string) []string {
+	plain := stripANSI(output)
+	var lines []string
+	for _, line := range strings.Split(plain, "\n") {
+		if line == "" {
+			continue
+		}
+		lines = append(lines, strings.TrimLeft(line, "\r"))
+	}
+	return lines
+}
+
+func terminalLineContaining(t *testing.T, lines []string, value string) string {
+	t.Helper()
+	for _, line := range lines {
+		if strings.Contains(line, value) {
+			return line
+		}
+	}
+	t.Fatalf("terminal output missing %q in %#v", value, lines)
+	return ""
 }
 
 func TestStreamWatchOutputFiltersNoise(t *testing.T) {
