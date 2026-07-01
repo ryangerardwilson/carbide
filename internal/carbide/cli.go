@@ -30,25 +30,25 @@ const defaultTerminalWidth = 80
 const progressStateColumnWidth = 8
 const minimumProgressFrameWidth = 4
 
+const defaultLogoText = `________________________oo_______oo_______oo_________
+_ooooo___ooooo__oo_ooo__oooooo________oooooo__ooooo__
+oo___oo_oo___oo_ooo___o_oo___oo__oo__oo___oo_oo____o_
+oo______oo___oo_oo______oo___oo__oo__oo___oo_ooooooo_
+oo______oo___oo_oo______oo___oo__oo__oo___oo_oo______
+_ooooo___oooo_o_oo______oooooo__oooo__oooooo__ooooo__
+_____________________________________________________
+`
+
 const commandListText = `Carbide %s
 
 Usage:
   carbide <command> [arguments]
 
-Options:
-  help       Show detailed help
-  version    Print the installed version
-
-Available commands:
-  new        Create a new Carbide project
-  init       Initialize the current empty directory
-  run dev    Start the local Docker development stack
-  status     Show local development containers
-  stop dev   Stop local development containers
-  follow logs
-             Follow live development logs
-  logs       Read structured development logs
-  upgrade    Upgrade the installed CLI
+Commands:
+  new <project-name>   Create a new Carbide project
+  init                 Initialize the current empty directory
+  help                 Show detailed help
+  version              Print the installed version
 `
 
 const helpText = `Carbide
@@ -264,9 +264,16 @@ func (a app) run(args []string) error {
 }
 
 func (a app) printCommandList() {
+	r := newRenderer(a.stdout)
+	logo := carbideLogo(a.home)
+	if r.interactive {
+		r.AnimateLogo(logo)
+	} else {
+		r.Logo(logo)
+	}
 	text := fmt.Sprintf(commandListText, version)
-	if shouldStyleOutput(a.stdout) {
-		fmt.Fprintf(a.stdout, "\033[38;5;245m%s\033[0m", text)
+	if r.styled {
+		fmt.Fprint(a.stdout, r.paint("38;5;245", text))
 		return
 	}
 	fmt.Fprint(a.stdout, text)
@@ -851,6 +858,36 @@ func (r renderer) Blank() {
 	fmt.Fprintln(r.out)
 }
 
+func (r renderer) Logo(logo string) {
+	for index, line := range logoLines(logo) {
+		fmt.Fprintln(r.out, r.formatLogoLine(index, line))
+	}
+	fmt.Fprintln(r.out)
+}
+
+func (r renderer) AnimateLogo(logo string) {
+	lines := logoLines(logo)
+	if len(lines) == 0 {
+		return
+	}
+
+	width := maxLineWidth(lines)
+	frames := 14
+	for frame := 0; frame <= frames; frame++ {
+		if frame > 0 {
+			fmt.Fprintf(r.out, "\033[%dA", len(lines))
+		}
+		reveal := width * frame / frames
+		for index, line := range lines {
+			fmt.Fprintf(r.out, "\r\033[K%s\n", r.formatLogoLine(index, visiblePrefix(line, reveal)))
+		}
+		if frame < frames {
+			time.Sleep(16 * time.Millisecond)
+		}
+	}
+	fmt.Fprintln(r.out)
+}
+
 func (r renderer) writeRow(row outputRow, width int) {
 	lines := strings.Split(row.value, "\n")
 	if len(lines) > 1 {
@@ -1192,6 +1229,22 @@ func (r renderer) formatService(service string) string {
 	}
 }
 
+func (r renderer) formatLogoLine(index int, line string) string {
+	if !r.styled {
+		return line
+	}
+	switch index % 4 {
+	case 0:
+		return r.paint("38;5;250", line)
+	case 1:
+		return r.paint("38;5;81", line)
+	case 2:
+		return r.paint("38;5;80", line)
+	default:
+		return r.paint("38;5;114", line)
+	}
+}
+
 func (r renderer) formatValue(row outputRow) string {
 	if !r.styled {
 		return row.value
@@ -1221,6 +1274,34 @@ func rowKeyWidth(rows []outputRow) int {
 		}
 	}
 	return width
+}
+
+func logoLines(logo string) []string {
+	logo = strings.TrimRight(logo, "\n")
+	if strings.TrimSpace(logo) == "" {
+		return nil
+	}
+	return strings.Split(logo, "\n")
+}
+
+func maxLineWidth(lines []string) int {
+	width := 0
+	for _, line := range lines {
+		if len(line) > width {
+			width = len(line)
+		}
+	}
+	return width
+}
+
+func visiblePrefix(value string, width int) string {
+	if width <= 0 {
+		return ""
+	}
+	if width >= len(value) {
+		return value
+	}
+	return value[:width]
 }
 
 func streamWatchOutput(input io.Reader, r renderer, logSink *devLogSink, stream string, wg *sync.WaitGroup) {
@@ -1514,6 +1595,16 @@ func limitLogEntries(entries []structuredLogEntry, limit int) []structuredLogEnt
 		return entries
 	}
 	return entries[len(entries)-limit:]
+}
+
+func carbideLogo(home string) string {
+	if home != "" {
+		content, err := os.ReadFile(filepath.Join(home, "logo.txt"))
+		if err == nil && strings.TrimSpace(string(content)) != "" {
+			return string(content)
+		}
+	}
+	return defaultLogoText
 }
 
 func resolveHome() (string, error) {

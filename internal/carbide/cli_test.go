@@ -67,19 +67,28 @@ func TestBareCommandPrintsCommandList(t *testing.T) {
 
 	got := out.String()
 	for _, want := range []string{
+		"________________________oo_______oo_______oo_________",
 		"Carbide 0.1.0-dev",
 		"Usage:",
 		"carbide <command> [arguments]",
-		"Options:",
-		"Available commands:",
-		"run dev",
-		"follow logs",
+		"Commands:",
+		"new <project-name>",
+		"init",
+		"help",
+		"version",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("bare command output = %q, missing %q", got, want)
 		}
 	}
 	for _, unwanted := range []string{
+		"Options:",
+		"Available commands:",
+		"run dev",
+		"status",
+		"stop dev",
+		"follow logs",
+		"upgrade",
 		"features:",
 		"raw.githubusercontent.com/ryangerardwilson/carbide",
 	} {

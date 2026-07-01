@@ -6,6 +6,7 @@ domain="carbide.ryangerardwilson.com"
 required_files=(
   ".gitignore"
   "README.md"
+  "logo.txt"
   "install.sh"
   "go.mod"
   "bin/carbide"
@@ -110,6 +111,7 @@ grep -q "carbide logs" README.md
 ! grep -q "command_format" bin/carbide
 ! grep -q "carbide format" bin/carbide
 grep -q "module github.com/ryangerardwilson/carbide" go.mod
+grep -q "oo_______oo_______oo" logo.txt
 grep -q "package main" cmd/carbide/main.go
 grep -q "package main" cmd/sealion/main.go
 grep -q "package carbide" internal/carbide/cli.go
