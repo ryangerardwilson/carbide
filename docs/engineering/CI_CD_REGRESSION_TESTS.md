@@ -204,7 +204,7 @@ Future checks:
 The first implemented CI job is intentionally small:
 
 ```sh
-bash -n scripts/*.sh bin/carbide bin/sealion install.sh
+bash -n scripts/*.sh bin/carbide install.sh
 go test ./...
 bash scripts/check_repo_contract.sh
 bash scripts/test_cli_scaffold.sh

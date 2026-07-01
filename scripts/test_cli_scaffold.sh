@@ -44,10 +44,6 @@ if "$repo_root/bin/carbide" format >/tmp/carbide-format.out 2>/tmp/carbide-forma
 fi
 grep -q "unknown command: format" /tmp/carbide-format.err
 
-"$repo_root/bin/sealion" help > "$tmp_dir/legacy-help.out"
-grep -q "carbide help" "$tmp_dir/legacy-help.out"
-! grep -q "sealion help" "$tmp_dir/legacy-help.out"
-
 cd "$tmp_dir"
 "$repo_root/bin/carbide" new demo
 

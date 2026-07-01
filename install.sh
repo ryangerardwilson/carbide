@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_url="${CARBIDE_REPO_URL:-${SEALION_REPO_URL:-https://github.com/ryangerardwilson/carbide.git}}"
-archive_url="${CARBIDE_ARCHIVE_URL:-${SEALION_ARCHIVE_URL:-https://github.com/ryangerardwilson/carbide/archive/refs/heads/main.tar.gz}}"
-install_dir="${CARBIDE_HOME:-${SEALION_HOME:-$HOME/.carbide}}"
-bin_dir="${CARBIDE_BIN_DIR:-${SEALION_BIN_DIR:-$HOME/.local/bin}}"
+repo_url="${CARBIDE_REPO_URL:-https://github.com/ryangerardwilson/carbide.git}"
+archive_url="${CARBIDE_ARCHIVE_URL:-https://github.com/ryangerardwilson/carbide/archive/refs/heads/main.tar.gz}"
+install_dir="${CARBIDE_HOME:-$HOME/.carbide}"
+bin_dir="${CARBIDE_BIN_DIR:-$HOME/.local/bin}"
 
 command -v go >/dev/null 2>&1 || {
   printf 'install failed: Go is required to build the Carbide CLI\n' >&2
@@ -52,9 +52,6 @@ mv "$tmp_bin" "$build_dir/carbide"
 chmod +x "$build_dir/carbide"
 chmod +x "$install_dir/bin/carbide"
 ln -sfn "$build_dir/carbide" "$bin_dir/carbide"
-if [ -L "$bin_dir/sealion" ]; then
-  rm -f "$bin_dir/sealion"
-fi
 
 printf 'installed carbide to %s\n' "$bin_dir/carbide"
 case ":$PATH:" in

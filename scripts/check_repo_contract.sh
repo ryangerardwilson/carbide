@@ -10,9 +10,7 @@ required_files=(
   "install.sh"
   "go.mod"
   "bin/carbide"
-  "bin/sealion"
   "cmd/carbide/main.go"
-  "cmd/sealion/main.go"
   "internal/carbide/cli.go"
   "internal/carbide/cli_test.go"
   ".github/workflows/ci.yml"
@@ -54,7 +52,6 @@ required_files=(
 required_dirs=(
   "cmd"
   "cmd/carbide"
-  "cmd/sealion"
   "internal/carbide"
   "src"
   "src/ui"
@@ -113,8 +110,8 @@ grep -q "carbide logs" README.md
 grep -q "module github.com/ryangerardwilson/carbide" go.mod
 grep -q "oo_______oo_______oo" logo.txt
 grep -q "package main" cmd/carbide/main.go
-grep -q "package main" cmd/sealion/main.go
 grep -q "package carbide" internal/carbide/cli.go
+! git grep -n -e 'S[e]alion' -e 's[e]alion' -e 'S[E]ALION' -- .
 grep -q "composeUpDetached" internal/carbide/cli.go
 grep -q "runDevStreams" internal/carbide/cli.go
 grep -q -- "--quiet-build" internal/carbide/cli.go

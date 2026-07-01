@@ -454,16 +454,12 @@ func (a app) commandRunDev() error {
 	}
 
 	requestedPort := os.Getenv("CARBIDE_HTTP_PORT")
-	if requestedPort == "" {
-		requestedPort = os.Getenv("SEALION_HTTP_PORT")
-	}
 	port, err := chooseDevPort(requestedPort)
 	if err != nil {
 		return err
 	}
 
 	env := setEnv(os.Environ(), "CARBIDE_HTTP_PORT", strconv.Itoa(port))
-	env = setEnv(env, "SEALION_HTTP_PORT", strconv.Itoa(port))
 	env = setEnv(env, "COMPOSE_MENU", "false")
 	watch := compose.supports("--watch")
 	logSink, err := openDevLogSink(devLogPath)
@@ -1609,9 +1605,6 @@ func carbideLogo(home string) string {
 
 func resolveHome() (string, error) {
 	if home := os.Getenv("CARBIDE_HOME"); home != "" {
-		return filepath.Abs(home)
-	}
-	if home := os.Getenv("SEALION_HOME"); home != "" {
 		return filepath.Abs(home)
 	}
 
