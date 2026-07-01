@@ -76,7 +76,6 @@ func TestBareCommandPrintsCommandList(t *testing.T) {
 		"new <project-name>",
 		"init",
 		"help",
-		"version",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("bare command output = %q, missing %q", got, want)
@@ -90,6 +89,7 @@ func TestBareCommandPrintsCommandList(t *testing.T) {
 		"stop dev",
 		"follow logs",
 		"upgrade",
+		"version",
 		"features:",
 		"raw.githubusercontent.com/ryangerardwilson/carbide",
 	} {

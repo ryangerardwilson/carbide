@@ -49,7 +49,6 @@ Commands:
   new <project-name>   Create a new Carbide project
   init                 Initialize the current empty directory
   help                 Show detailed help
-  version              Print the installed version
 `
 
 const helpText = `Carbide
