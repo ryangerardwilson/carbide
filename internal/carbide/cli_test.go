@@ -98,6 +98,19 @@ func TestBareCommandPrintsCommandList(t *testing.T) {
 	}
 }
 
+func TestRendererStyledLogoUsesGlyphColors(t *testing.T) {
+	r := renderer{styled: true}
+
+	got := r.formatLogoLine(0, "_o0Ox")
+	want := "\033[2;38;5;245m_\033[0m\033[38;5;220mo0O\033[0mx"
+	if got != want {
+		t.Fatalf("styled logo line = %q, want %q", got, want)
+	}
+	if plain := stripANSI(got); plain != "_o0Ox" {
+		t.Fatalf("styled logo line strips to %q, want %q", plain, "_o0Ox")
+	}
+}
+
 func TestRendererPlainOutput(t *testing.T) {
 	var out bytes.Buffer
 	newRenderer(&out).Message(

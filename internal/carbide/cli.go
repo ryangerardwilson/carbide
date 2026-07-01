@@ -1225,19 +1225,42 @@ func (r renderer) formatService(service string) string {
 	}
 }
 
-func (r renderer) formatLogoLine(index int, line string) string {
+func (r renderer) formatLogoLine(_ int, line string) string {
 	if !r.styled {
 		return line
 	}
-	switch index % 4 {
-	case 0:
-		return r.paint("38;5;250", line)
-	case 1:
-		return r.paint("38;5;81", line)
-	case 2:
-		return r.paint("38;5;80", line)
+
+	var out strings.Builder
+	activeColor := ""
+	for i := 0; i < len(line); i++ {
+		color := logoGlyphColor(line[i])
+		if color != activeColor {
+			if activeColor != "" {
+				out.WriteString("\033[0m")
+			}
+			if color != "" {
+				out.WriteString("\033[")
+				out.WriteString(color)
+				out.WriteString("m")
+			}
+			activeColor = color
+		}
+		out.WriteByte(line[i])
+	}
+	if activeColor != "" {
+		out.WriteString("\033[0m")
+	}
+	return out.String()
+}
+
+func logoGlyphColor(ch byte) string {
+	switch ch {
+	case '_':
+		return "2;38;5;245"
+	case 'o', 'O', '0':
+		return "38;5;220"
 	default:
-		return r.paint("38;5;114", line)
+		return ""
 	}
 }
 
