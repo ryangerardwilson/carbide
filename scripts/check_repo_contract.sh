@@ -29,7 +29,12 @@ required_files=(
   "scripts/test_cli_scaffold.sh"
   "scripts/test_starter_docker_flow.sh"
   "templates/default/Dockerfile"
+  "templates/default/.env.example"
   "templates/default/.gitignore"
+  "templates/default/config/env.schema.json"
+  "templates/default/doc/runbook/backup-restore.md"
+  "templates/default/doc/runbook/deploy.md"
+  "templates/default/doc/runbook/env.md"
   "templates/default/docker-compose.yml"
   "templates/default/view/web/Dockerfile"
   "templates/default/view/web/index.html"
@@ -99,6 +104,9 @@ required_dirs=(
   "infra/compose"
   "infra/schemas"
   "templates/default"
+  "templates/default/config"
+  "templates/default/doc"
+  "templates/default/doc/runbook"
   "templates/default/view"
   "templates/default/view/web"
   "templates/default/view/web/src"
@@ -143,12 +151,18 @@ grep -q "carbide status" README.md
 grep -q "carbide stop dev" README.md
 grep -q "carbide follow logs" README.md
 grep -q "carbide logs" README.md
+grep -q "carbide doctor env" README.md
+grep -q "carbide deploy preview" README.md
+grep -q "carbide deploy apply" README.md
 ! grep -q "command_format" bin/carbide
 ! grep -q "carbide format" bin/carbide
 grep -q "module github.com/ryangerardwilson/carbide" go.mod
 grep -q "oo_______oo_______oo" logo.txt
 grep -q "package main" cmd/carbide/main.go
 grep -q "package carbide" internal/carbide/cli.go
+grep -q "commandDoctorEnv" internal/carbide/cli.go
+grep -q "commandDeployPreview" internal/carbide/cli.go
+grep -q "commandDeployApply" internal/carbide/cli.go
 ! git grep -n -e 'S[e]alion' -e 's[e]alion' -e 'S[E]ALION' -- .
 grep -q "composeUpDetached" internal/carbide/cli.go
 grep -q "runDevStreams" internal/carbide/cli.go
@@ -157,13 +171,31 @@ grep -q "Carbide dev" internal/carbide/cli.go
 grep -q "Go is required to build the Carbide CLI" install.sh
 grep -q ".bin/carbide" install.sh
 grep -q "default_port = 8080" templates/default/carbide.toml
+grep -q 'schema = "config/env.schema.json"' templates/default/carbide.toml
+grep -q "preview_before_apply = true" templates/default/carbide.toml
 grep -q ".carbide/" templates/default/.gitignore
+grep -q ".env" templates/default/.gitignore
+grep -q "config/env.schema.json" templates/default/README.md
+grep -q "carbide doctor env" templates/default/README.md
+grep -q "carbide deploy preview dev" templates/default/README.md
+grep -q "carbide deploy apply dev" templates/default/README.md
+grep -q "POSTGRES_PASSWORD" templates/default/.env.example
+grep -q '"name": "DATABASE_URL"' templates/default/config/env.schema.json
+grep -q '"secret": true' templates/default/config/env.schema.json
+grep -q '"browser_exposed": true' templates/default/config/env.schema.json
+grep -q '"framework_owned": true' templates/default/config/env.schema.json
+grep -q "separate secrets container" templates/default/doc/runbook/env.md
+grep -q "preview-before-apply" templates/default/doc/runbook/deploy.md
+grep -q "Postgres owns durable application state" templates/default/doc/runbook/backup-restore.md
 ! grep -q 'url = "http://localhost:8080"' templates/default/carbide.toml
 grep -q "frontend:" templates/default/docker-compose.yml
 grep -q "backend:" templates/default/docker-compose.yml
 grep -q "db:" templates/default/docker-compose.yml
 grep -q 'PUBLIC_URL: "http://localhost:${CARBIDE_HTTP_PORT:-8080}"' templates/default/docker-compose.yml
 test "$(grep -c 'PUBLIC_URL: "http://localhost:${CARBIDE_HTTP_PORT:-8080}"' templates/default/docker-compose.yml)" -eq 2
+grep -q 'PUBLIC_APP_NAME: "${PUBLIC_APP_NAME:-__PROJECT_NAME__}"' templates/default/docker-compose.yml
+grep -q 'APP_ENV: "${APP_ENV:-development}"' templates/default/docker-compose.yml
+grep -q 'POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-carbide}"' templates/default/docker-compose.yml
 grep -q "develop:" templates/default/docker-compose.yml
 grep -q "watch:" templates/default/docker-compose.yml
 grep -q "action: rebuild" templates/default/docker-compose.yml

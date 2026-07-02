@@ -30,6 +30,43 @@ The generated app runs as three Docker Compose services:
 The browser uses one origin. The Bun frontend proxies `/api` and `/health` to
 the Go backend over the Compose network, so cookies work without CORS setup.
 
+## Environment And Secrets
+
+Carbide keeps local development placeholders separate from real deployment
+secrets. Docker Compose provides local defaults, `.env.example` shows optional
+local overrides, and `.env` is ignored.
+
+The source of truth is:
+
+```text
+config/env.schema.json
+```
+
+Run:
+
+```sh
+carbide doctor env
+```
+
+to validate required, secret, browser-exposed, and framework-owned variables
+without printing secret values.
+
+Real deploy secrets belong to the deploy/IaC layer. This starter does not run a
+separate secrets container.
+
+## Deploy Rule
+
+Infrastructure uses a preview-before-apply rule:
+
+```sh
+carbide deploy preview dev
+carbide deploy apply dev
+```
+
+`preview` shows what would change. `apply` is the only command allowed to make
+real infrastructure changes. No deploy target is implemented yet, so `apply`
+currently refuses to mutate anything.
+
 ## Where Code Lives
 
 - `view/web/src/` owns the Bun frontend server, React app flow, and Tailwind
@@ -45,6 +82,9 @@ the Go backend over the Compose network, so cookies work without CORS setup.
 - `go.mod` and `go.sum` own backend dependencies.
 - `migrations/` owns checked-in schema state.
 - `docker-compose.yml` owns the local infrastructure contract.
+- `config/env.schema.json` owns the environment and secrets contract.
+- `doc/runbook/` owns local operating notes for env, deploy, backup, and
+  restore behavior.
 
 `carbide run dev` starts Docker Compose watch when your Compose version supports
 it. Edits under `view/web/src/`, `src/`, `model/`, `controller/`, view web
@@ -82,3 +122,5 @@ carbide follow logs service backend
 - Postgres-backed users and sessions
 - queryable structured dev logs
 - checked-in local Docker Compose contract
+- checked-in env/secrets schema
+- deploy preview/apply contract with non-mutating default behavior

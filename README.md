@@ -21,6 +21,7 @@ fast to start:
 - one API request lifecycle
 - one database migration path
 - one checked-in infrastructure contract
+- one environment and secrets contract
 - one Go CLI entry point
 - one opinionated set of security defaults
 
@@ -46,6 +47,8 @@ Carbide should make the hard parts visible instead of hiding them behind magic.
 - **Infrastructure as code:** every supported runtime dependency, service
   boundary, volume, network, secret contract, environment variable, health
   check, and deploy target must be described in checked-in code.
+- **Preview before apply:** deploy tooling must show infrastructure changes
+  before it is allowed to mutate real resources.
 - **Explicit ownership:** requests, responses, sessions, and database handles
   must have clear lifetimes.
 - **Convention over configuration:** defaults should cover normal apps without
@@ -104,12 +107,30 @@ At minimum, each app must keep these contracts in version control:
 - environment variable schema with required, optional, and secret values;
 - generated local Compose manifests first, then deployment manifests for each
   supported production target as those targets become official;
+- an environment schema that marks required, optional, secret,
+  browser-exposed, and framework-owned values;
 - framework and app version gates for infrastructure changes.
 
 The Carbide CLI should generate and validate these files instead of asking
 developers to maintain ad hoc infrastructure by hand. Infrastructure is part of
 the application source, and changes to it must be reviewable, diffable, and
 recoverable.
+
+Local development secrets and deployment secrets stay separate. The generated
+Docker Compose stack uses obvious local-only defaults so a new app boots with
+`carbide run dev`. Real deployment secrets belong to the deployment or IaC
+layer; Carbide does not add a separate secrets container by default.
+
+Deploy commands follow the preview/apply contract:
+
+```sh
+carbide deploy preview dev
+carbide deploy apply dev
+```
+
+`preview` is non-mutating and shows the planned change set. `apply` is the only
+path allowed to mutate infrastructure. Until Carbide ships a real deploy target,
+`apply` refuses to run.
 
 ## Documentation And Automation
 
@@ -156,6 +177,10 @@ local development stack. `carbide help` prints the command reference.
 available. `carbide logs` reads the structured dev log file written by
 `carbide run dev`; examples include `carbide logs service backend` and
 `carbide logs containing "/api/login" json`.
+`carbide doctor env` validates `config/env.schema.json`, `.env`, local
+defaults, and secret/browser exposure rules without printing secret values.
+`carbide deploy preview <target>` prints the non-mutating deploy plan, while
+`carbide deploy apply <target>` is guarded until a deploy target exists.
 
 When Docker Compose supports file watch, `carbide run dev` starts the stack with
 quiet Compose output, watch enabled, and live logs streamed below the startup
@@ -179,7 +204,9 @@ Generated apps use an MVC shape. `view/web/` owns the Bun server, Tailwind
 build, browser UI, same-origin `/api` calls, and a React component library
 organized into `component/l1`, `component/l2`, and `component/l3`. `model/`
 owns Postgres state, `controller/` owns request flow and JSON responses, and
-`src/` owns the Go HTTP/API server.
+`src/` owns the Go HTTP/API server. `config/env.schema.json` owns the
+environment and secrets contract. `doc/runbook/` owns local operating notes for
+env, deploy, backup, and restore behavior.
 
 The generated component library keeps fonts, color schemes, and semantic UI
 classes in `component/l1/theme.css` and `component/l1/tokens.js`. L1
@@ -198,6 +225,7 @@ sidebar, section navigation, account/logout footer, and a main work area.
   connection environment variables.
 - Define the default three-container Compose topology for local development.
 - Define the mandatory infrastructure-as-code file layout and validation rules.
+- Define the mandatory environment and secrets schema.
 - Choose Go version, build system, and test runner.
 - Create the canonical app directory layout.
 - Define the request, response, app, and service lifecycle contracts.
@@ -206,6 +234,7 @@ sidebar, section navigation, account/logout footer, and a main work area.
 - Publish a Bun-served React login/dashboard starter backed by Tailwind, a Go
   API, and Postgres.
 - Replace the prototype shell CLI with a compiled Go CLI.
+- Add non-mutating deploy preview and guarded deploy apply commands.
 
 ### Phase 1: HTTP Core
 
@@ -219,6 +248,7 @@ sidebar, section navigation, account/logout footer, and a main work area.
 
 - Harden the generated MVC directory contract.
 - Add configuration loading from environment and checked-in defaults.
+- Add environment schema validation and protected framework-owned keys.
 - Add service registration without hidden reflection.
 - Add logging with request IDs.
 - Add graceful shutdown and worker lifecycle hooks.

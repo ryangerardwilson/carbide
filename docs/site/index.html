@@ -42,6 +42,8 @@ carbide status</code></pre>
             <li>Postgres is mandatory, not one adapter among many.</li>
             <li>The Bun frontend is the public entrypoint and proxies <code>/api</code> to the backend.</li>
             <li>Infrastructure belongs in version-controlled code.</li>
+            <li>Environment and secret contracts are checked in and validated without printing values.</li>
+            <li>Deploys follow preview before apply; apply is guarded until a real deploy target exists.</li>
             <li>The default starter opens account creation first, then supports login, logout, and dashboard.</li>
             <li>The first IaC target is generated Docker Compose for local development.</li>
             <li>The CLI is implemented in Go and renders colored, aligned, script-safe output with full-width ILoveCandy-style per-container startup/shutdown animation, status tables, timestamped logs, live log follow, and queryable structured dev logs.</li>
@@ -56,6 +58,7 @@ carbide status</code></pre>
             <li>Proxy <code>/api</code> to the Go backend.</li>
             <li>Create the first user with a Postgres-backed session.</li>
             <li>Open the dashboard.</li>
+            <li>Validate the environment contract with <code>carbide doctor env</code>.</li>
           </ol>
         </section>
 

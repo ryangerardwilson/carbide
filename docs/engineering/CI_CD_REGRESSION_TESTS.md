@@ -126,13 +126,22 @@ Future checks:
 - generated Compose config declares file-watch rebuilds for `view/web` source,
   view web package/config files, backend source, model, controller, and
   Dockerfile changes;
+- generated apps include `config/env.schema.json`, `.env.example`, and
+  runbooks for env, deploy, backup, and restore behavior;
 - generated apps include a Bun/React/Tailwind frontend container, Go
   backend/API container, and Postgres database container;
 - Bun frontend proxies `/api` and `/health` to the backend;
 - `/api/me` reports anonymous and authenticated state correctly;
 - `/dashboard` is served by the React app shell;
 - restart behavior preserves Postgres data;
-- environment schema rejects missing required values.
+- environment schema rejects missing required values;
+- secret values are never printed by `carbide doctor env`;
+- browser-exposed variables cannot be marked secret;
+- framework-owned keys are visible in the schema and protected from casual app
+  override;
+- `carbide deploy preview <target>` is non-mutating and reports that no deploy
+  target exists yet;
+- `carbide deploy apply <target>` refuses until a real deploy target exists.
 
 ### CLI Golden Tests
 
@@ -160,6 +169,10 @@ Future checks:
   through timestamped service-tagged rows after the stack is ready;
 - `carbide status` prints a stable table of services, container names,
   published host ports, internal container ports, and status;
+- `carbide doctor env` validates the generated environment contract without
+  printing secret values;
+- `carbide deploy preview <target>` prints the non-mutating deploy plan;
+- `carbide deploy apply <target>` is guarded until a deploy target exists;
 - `carbide follow logs` reattaches to live container logs and preserves
   timestamped, service-tagged rendering;
 - `carbide run dev` writes `.carbide/log/dev.jsonl`, and `carbide logs` can

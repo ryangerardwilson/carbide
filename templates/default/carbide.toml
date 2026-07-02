@@ -6,3 +6,10 @@ carbide_version = "0.1.0-dev"
 host = "localhost"
 default_port = 8080
 database = "postgres"
+
+[env]
+schema = "config/env.schema.json"
+
+[deploy]
+preview_before_apply = true
+targets = []

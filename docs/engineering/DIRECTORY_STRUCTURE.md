@@ -49,6 +49,13 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |-- templates/
 |   `-- default/
 |       |-- Dockerfile
+|       |-- config/
+|       |   `-- env.schema.json
+|       |-- doc/
+|       |   `-- runbook/
+|       |       |-- backup-restore.md
+|       |       |-- deploy.md
+|       |       `-- env.md
 |       |-- docker-compose.yml
 |       |-- go.mod
 |       |-- go.sum
@@ -109,6 +116,11 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
   generation.
 - `templates/default/`: generated starter app used by `carbide new` and
   `carbide init`.
+- `templates/default/config/`: generated app configuration contracts.
+- `templates/default/config/env.schema.json`: generated required, optional,
+  secret, browser-exposed, and framework-owned environment contract.
+- `templates/default/doc/runbook/`: generated local operating notes for
+  environment, deploy preview/apply, backup, and restore behavior.
 - `templates/default/model/`: generated Postgres-backed model code.
 - `templates/default/controller/`: generated request-flow handlers.
 - `templates/default/src/`: generated Go HTTP/API server.

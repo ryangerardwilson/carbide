@@ -120,6 +120,9 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"Usage:",
 		"  carbide <command> [arguments]",
 		"Available commands:",
+		"  deploy apply <target>",
+		"  deploy preview <target>",
+		"  doctor env",
 		"  help",
 		"  init",
 		"  logs",
@@ -141,6 +144,9 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"Usage:",
 		"Available commands:",
 		"new <project-name>",
+		"deploy preview <target>",
+		"deploy apply <target>",
+		"doctor env",
 		"run dev",
 		"stop dev",
 		"follow logs",
@@ -173,6 +179,161 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 			t.Fatalf("help output = %q, should not contain %q", got, unwanted)
 		}
 	}
+}
+
+func TestDoctorEnvPrintsContractSummary(t *testing.T) {
+	withWorkingDir(t, t.TempDir(), func() {
+		if err := os.WriteFile("carbide.toml", []byte("name = \"demo\"\n"), 0644); err != nil {
+			t.Fatalf("WriteFile carbide.toml returned %v", err)
+		}
+		if err := os.MkdirAll("config", 0755); err != nil {
+			t.Fatalf("MkdirAll returned %v", err)
+		}
+		schema := `{
+  "version": 1,
+  "variables": [
+    {
+      "name": "DATABASE_URL",
+      "service": "backend",
+      "required": true,
+      "secret": true,
+      "browser_exposed": false,
+      "framework_owned": true,
+      "local_default": "postgres://carbide:carbide@db:5432/carbide"
+    },
+    {
+      "name": "PUBLIC_APP_NAME",
+      "service": "frontend",
+      "required": false,
+      "secret": false,
+      "browser_exposed": true,
+      "framework_owned": false,
+      "local_default": "Demo"
+    }
+  ]
+}
+`
+		if err := os.WriteFile(envSchemaPath, []byte(schema), 0644); err != nil {
+			t.Fatalf("WriteFile env schema returned %v", err)
+		}
+
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		if err := a.run([]string{"doctor", "env"}); err != nil {
+			t.Fatalf("run returned %v", err)
+		}
+
+		got := out.String()
+		for _, want := range []string{
+			"Carbide doctor",
+			"environment contract",
+			"schema     config/env.schema.json",
+			"env        .env not found; local defaults active",
+			"status     ok",
+			"required   0 missing",
+			"secrets    1 declared",
+			"browser    1 exposed",
+			"framework  1 owned",
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("doctor env output = %q, missing %q", got, want)
+			}
+		}
+		if strings.Contains(got, "postgres://") {
+			t.Fatalf("doctor env output printed secret value: %q", got)
+		}
+	})
+}
+
+func TestDoctorEnvRejectsMissingRequiredValue(t *testing.T) {
+	withWorkingDir(t, t.TempDir(), func() {
+		if err := os.WriteFile("carbide.toml", []byte("name = \"demo\"\n"), 0644); err != nil {
+			t.Fatalf("WriteFile carbide.toml returned %v", err)
+		}
+		if err := os.MkdirAll("config", 0755); err != nil {
+			t.Fatalf("MkdirAll returned %v", err)
+		}
+		schema := `{"version":1,"variables":[{"name":"API_SECRET","required":true,"secret":true}]}`
+		if err := os.WriteFile(envSchemaPath, []byte(schema), 0644); err != nil {
+			t.Fatalf("WriteFile env schema returned %v", err)
+		}
+
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		err := a.run([]string{"doctor", "env"})
+		if err == nil {
+			t.Fatalf("doctor env should reject missing required values")
+		}
+		if !strings.Contains(err.Error(), "missing required value") {
+			t.Fatalf("doctor env error = %v", err)
+		}
+		if !strings.Contains(out.String(), "missing  API_SECRET") {
+			t.Fatalf("doctor env output = %q", out.String())
+		}
+	})
+}
+
+func TestDeployPreviewAndApplyAreGuarded(t *testing.T) {
+	withWorkingDir(t, t.TempDir(), func() {
+		if err := os.WriteFile("carbide.toml", []byte("name = \"demo\"\n"), 0644); err != nil {
+			t.Fatalf("WriteFile carbide.toml returned %v", err)
+		}
+		if err := os.MkdirAll("config", 0755); err != nil {
+			t.Fatalf("MkdirAll returned %v", err)
+		}
+		schema := `{"version":1,"variables":[{"name":"APP_ENV","required":true,"local_default":"development"}]}`
+		if err := os.WriteFile(envSchemaPath, []byte(schema), 0644); err != nil {
+			t.Fatalf("WriteFile env schema returned %v", err)
+		}
+
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		if err := a.run([]string{"deploy", "preview", "dev"}); err != nil {
+			t.Fatalf("preview returned %v", err)
+		}
+		got := out.String()
+		for _, want := range []string{
+			"Carbide deploy",
+			"preview dev",
+			"target   dev",
+			"mutates  no",
+			"plan     validate env contract",
+			"refuse apply until target is implemented",
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("deploy preview output = %q, missing %q", got, want)
+			}
+		}
+
+		out.Reset()
+		err := a.run([]string{"deploy", "apply", "dev"})
+		if err == nil {
+			t.Fatalf("deploy apply should be disabled")
+		}
+		if !strings.Contains(err.Error(), "disabled until a deploy target exists") {
+			t.Fatalf("deploy apply error = %v", err)
+		}
+		if !strings.Contains(out.String(), "status   disabled") {
+			t.Fatalf("deploy apply output = %q", out.String())
+		}
+	})
+}
+
+func withWorkingDir(t *testing.T, dir string, work func()) {
+	t.Helper()
+	previous, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd returned %v", err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("Chdir returned %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(previous); err != nil {
+			t.Fatalf("restore Chdir returned %v", err)
+		}
+	}()
+	work()
 }
 
 func assertOutputOrder(t *testing.T, output string, values []string) {

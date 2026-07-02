@@ -45,7 +45,8 @@
           <li><strong>Unit tests:</strong> protects router, request, response, middleware, config, and logging behavior.</li>
           <li><strong>Compatibility and race tests:</strong> exposes concurrency and generated app compatibility failures.</li>
           <li><strong>Postgres integration:</strong> tests readiness, pooling, migrations, transactions, and parameterized queries.</li>
-          <li><strong>Container and IaC:</strong> validates Compose generation, frontend/backend/database separation, health checks, file-watch rebuilds for <code>view/web</code>, backend, model, controller, and Dockerfile changes, external URL logs, registration-first JSON auth, and environment schemas.</li>
+          <li><strong>Container and IaC:</strong> validates Compose generation, frontend/backend/database separation, health checks, file-watch rebuilds for <code>view/web</code>, backend, model, controller, and Dockerfile changes, external URL logs, registration-first JSON auth, environment schemas, and generated runbooks.</li>
+          <li><strong>Env and deploy:</strong> protects <code>carbide doctor env</code>, non-mutating <code>carbide deploy preview &lt;target&gt;</code>, and guarded <code>carbide deploy apply &lt;target&gt;</code>.</li>
           <li><strong>Frontend:</strong> protects the Bun/React/Tailwind container, same-origin API proxy, lockfile install path, and dashboard app shell.</li>
           <li><strong>Backend API:</strong> protects JSON auth responses, session cookies, <code>/api/me</code>, and Postgres-backed dashboard data.</li>
           <li><strong>CLI golden tests:</strong> protects scaffolding, deterministic generated files, and actionable command errors.</li>

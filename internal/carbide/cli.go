@@ -26,6 +26,7 @@ var version = "0.1.0-dev"
 var commit = ""
 
 const devLogPath = ".carbide/log/dev.jsonl"
+const envSchemaPath = "config/env.schema.json"
 const defaultTerminalWidth = 80
 const progressStateColumnWidth = 8
 const minimumProgressFrameWidth = 4
@@ -137,6 +138,32 @@ type composeServiceSnapshot struct {
 	Publishers []composeServicePort `json:"Publishers"`
 }
 
+type envSchema struct {
+	Version   int           `json:"version"`
+	Variables []envVariable `json:"variables"`
+}
+
+type envVariable struct {
+	Name           string `json:"name"`
+	Service        string `json:"service"`
+	Required       bool   `json:"required"`
+	Secret         bool   `json:"secret"`
+	BrowserExposed bool   `json:"browser_exposed"`
+	FrameworkOwned bool   `json:"framework_owned"`
+	LocalDefault   string `json:"local_default"`
+	Description    string `json:"description"`
+}
+
+type envContractReport struct {
+	schema          envSchema
+	envFileFound    bool
+	missingRequired []string
+	warnings        []string
+	secretCount     int
+	browserCount    int
+	frameworkCount  int
+}
+
 func SetCommit(value string) {
 	if value != "" {
 		commit = value
@@ -195,6 +222,19 @@ func (a app) run(args []string) error {
 			return errors.New("usage: carbide init")
 		}
 		return a.commandInit()
+	case "doctor":
+		if len(args) == 2 && args[1] == "env" {
+			return a.commandDoctorEnv()
+		}
+		return errors.New("usage: carbide doctor env")
+	case "deploy":
+		if len(args) == 3 && args[1] == "preview" {
+			return a.commandDeployPreview(args[2])
+		}
+		if len(args) == 3 && args[1] == "apply" {
+			return a.commandDeployApply(args[2])
+		}
+		return errors.New("usage: carbide deploy preview <target> | carbide deploy apply <target>")
 	case "run":
 		if len(args) == 2 && args[1] == "dev" {
 			return a.commandRunDev()
@@ -243,6 +283,9 @@ func (a app) printHelp() {
 	r.CommandList([]helpCommandSection{
 		{
 			rows: []outputRow{
+				{"deploy apply <target>", "apply deploy changes"},
+				{"deploy preview <target>", "show deploy changes"},
+				{"doctor env", "validate env contract"},
 				{"help", "show this help"},
 				{"init", "init current directory"},
 				{"logs", "query saved logs"},
@@ -368,6 +411,96 @@ func (a app) commandInit() error {
 		outputRow{"next", "carbide run dev"},
 	)
 	return nil
+}
+
+func (a app) commandDoctorEnv() error {
+	if !isFile("carbide.toml") {
+		return errors.New("run this inside a Carbide project")
+	}
+
+	report, err := inspectEnvContract()
+	if err != nil {
+		return err
+	}
+
+	status := "ok"
+	if len(report.missingRequired) > 0 || len(report.warnings) > 0 {
+		status = "needs attention"
+	}
+	envFile := ".env not found; local defaults active"
+	if report.envFileFound {
+		envFile = ".env found"
+	}
+
+	r := newRenderer(a.stdout)
+	r.Title("Carbide doctor", "environment contract")
+	r.Rows(
+		outputRow{"schema", envSchemaPath},
+		outputRow{"env", envFile},
+		outputRow{"status", status},
+		outputRow{"required", fmt.Sprintf("%d missing", len(report.missingRequired))},
+		outputRow{"secrets", fmt.Sprintf("%d declared", report.secretCount)},
+		outputRow{"browser", fmt.Sprintf("%d exposed", report.browserCount)},
+		outputRow{"framework", fmt.Sprintf("%d owned", report.frameworkCount)},
+	)
+	for _, name := range report.missingRequired {
+		r.Row(outputRow{"missing", name})
+	}
+	for _, warning := range report.warnings {
+		r.Row(outputRow{"warning", warning})
+	}
+	if len(report.missingRequired) > 0 {
+		return fmt.Errorf("environment contract has %d missing required value(s)", len(report.missingRequired))
+	}
+	return nil
+}
+
+func (a app) commandDeployPreview(target string) error {
+	if !isFile("carbide.toml") {
+		return errors.New("run this inside a Carbide project")
+	}
+	if err := ensureDeployTarget(target); err != nil {
+		return err
+	}
+
+	report, err := inspectEnvContract()
+	if err != nil {
+		return err
+	}
+
+	envStatus := "ok"
+	if len(report.missingRequired) > 0 || len(report.warnings) > 0 {
+		envStatus = "needs attention"
+	}
+
+	r := newRenderer(a.stdout)
+	r.Title("Carbide deploy", fmt.Sprintf("preview %s", target))
+	r.Rows(
+		outputRow{"target", target},
+		outputRow{"mutates", "no"},
+		outputRow{"env", envStatus},
+		outputRow{"plan", "validate env contract\nuse checked-in deploy target when one exists\nrefuse apply until target is implemented"},
+	)
+	return nil
+}
+
+func (a app) commandDeployApply(target string) error {
+	if !isFile("carbide.toml") {
+		return errors.New("run this inside a Carbide project")
+	}
+	if err := ensureDeployTarget(target); err != nil {
+		return err
+	}
+
+	r := newRenderer(a.stdout)
+	r.Title("Carbide deploy", fmt.Sprintf("apply %s", target))
+	r.Rows(
+		outputRow{"target", target},
+		outputRow{"status", "disabled"},
+		outputRow{"reason", "no deploy target is implemented yet"},
+		outputRow{"preview", fmt.Sprintf("carbide deploy preview %s", target)},
+	)
+	return fmt.Errorf("deploy apply %s is disabled until a deploy target exists", target)
 }
 
 func (a app) commandUpgrade() error {
@@ -1594,6 +1727,133 @@ func (a app) commandFollowLogs(args []string) error {
 	streams.Wait()
 	if first.err != nil {
 		return fmt.Errorf("Docker Compose %s failed: %w", first.name, first.err)
+	}
+	return nil
+}
+
+func inspectEnvContract() (envContractReport, error) {
+	schema, err := readEnvSchema(envSchemaPath)
+	if err != nil {
+		return envContractReport{}, err
+	}
+	dotenv, envFileFound, err := readDotenv(".env")
+	if err != nil {
+		return envContractReport{}, err
+	}
+
+	report := envContractReport{
+		schema:       schema,
+		envFileFound: envFileFound,
+	}
+	seen := map[string]bool{}
+	for _, variable := range schema.Variables {
+		name := strings.TrimSpace(variable.Name)
+		if name == "" {
+			report.warnings = append(report.warnings, "schema contains an unnamed variable")
+			continue
+		}
+		if seen[name] {
+			report.warnings = append(report.warnings, fmt.Sprintf("%s is declared more than once", name))
+			continue
+		}
+		seen[name] = true
+		if variable.Secret {
+			report.secretCount++
+		}
+		if variable.BrowserExposed {
+			report.browserCount++
+		}
+		if variable.FrameworkOwned {
+			report.frameworkCount++
+		}
+		if variable.Secret && variable.BrowserExposed {
+			report.warnings = append(report.warnings, fmt.Sprintf("%s is secret and browser-exposed", name))
+		}
+		if variable.Required && envValue(name, variable.LocalDefault, dotenv) == "" {
+			report.missingRequired = append(report.missingRequired, name)
+		}
+	}
+	return report, nil
+}
+
+func readEnvSchema(path string) (envSchema, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return envSchema{}, fmt.Errorf("missing %s", path)
+		}
+		return envSchema{}, err
+	}
+	var schema envSchema
+	if err := json.Unmarshal(data, &schema); err != nil {
+		return envSchema{}, fmt.Errorf("invalid %s: %w", path, err)
+	}
+	if schema.Version == 0 {
+		return envSchema{}, fmt.Errorf("%s is missing version", path)
+	}
+	if len(schema.Variables) == 0 {
+		return envSchema{}, fmt.Errorf("%s declares no variables", path)
+	}
+	return schema, nil
+}
+
+func readDotenv(path string) (map[string]string, bool, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return map[string]string{}, false, nil
+		}
+		return nil, false, err
+	}
+	defer file.Close()
+
+	values := map[string]string{}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		if key == "" {
+			continue
+		}
+		values[key] = unquoteEnvValue(strings.TrimSpace(value))
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, false, err
+	}
+	return values, true, nil
+}
+
+func envValue(name string, localDefault string, dotenv map[string]string) string {
+	if value, ok := dotenv[name]; ok && strings.TrimSpace(value) != "" {
+		return strings.TrimSpace(value)
+	}
+	if value := strings.TrimSpace(os.Getenv(name)); value != "" {
+		return value
+	}
+	return strings.TrimSpace(localDefault)
+}
+
+func unquoteEnvValue(value string) string {
+	if len(value) < 2 {
+		return value
+	}
+	if (value[0] == '"' && value[len(value)-1] == '"') ||
+		(value[0] == '\'' && value[len(value)-1] == '\'') {
+		return value[1 : len(value)-1]
+	}
+	return value
+}
+
+func ensureDeployTarget(target string) error {
+	if !regexp.MustCompile(`^[a-z][a-z0-9-]*$`).MatchString(target) {
+		return errors.New("deploy target must use lowercase letters, numbers, and dashes")
 	}
 	return nil
 }

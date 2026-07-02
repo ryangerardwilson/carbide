@@ -32,6 +32,9 @@ awk 'length($0) > 79 { print "help line exceeds 79 chars: " $0; exit 1 }' "$tmp_
 grep -q "^Usage:$" "$tmp_dir/help.out"
 grep -q "^  carbide <command> \\[arguments\\]$" "$tmp_dir/help.out"
 grep -q "^Available commands:$" "$tmp_dir/help.out"
+grep -q "^  deploy apply <target> " "$tmp_dir/help.out"
+grep -q "^  deploy preview <target> " "$tmp_dir/help.out"
+grep -q "^  doctor env " "$tmp_dir/help.out"
 grep -q "^  help " "$tmp_dir/help.out"
 grep -q "^  init " "$tmp_dir/help.out"
 grep -q "^  logs " "$tmp_dir/help.out"
@@ -75,7 +78,12 @@ cd "$tmp_dir"
 "$repo_root/bin/carbide" new demo
 
 test -f "$tmp_dir/demo/carbide.toml"
+test -f "$tmp_dir/demo/.env.example"
 test -f "$tmp_dir/demo/.gitignore"
+test -f "$tmp_dir/demo/config/env.schema.json"
+test -f "$tmp_dir/demo/doc/runbook/backup-restore.md"
+test -f "$tmp_dir/demo/doc/runbook/deploy.md"
+test -f "$tmp_dir/demo/doc/runbook/env.md"
 test -f "$tmp_dir/demo/docker-compose.yml"
 test -f "$tmp_dir/demo/Dockerfile"
 test -f "$tmp_dir/demo/view/web/Dockerfile"
@@ -139,14 +147,28 @@ test -f "$tmp_dir/demo/migrations/001_auth.sql"
 
 grep -q 'name = "demo"' "$tmp_dir/demo/carbide.toml"
 grep -q "default_port = 8080" "$tmp_dir/demo/carbide.toml"
+grep -q 'schema = "config/env.schema.json"' "$tmp_dir/demo/carbide.toml"
+grep -q "preview_before_apply = true" "$tmp_dir/demo/carbide.toml"
 ! grep -q 'url = "http://localhost:8080"' "$tmp_dir/demo/carbide.toml"
 grep -q 'name: demo' "$tmp_dir/demo/docker-compose.yml"
 grep -q ".carbide/" "$tmp_dir/demo/.gitignore"
+grep -q ".env" "$tmp_dir/demo/.gitignore"
+grep -q "POSTGRES_PASSWORD" "$tmp_dir/demo/.env.example"
+grep -q '"name": "DATABASE_URL"' "$tmp_dir/demo/config/env.schema.json"
+grep -q '"secret": true' "$tmp_dir/demo/config/env.schema.json"
+grep -q '"browser_exposed": true' "$tmp_dir/demo/config/env.schema.json"
+grep -q '"framework_owned": true' "$tmp_dir/demo/config/env.schema.json"
+grep -q "separate secrets container" "$tmp_dir/demo/doc/runbook/env.md"
+grep -q "preview-before-apply" "$tmp_dir/demo/doc/runbook/deploy.md"
+grep -q "Postgres owns durable application state" "$tmp_dir/demo/doc/runbook/backup-restore.md"
 grep -q "frontend:" "$tmp_dir/demo/docker-compose.yml"
 grep -q "backend:" "$tmp_dir/demo/docker-compose.yml"
 grep -q "db:" "$tmp_dir/demo/docker-compose.yml"
 grep -q 'PUBLIC_URL: "http://localhost:${CARBIDE_HTTP_PORT:-8080}"' "$tmp_dir/demo/docker-compose.yml"
 test "$(grep -c 'PUBLIC_URL: "http://localhost:${CARBIDE_HTTP_PORT:-8080}"' "$tmp_dir/demo/docker-compose.yml")" -eq 2
+grep -q 'PUBLIC_APP_NAME: "${PUBLIC_APP_NAME:-demo}"' "$tmp_dir/demo/docker-compose.yml"
+grep -q 'APP_ENV: "${APP_ENV:-development}"' "$tmp_dir/demo/docker-compose.yml"
+grep -q 'POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-carbide}"' "$tmp_dir/demo/docker-compose.yml"
 grep -q "develop:" "$tmp_dir/demo/docker-compose.yml"
 grep -q "watch:" "$tmp_dir/demo/docker-compose.yml"
 grep -q "action: rebuild" "$tmp_dir/demo/docker-compose.yml"
@@ -240,6 +262,28 @@ grep -q "onNavItem={setActiveSection}" "$tmp_dir/demo/view/web/src/component/l3/
 ! find "$tmp_dir/demo" -path '*/ui_components/*' -print -quit | grep -q .
 ! grep -R "views/" "$tmp_dir/demo" >/dev/null
 ! grep -R "__PROJECT_" "$tmp_dir/demo" >/dev/null
+
+cd "$tmp_dir/demo"
+CARBIDE_HOME="$repo_root" "$repo_root/bin/carbide" doctor env > "$tmp_dir/doctor-env.out"
+grep -q "Carbide doctor" "$tmp_dir/doctor-env.out"
+grep -q "environment contract" "$tmp_dir/doctor-env.out"
+grep -Eq "^status[[:space:]]+ok" "$tmp_dir/doctor-env.out"
+grep -Eq "^required[[:space:]]+0 missing" "$tmp_dir/doctor-env.out"
+grep -Eq "^secrets[[:space:]]+2 declared" "$tmp_dir/doctor-env.out"
+! grep -q "postgres://carbide:carbide" "$tmp_dir/doctor-env.out"
+
+CARBIDE_HOME="$repo_root" "$repo_root/bin/carbide" deploy preview dev > "$tmp_dir/deploy-preview.out"
+grep -q "Carbide deploy" "$tmp_dir/deploy-preview.out"
+grep -q "preview dev" "$tmp_dir/deploy-preview.out"
+grep -Eq "^mutates[[:space:]]+no" "$tmp_dir/deploy-preview.out"
+grep -q "refuse apply until target is implemented" "$tmp_dir/deploy-preview.out"
+
+if CARBIDE_HOME="$repo_root" "$repo_root/bin/carbide" deploy apply dev > "$tmp_dir/deploy-apply.out" 2> "$tmp_dir/deploy-apply.err"; then
+  printf 'carbide deploy apply should be guarded until a target exists\n' >&2
+  exit 1
+fi
+grep -q "status.*disabled" "$tmp_dir/deploy-apply.out"
+grep -q "disabled until a deploy target exists" "$tmp_dir/deploy-apply.err"
 
 mkdir "$tmp_dir/init-app"
 cd "$tmp_dir/init-app"
