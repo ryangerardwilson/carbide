@@ -236,20 +236,20 @@ func (a app) printCommandList() {
 func (a app) printHelp() {
 	r := newRenderer(a.stdout)
 	r.Table(
-		[]string{"area", "command", "purpose"},
+		[]string{"command", "purpose"},
 		[]tableRow{
-			{"start", "carbide new <project-name>", "create project directory"},
-			{"", "carbide init", "init current directory"},
-			{"develop", "carbide run dev", "start Docker dev stack"},
-			{"", "carbide status", "show containers and ports"},
-			{"", "carbide stop dev", "stop dev containers"},
-			{"logs", "carbide follow logs", "stream live logs"},
-			{"", "carbide follow logs service backend", "stream one service"},
-			{"", "carbide logs", "query saved logs"},
-			{"", "carbide logs containing \"/api/login\" json", "query logs as JSON"},
-			{"maintain", "carbide help", "show this table"},
-			{"", "carbide version", "print installed version"},
-			{"", "carbide upgrade", "upgrade CLI from GitHub"},
+			{"carbide new <project-name>", "create project directory"},
+			{"carbide init", "init current directory"},
+			{"carbide run dev", "start Docker dev stack"},
+			{"carbide status", "show containers and ports"},
+			{"carbide stop dev", "stop dev containers"},
+			{"carbide follow logs", "stream live logs"},
+			{"carbide follow logs service backend", "stream one service"},
+			{"carbide logs", "query saved logs"},
+			{"carbide logs containing \"/api/login\" json", "query logs as JSON"},
+			{"carbide help", "show this table"},
+			{"carbide version", "print installed version"},
+			{"carbide upgrade", "upgrade CLI from GitHub"},
 		},
 	)
 }

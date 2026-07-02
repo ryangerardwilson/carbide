@@ -108,7 +108,7 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 	}
 
 	got := out.String()
-	if !strings.HasPrefix(got, "area") {
+	if !strings.HasPrefix(got, "command") {
 		t.Fatalf("help output = %q, should start with table header", got)
 	}
 	for _, line := range strings.Split(strings.TrimRight(got, "\n"), "\n") {
@@ -117,21 +117,16 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		}
 	}
 	for _, want := range []string{
-		"area",
 		"command",
 		"purpose",
-		"start",
 		"carbide new <project-name>",
 		"carbide init",
-		"develop",
 		"carbide run dev",
 		"carbide status",
 		"carbide stop dev",
-		"logs",
 		"carbide follow logs",
 		"carbide follow logs service backend",
 		"carbide logs",
-		"maintain",
 		"carbide help",
 		"carbide version",
 		"carbide upgrade",
@@ -142,6 +137,7 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		}
 	}
 	for _, unwanted := range []string{
+		"area",
 		"Carbide\n",
 		"Containerized full-stack apps with React, Go, and Postgres.",
 		"_____________________________________________________",
