@@ -238,18 +238,18 @@ func (a app) printHelp() {
 	r.Table(
 		[]string{"command", "purpose"},
 		[]tableRow{
-			{"carbide new <project-name>", "create project directory"},
+			{"carbide follow logs", "stream live logs"},
+			{"carbide follow logs service backend", "stream one service"},
+			{"carbide help", "show this table"},
 			{"carbide init", "init current directory"},
+			{"carbide logs", "query saved logs"},
+			{"carbide logs containing \"/api/login\" json", "query logs as JSON"},
+			{"carbide new <project-name>", "create project directory"},
 			{"carbide run dev", "start Docker dev stack"},
 			{"carbide status", "show containers and ports"},
 			{"carbide stop dev", "stop dev containers"},
-			{"carbide follow logs", "stream live logs"},
-			{"carbide follow logs service backend", "stream one service"},
-			{"carbide logs", "query saved logs"},
-			{"carbide logs containing \"/api/login\" json", "query logs as JSON"},
-			{"carbide help", "show this table"},
-			{"carbide version", "print installed version"},
 			{"carbide upgrade", "upgrade CLI from GitHub"},
+			{"carbide version", "print installed version"},
 		},
 	)
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -116,6 +117,12 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 			t.Fatalf("help line is %d columns, want <= 79: %q", width, line)
 		}
 	}
+	commands := helpCommands(got)
+	sortedCommands := append([]string(nil), commands...)
+	sort.Strings(sortedCommands)
+	if strings.Join(commands, "\n") != strings.Join(sortedCommands, "\n") {
+		t.Fatalf("help commands are not sorted:\ngot  %#v\nwant %#v", commands, sortedCommands)
+	}
 	for _, want := range []string{
 		"command",
 		"purpose",
@@ -153,6 +160,18 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 			t.Fatalf("help output = %q, should not contain %q", got, unwanted)
 		}
 	}
+}
+
+func helpCommands(output string) []string {
+	var commands []string
+	for index, line := range strings.Split(strings.TrimRight(output, "\n"), "\n") {
+		if index == 0 || strings.TrimSpace(line) == "" {
+			continue
+		}
+		columns := strings.SplitN(line, "  ", 2)
+		commands = append(commands, strings.TrimSpace(columns[0]))
+	}
+	return commands
 }
 
 func TestRendererStyledLogoUsesGlyphColors(t *testing.T) {

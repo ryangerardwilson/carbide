@@ -29,6 +29,8 @@ grep -q "help" "$tmp_dir/no-args.out"
 
 "$repo_root/bin/carbide" help > "$tmp_dir/help.out"
 awk 'length($0) > 79 { print "help line exceeds 79 chars: " $0; exit 1 }' "$tmp_dir/help.out"
+tail -n +2 "$tmp_dir/help.out" | sed -E 's/  +.*$//' > "$tmp_dir/help-commands.out"
+sort "$tmp_dir/help-commands.out" | cmp -s "$tmp_dir/help-commands.out" -
 grep -q "^command  .*purpose" "$tmp_dir/help.out"
 grep -q "carbide help" "$tmp_dir/help.out"
 grep -q "carbide version" "$tmp_dir/help.out"
