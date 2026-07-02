@@ -70,6 +70,11 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |               |-- index.html
 |               |-- package.json
 |               `-- src/
+|                   |-- component/
+|                   |   |-- l1/
+|                   |   |-- l2/
+|                   |   |-- l3/
+|                   |   `-- utils.js
 |                   |-- main.jsx
 |                   |-- server.jsx
 |                   `-- styles.css
@@ -107,6 +112,12 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 - `templates/default/src/`: generated Go HTTP/API server.
 - `templates/default/view/web/`: generated Bun/React/Tailwind web app,
   frontend container source, browser UI, and same-origin API proxy.
+- `templates/default/view/web/src/component/l1/`: generated React design
+  primitives.
+- `templates/default/view/web/src/component/l2/`: generated reusable UI/UX
+  patterns, layout patterns, and integration adapters.
+- `templates/default/view/web/src/component/l3/`: generated product surfaces
+  such as auth, dashboard, loading, and component-library views.
 - `tests/fixtures/`: shared test fixtures.
 - `tests/integration/`: tests that use Postgres or containers.
 - `tests/regression/`: tests created after a bug or broken contract.

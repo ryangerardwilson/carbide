@@ -176,9 +176,10 @@ written as JSONL to
 the whole local system from one command.
 
 Generated apps use an MVC shape. `view/web/` owns the Bun server, Tailwind
-build, browser UI, and same-origin `/api` calls. `model/` owns
-Postgres state, `controller/` owns request flow and JSON responses, and `src/`
-owns the Go HTTP/API server.
+build, browser UI, same-origin `/api` calls, and a React component library
+organized into `component/l1`, `component/l2`, and `component/l3`. `model/`
+owns Postgres state, `controller/` owns request flow and JSON responses, and
+`src/` owns the Go HTTP/API server.
 
 ## Roadmap
 
@@ -219,8 +220,8 @@ owns the Go HTTP/API server.
 - Keep the Bun/React frontend container as the public local-development
   entrypoint.
 - Proxy `/api` and `/health` to the Go backend to preserve same-origin cookies.
-- Define the frontend component layout for app screens, reusable patterns, and
-  primitives.
+- Ship the frontend component layout for L1 primitives, L2 interaction/layout
+  patterns and integration adapters, and L3 app screens.
 - Make Tailwind the mandatory generated styling path.
 - Add a production frontend build/serve contract after the dev loop is stable.
 

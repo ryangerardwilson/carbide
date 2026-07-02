@@ -32,10 +32,16 @@
     |-- index.html
     |-- package.json
     `-- src/
+        |-- component/
+        |   |-- l1/
+        |   |-- l2/
+        |   |-- l3/
+        |   `-- utils.js
         |-- main.jsx
         |-- server.jsx
         `-- styles.css</code></pre>
-        <p>The web app lives inside <code>view/web</code>. React owns page flow, forms, and dashboard rendering. The Go backend owns JSON responses, HttpOnly cookies, sessions, validation, and Postgres access.</p>
+        <p>The web app lives inside <code>view/web</code>. <code>main.jsx</code> owns browser route state and API calls, then renders L3 views. L3 views compose L2 patterns, and L2 patterns compose L1 primitives.</p>
+        <p>The starter includes L2 patterns for lessons, dropdowns, modals, accordions, carousels, tabs, notifications, radio groups, toggles, tooltips, popovers, listboxes, comboboxes, text editor adapters, chart adapters, enhanced selects, calendars, carousel integrations, dashboard layouts, and landing-page layouts.</p>
       </section>
 
       <section>
@@ -51,6 +57,7 @@
           <li>Auth uses same-origin cookies without CORS setup.</li>
           <li>Frontend installs with <code>bun install --frozen-lockfile</code> and builds with <code>bun run build</code>.</li>
           <li>Tailwind is required in the generated frontend.</li>
+          <li>The generated frontend includes <code>component/l1</code>, <code>component/l2</code>, and <code>component/l3</code>.</li>
         </ul>
       </section>
     </main>

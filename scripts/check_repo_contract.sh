@@ -38,6 +38,38 @@ required_files=(
   "templates/default/view/web/src/main.jsx"
   "templates/default/view/web/src/server.jsx"
   "templates/default/view/web/src/styles.css"
+  "templates/default/view/web/src/component/utils.js"
+  "templates/default/view/web/src/component/l1/Button.jsx"
+  "templates/default/view/web/src/component/l1/Field.jsx"
+  "templates/default/view/web/src/component/l1/Surface.jsx"
+  "templates/default/view/web/src/component/l1/Text.jsx"
+  "templates/default/view/web/src/component/l1/index.js"
+  "templates/default/view/web/src/component/l2/Accordion.jsx"
+  "templates/default/view/web/src/component/l2/AuthForm.jsx"
+  "templates/default/view/web/src/component/l2/Carousel.jsx"
+  "templates/default/view/web/src/component/l2/CarouselIntegrations.jsx"
+  "templates/default/view/web/src/component/l2/Charts.jsx"
+  "templates/default/view/web/src/component/l2/Combobox.jsx"
+  "templates/default/view/web/src/component/l2/DateComponents.jsx"
+  "templates/default/view/web/src/component/l2/Dropdown.jsx"
+  "templates/default/view/web/src/component/l2/EnhancedSelects.jsx"
+  "templates/default/view/web/src/component/l2/Layouts.jsx"
+  "templates/default/view/web/src/component/l2/Lessons.jsx"
+  "templates/default/view/web/src/component/l2/Listbox.jsx"
+  "templates/default/view/web/src/component/l2/Modal.jsx"
+  "templates/default/view/web/src/component/l2/Notifications.jsx"
+  "templates/default/view/web/src/component/l2/Popover.jsx"
+  "templates/default/view/web/src/component/l2/RadioGroup.jsx"
+  "templates/default/view/web/src/component/l2/Tabs.jsx"
+  "templates/default/view/web/src/component/l2/TextEditors.jsx"
+  "templates/default/view/web/src/component/l2/Toggle.jsx"
+  "templates/default/view/web/src/component/l2/Tooltip.jsx"
+  "templates/default/view/web/src/component/l2/index.js"
+  "templates/default/view/web/src/component/l3/AuthView.jsx"
+  "templates/default/view/web/src/component/l3/ComponentLibraryView.jsx"
+  "templates/default/view/web/src/component/l3/DashboardView.jsx"
+  "templates/default/view/web/src/component/l3/LoadingView.jsx"
+  "templates/default/view/web/src/component/l3/index.js"
   "templates/default/carbide.toml"
   "templates/default/go.mod"
   "templates/default/go.sum"
@@ -68,6 +100,10 @@ required_dirs=(
   "templates/default/view"
   "templates/default/view/web"
   "templates/default/view/web/src"
+  "templates/default/view/web/src/component"
+  "templates/default/view/web/src/component/l1"
+  "templates/default/view/web/src/component/l2"
+  "templates/default/view/web/src/component/l3"
   "templates/default/src"
   "templates/default/model"
   "templates/default/controller"
@@ -163,8 +199,50 @@ grep -q "proxying /api and /health to backend service" templates/default/view/we
 ! grep -q "Bun frontend listening on http://localhost" templates/default/view/web/src/server.jsx
 grep -q '@import "tailwindcss";' templates/default/view/web/src/styles.css
 grep -q '/api/${mode}' templates/default/view/web/src/main.jsx
-grep -q "Bun frontend + Go API + Postgres" templates/default/view/web/src/main.jsx
-grep -q "React + Bun container" templates/default/view/web/src/main.jsx
+grep -q "./component/l3/index.js" templates/default/view/web/src/main.jsx
+grep -q "AuthView" templates/default/view/web/src/main.jsx
+grep -q "DashboardView" templates/default/view/web/src/main.jsx
+grep -q "LoadingView" templates/default/view/web/src/main.jsx
+grep -R -q "Bun frontend + Go API + Postgres" templates/default/view/web/src/component
+grep -R -q "React + Bun container" templates/default/view/web/src/component
+grep -q "export function Button" templates/default/view/web/src/component/l1/Button.jsx
+grep -q "export function Field" templates/default/view/web/src/component/l1/Field.jsx
+grep -q "export function Panel" templates/default/view/web/src/component/l1/Surface.jsx
+grep -q "export function Dropdown" templates/default/view/web/src/component/l2/Dropdown.jsx
+grep -q "export const Menu = Dropdown" templates/default/view/web/src/component/l2/Dropdown.jsx
+grep -q "export function Modal" templates/default/view/web/src/component/l2/Modal.jsx
+grep -q "export const Dialog = Modal" templates/default/view/web/src/component/l2/Modal.jsx
+grep -q "export function Slideover" templates/default/view/web/src/component/l2/Modal.jsx
+grep -q "export function Accordion" templates/default/view/web/src/component/l2/Accordion.jsx
+grep -q "export const Disclosure = Accordion" templates/default/view/web/src/component/l2/Accordion.jsx
+grep -q "export function Carousel" templates/default/view/web/src/component/l2/Carousel.jsx
+grep -q "export function Tabs" templates/default/view/web/src/component/l2/Tabs.jsx
+grep -q "export function Notifications" templates/default/view/web/src/component/l2/Notifications.jsx
+grep -q "export function RadioGroup" templates/default/view/web/src/component/l2/RadioGroup.jsx
+grep -q "export function Radio" templates/default/view/web/src/component/l2/RadioGroup.jsx
+grep -q "export function Toggle" templates/default/view/web/src/component/l2/Toggle.jsx
+grep -q "export const Switch = Toggle" templates/default/view/web/src/component/l2/Toggle.jsx
+grep -q "export function Tooltip" templates/default/view/web/src/component/l2/Tooltip.jsx
+grep -q "export function Popover" templates/default/view/web/src/component/l2/Popover.jsx
+grep -q "export function Listbox" templates/default/view/web/src/component/l2/Listbox.jsx
+grep -q "export function Combobox" templates/default/view/web/src/component/l2/Combobox.jsx
+grep -q "export function Lessons" templates/default/view/web/src/component/l2/Lessons.jsx
+grep -q "export function DashboardLayout" templates/default/view/web/src/component/l2/Layouts.jsx
+grep -q "export function LandingPageLayout" templates/default/view/web/src/component/l2/Layouts.jsx
+grep -q "export function TrixEditor" templates/default/view/web/src/component/l2/TextEditors.jsx
+grep -q "export function QuillEditor" templates/default/view/web/src/component/l2/TextEditors.jsx
+grep -q "export function SimpleMDEEditor" templates/default/view/web/src/component/l2/TextEditors.jsx
+grep -q "export function ChartJsPanel" templates/default/view/web/src/component/l2/Charts.jsx
+grep -q "export function ApexChartsPanel" templates/default/view/web/src/component/l2/Charts.jsx
+grep -q "export function Select2Select" templates/default/view/web/src/component/l2/EnhancedSelects.jsx
+grep -q "export function ChoicesSelect" templates/default/view/web/src/component/l2/EnhancedSelects.jsx
+grep -q "export function FlatpickrPicker" templates/default/view/web/src/component/l2/DateComponents.jsx
+grep -q "export function DateRangePicker" templates/default/view/web/src/component/l2/DateComponents.jsx
+grep -q "export function FullCalendarPanel" templates/default/view/web/src/component/l2/DateComponents.jsx
+grep -q "export function GlideCarousel" templates/default/view/web/src/component/l2/CarouselIntegrations.jsx
+grep -q "export function SplideCarousel" templates/default/view/web/src/component/l2/CarouselIntegrations.jsx
+grep -q "export function AuthView" templates/default/view/web/src/component/l3/AuthView.jsx
+grep -q "export function DashboardView" templates/default/view/web/src/component/l3/DashboardView.jsx
 grep -q "github.com/jackc/pgx/v5" templates/default/go.mod
 grep -q "package main" templates/default/src/main.go
 grep -q "/api/login" templates/default/controller/page_controller.go

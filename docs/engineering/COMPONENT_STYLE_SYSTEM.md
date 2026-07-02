@@ -39,6 +39,11 @@ view/
     |-- index.html
     |-- package.json
     `-- src/
+        |-- component/
+        |   |-- l1/
+        |   |-- l2/
+        |   |-- l3/
+        |   `-- utils.js
         |-- main.jsx
         |-- server.jsx
         `-- styles.css
@@ -47,9 +52,32 @@ view/
 Generated apps place the web app under `view/web/` so the project keeps the
 MVC directory shape: `model/`, `view/`, and `controller/`.
 
-The default UI is deliberately small: register, login, logout, and dashboard.
-React components call same-origin `/api` endpoints with `credentials: "include"`
-so the backend can own HttpOnly cookies.
+The default UI includes register, login, logout, dashboard, and a built-in
+component library. React components call same-origin `/api` endpoints with
+`credentials: "include"` so the backend can own HttpOnly cookies.
+
+## Component Contract
+
+Generated apps enforce a three-level component structure:
+
+- `component/l1/`: design primitives such as buttons, fields, surfaces, text,
+  badges, metrics, and code treatments. L1 never knows auth, routing, API
+  calls, or app-specific state.
+- `component/l2/`: reusable UX patterns composed from L1. This includes
+  Lessons, Dropdown/Menu, Modal/Dialog/Slideover, Accordion/Disclosure,
+  Carousel, Tabs, Notifications, Radio/Radio Group, Toggle/Switch, Tooltip,
+  Popover, Listbox/Select, Combobox/Autocomplete, text editor adapters
+  (Trix, Quill, SimpleMDE), chart adapters (Chart.js, ApexCharts), enhanced
+  select adapters (Select2, Choices.js), calendar/date adapters (Flatpickr,
+  Date Range Picker, FullCalendar), carousel adapters (Glide, Splide), and
+  layout patterns for dashboards and landing pages.
+- `component/l3/`: product and app surfaces composed from L2 patterns. The
+  starter ships `AuthView`, `DashboardView`, `ComponentLibraryView`, and
+  `LoadingView`.
+
+`main.jsx` owns browser route state and API calls. It imports L3 views instead
+of building screen markup inline. L3 views may pass product data downward; L2
+and L1 stay reusable.
 
 ## Styling
 
@@ -57,13 +85,9 @@ Generated apps use Tailwind as the mandatory styling path. `styles.css` is the
 Tailwind input file, and the container builds generated CSS with the checked-in
 Bun lockfile.
 
-Future component conventions can still use L1/L2/L3 language:
-
-- L1: primitive controls and text treatments;
-- L2: reusable patterns such as form sections or page headers;
-- L3: app-specific pages and product/domain sections.
-
-The default React starter should keep those boundaries in component structure.
+The component library uses Tailwind classes directly. Third-party integration
+names are represented as adapter components that render useful built-in
+fallbacks without adding mandatory frontend dependencies to every new app.
 
 ## Regression Tests
 
@@ -80,4 +104,10 @@ The frontend contract needs dedicated regression coverage:
 - frontend and backend watch paths are present in Compose;
 - generated frontend installs with `bun install --frozen-lockfile` and builds
   with `bun run build`;
-- Tailwind is present and required in the generated frontend.
+- Tailwind is present and required in the generated frontend;
+- generated frontend includes `component/l1`, `component/l2`, and
+  `component/l3`;
+- generated `main.jsx` imports L3 views and does not reimplement dashboard or
+  auth screen markup inline;
+- L2 includes the Alpine-style interaction patterns and named integration
+  adapter components.

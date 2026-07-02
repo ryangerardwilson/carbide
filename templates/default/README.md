@@ -32,8 +32,12 @@ the Go backend over the Compose network, so cookies work without CORS setup.
 
 ## Where Code Lives
 
-- `view/web/src/` owns the Bun frontend server, React screens, forms,
-  dashboard UI, and Tailwind CSS input.
+- `view/web/src/` owns the Bun frontend server, React app flow, and Tailwind
+  CSS input.
+- `view/web/src/component/l1/` owns React design primitives.
+- `view/web/src/component/l2/` owns reusable UI/UX patterns, layouts, and
+  integration adapters.
+- `view/web/src/component/l3/` owns app-specific React surfaces.
 - `src/` owns the Go HTTP/API server.
 - `controller/` owns Go API request handlers.
 - `model/` owns Postgres-backed data access.
@@ -71,6 +75,8 @@ carbide follow logs service backend
 - Postgres service container
 - same-origin `/api` proxy from the Bun frontend to the Go backend
 - register, login, logout, and dashboard experience
+- L1/L2/L3 React component library with built-in interaction, layout, and
+  integration adapter components
 - Postgres-backed users and sessions
 - queryable structured dev logs
 - checked-in local Docker Compose contract
