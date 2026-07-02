@@ -108,9 +108,10 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 	}
 
 	got := out.String()
+	if !strings.HasPrefix(got, "Start\n") {
+		t.Fatalf("help output = %q, should start with Start section", got)
+	}
 	for _, want := range []string{
-		"Carbide",
-		"Containerized full-stack apps with React, Go, and Postgres.",
 		"Start",
 		"carbide new <project-name>",
 		"carbide init",
@@ -133,6 +134,8 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		}
 	}
 	for _, unwanted := range []string{
+		"Carbide\n",
+		"Containerized full-stack apps with React, Go, and Postgres.",
 		"_____________________________________________________",
 		"________________________oo_______oo_______oo_________",
 		"install the CLI",

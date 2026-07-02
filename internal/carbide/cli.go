@@ -235,7 +235,6 @@ func (a app) printCommandList() {
 
 func (a app) printHelp() {
 	r := newRenderer(a.stdout)
-	r.Title("Carbide", "Containerized full-stack apps with React, Go, and Postgres.")
 	r.HelpSection(
 		"Start",
 		outputRow{"carbide new <project-name>", "create a new project directory"},
