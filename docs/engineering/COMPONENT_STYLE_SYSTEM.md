@@ -41,6 +41,8 @@ view/
     `-- src/
         |-- component/
         |   |-- l1/
+        |   |   |-- theme.css
+        |   |   `-- tokens.js
         |   |-- l2/
         |   |-- l3/
         |   `-- utils.js
@@ -60,7 +62,8 @@ component library. React components call same-origin `/api` endpoints with
 
 Generated apps enforce a three-level component structure:
 
-- `component/l1/`: design primitives such as buttons, fields, surfaces, text,
+- `component/l1/`: theme tokens, font and color variables, semantic UI
+  classes, and design primitives such as buttons, fields, surfaces, text,
   badges, metrics, and code treatments. L1 never knows auth, routing, API
   calls, or app-specific state.
 - `component/l2/`: reusable UX patterns composed from L1. This includes
@@ -85,9 +88,12 @@ Generated apps use Tailwind as the mandatory styling path. `styles.css` is the
 Tailwind input file, and the container builds generated CSS with the checked-in
 Bun lockfile.
 
-The component library uses Tailwind classes directly. Third-party integration
-names are represented as adapter components that render useful built-in
-fallbacks without adding mandatory frontend dependencies to every new app.
+The component library uses Tailwind layout classes directly, but font and color
+scheme decisions live in L1. `theme.css` owns CSS custom properties and
+semantic `cb-*` classes. `tokens.js` exports the same contract for React
+components. Third-party integration names are represented as adapter
+components that render useful built-in fallbacks without adding mandatory
+frontend dependencies to every new app.
 
 ## Regression Tests
 
@@ -107,6 +113,8 @@ The frontend contract needs dedicated regression coverage:
 - Tailwind is present and required in the generated frontend;
 - generated frontend includes `component/l1`, `component/l2`, and
   `component/l3`;
+- generated L1 includes `theme.css` and `tokens.js`, and `styles.css` imports
+  the L1 theme after Tailwind;
 - generated `main.jsx` imports L3 views and does not reimplement dashboard or
   auth screen markup inline;
 - L2 includes the Alpine-style interaction patterns and named integration

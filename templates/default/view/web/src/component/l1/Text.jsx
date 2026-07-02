@@ -1,8 +1,9 @@
 import { cx } from '../utils.js';
+import { ui } from './tokens.js';
 
 export function Eyebrow({ children, className = '' }) {
   return (
-    <p className={cx('m-0 text-xs font-extrabold uppercase tracking-normal text-teal-700', className)}>
+    <p className={cx('m-0 text-xs font-extrabold uppercase tracking-normal', ui.accent, className)}>
       {children}
     </p>
   );
@@ -16,13 +17,13 @@ export function Heading({ children, className = '', level = 1 }) {
     3: 'text-xl leading-snug'
   };
 
-  return <Tag className={cx('m-0 text-[#16211b]', sizes[level] || sizes[3], className)}>{children}</Tag>;
+  return <Tag className={cx('m-0', ui.text, sizes[level] || sizes[3], className)}>{children}</Tag>;
 }
 
 export function Muted({ children, className = '', as: Tag = 'p' }) {
-  return <Tag className={cx('m-0 text-[#5d6f64]', className)}>{children}</Tag>;
+  return <Tag className={cx('m-0', ui.muted, className)}>{children}</Tag>;
 }
 
 export function CodeText({ children }) {
-  return <code className="rounded bg-emerald-50 px-1.5 py-0.5 text-[#21463f]">{children}</code>;
+  return <code className={cx('rounded px-1.5 py-0.5', ui.code)}>{children}</code>;
 }

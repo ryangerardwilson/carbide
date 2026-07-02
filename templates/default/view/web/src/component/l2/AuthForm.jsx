@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Button, Field, Muted, TextInput } from '../l1/index.js';
+import { Button, Field, Muted, TextInput, ui } from '../l1/index.js';
+import { cx } from '../utils.js';
 
 export function AuthForm({ busy, error = '', mode, onMode, onSubmit }) {
   const isRegister = mode === 'register';
@@ -12,13 +13,13 @@ export function AuthForm({ busy, error = '', mode, onMode, onSubmit }) {
 
   return (
     <form
-      className="grid content-center gap-5 border-l border-emerald-950/10 bg-[#fbfdfb] px-7 py-10 sm:px-10 lg:min-h-svh lg:px-14"
+      className={cx('grid content-center gap-5 border-l px-7 py-10 sm:px-10 lg:min-h-svh lg:px-14', ui.border, ui.surfaceSoft)}
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit({ email, password });
       }}
     >
-      {error ? <p className="m-0 rounded-md bg-rose-50 px-3 py-2 text-rose-800">{error}</p> : null}
+      {error ? <p className={cx('m-0 rounded-md px-3 py-2', ui.errorSurface, ui.errorText)}>{error}</p> : null}
 
       <Field label="Email">
         <TextInput
@@ -49,7 +50,7 @@ export function AuthForm({ busy, error = '', mode, onMode, onSubmit }) {
       <Muted>
         {isRegister ? 'Already registered?' : 'Need an account?'}{' '}
         <button
-          className="inline bg-transparent p-0 font-bold text-teal-700 underline-offset-4 hover:underline"
+          className={cx('inline bg-transparent p-0 font-bold underline-offset-4 hover:underline', ui.accent)}
           type="button"
           onClick={() => onMode(isRegister ? 'login' : 'register')}
         >

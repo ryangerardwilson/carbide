@@ -1,4 +1,5 @@
-import { Badge, Panel } from '../l1/index.js';
+import { Badge, Panel, ui } from '../l1/index.js';
+import { cx } from '../utils.js';
 
 export function Lessons({ active = 0, items = [] }) {
   return (
@@ -7,8 +8,8 @@ export function Lessons({ active = 0, items = [] }) {
         <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-3" key={item.title}>
           <Badge tone={index <= active ? 'good' : 'neutral'}>{index + 1}</Badge>
           <div>
-            <h3 className="m-0 text-base text-[#16211b]">{item.title}</h3>
-            {item.detail ? <p className="m-0 mt-1 text-sm text-[#66786e]">{item.detail}</p> : null}
+            <h3 className={cx('m-0 text-base', ui.text)}>{item.title}</h3>
+            {item.detail ? <p className={cx('m-0 mt-1 text-sm', ui.subtle)}>{item.detail}</p> : null}
           </div>
         </div>
       ))}

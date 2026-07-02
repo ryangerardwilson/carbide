@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ui } from '../l1/index.js';
 import { cx } from '../utils.js';
 
 export function Tabs({ defaultValue, tabs = [] }) {
@@ -7,15 +8,15 @@ export function Tabs({ defaultValue, tabs = [] }) {
 
   return (
     <section className="grid gap-4">
-      <div className="flex flex-wrap gap-2 border-b border-emerald-950/10" role="tablist">
+      <div className={cx('flex flex-wrap gap-2 border-b', ui.border)} role="tablist">
         {tabs.map((tab) => (
           <button
             aria-selected={tab.value === current?.value}
             className={cx(
               'min-h-10 border-b-2 px-3 text-sm font-bold transition',
               tab.value === current?.value
-                ? 'border-teal-700 text-teal-800'
-                : 'border-transparent text-[#66786e] hover:text-[#16211b]'
+                ? 'cb-tab-active'
+                : 'cb-tab-inactive'
             )}
             key={tab.value}
             role="tab"

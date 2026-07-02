@@ -44,6 +44,8 @@ required_files=(
   "templates/default/view/web/src/component/l1/Surface.jsx"
   "templates/default/view/web/src/component/l1/Text.jsx"
   "templates/default/view/web/src/component/l1/index.js"
+  "templates/default/view/web/src/component/l1/theme.css"
+  "templates/default/view/web/src/component/l1/tokens.js"
   "templates/default/view/web/src/component/l2/Accordion.jsx"
   "templates/default/view/web/src/component/l2/AuthForm.jsx"
   "templates/default/view/web/src/component/l2/Carousel.jsx"
@@ -198,6 +200,7 @@ grep -q "listening inside container" templates/default/view/web/src/server.jsx
 grep -q "proxying /api and /health to backend service" templates/default/view/web/src/server.jsx
 ! grep -q "Bun frontend listening on http://localhost" templates/default/view/web/src/server.jsx
 grep -q '@import "tailwindcss";' templates/default/view/web/src/styles.css
+grep -q '@import "./component/l1/theme.css";' templates/default/view/web/src/styles.css
 grep -q '/api/${mode}' templates/default/view/web/src/main.jsx
 grep -q "./component/l3/index.js" templates/default/view/web/src/main.jsx
 grep -q "AuthView" templates/default/view/web/src/main.jsx
@@ -208,6 +211,15 @@ grep -R -q "React + Bun container" templates/default/view/web/src/component
 grep -q "export function Button" templates/default/view/web/src/component/l1/Button.jsx
 grep -q "export function Field" templates/default/view/web/src/component/l1/Field.jsx
 grep -q "export function Panel" templates/default/view/web/src/component/l1/Surface.jsx
+grep -q "export const color" templates/default/view/web/src/component/l1/tokens.js
+grep -q "export const ui" templates/default/view/web/src/component/l1/tokens.js
+grep -q -- "--cb-font-sans" templates/default/view/web/src/component/l1/theme.css
+grep -q -- "--cb-color-action" templates/default/view/web/src/component/l1/theme.css
+grep -q -- "--cb-color-surface" templates/default/view/web/src/component/l1/theme.css
+grep -q "cb-action" templates/default/view/web/src/component/l1/theme.css
+grep -q "cb-input" templates/default/view/web/src/component/l1/theme.css
+grep -q "ui.action" templates/default/view/web/src/component/l1/Button.jsx
+grep -q "ui.input" templates/default/view/web/src/component/l1/Field.jsx
 grep -q "export function Dropdown" templates/default/view/web/src/component/l2/Dropdown.jsx
 grep -q "export const Menu = Dropdown" templates/default/view/web/src/component/l2/Dropdown.jsx
 grep -q "export function Modal" templates/default/view/web/src/component/l2/Modal.jsx

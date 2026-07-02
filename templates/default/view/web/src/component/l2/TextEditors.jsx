@@ -1,10 +1,11 @@
-import { Field } from '../l1/index.js';
+import { Field, ui } from '../l1/index.js';
+import { cx } from '../utils.js';
 
 function TextEditorAdapter({ library, label, onChange, placeholder = '', value = '' }) {
   return (
     <Field hint={`${library} adapter surface`} label={label || library}>
       <textarea
-        className="min-h-32 w-full rounded-md border border-emerald-900/20 bg-white px-3 py-2 text-[#16211b] outline-none focus:border-teal-700 focus:ring-4 focus:ring-teal-700/15"
+        className={cx('min-h-32 w-full rounded-md border px-3 py-2 outline-none', ui.input)}
         data-integration={library}
         onChange={(event) => onChange?.(event.target.value)}
         placeholder={placeholder}

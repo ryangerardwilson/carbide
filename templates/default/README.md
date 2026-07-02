@@ -34,7 +34,8 @@ the Go backend over the Compose network, so cookies work without CORS setup.
 
 - `view/web/src/` owns the Bun frontend server, React app flow, and Tailwind
   CSS input.
-- `view/web/src/component/l1/` owns React design primitives.
+- `view/web/src/component/l1/` owns theme tokens, fonts, color schemes,
+  semantic UI classes, and React design primitives.
 - `view/web/src/component/l2/` owns reusable UI/UX patterns, layouts, and
   integration adapters.
 - `view/web/src/component/l3/` owns app-specific React surfaces.

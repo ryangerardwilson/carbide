@@ -72,6 +72,8 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 |               `-- src/
 |                   |-- component/
 |                   |   |-- l1/
+|                   |   |   |-- theme.css
+|                   |   |   `-- tokens.js
 |                   |   |-- l2/
 |                   |   |-- l3/
 |                   |   `-- utils.js
@@ -112,8 +114,8 @@ generated apps, infrastructure, tests, and documentation have clear ownership.
 - `templates/default/src/`: generated Go HTTP/API server.
 - `templates/default/view/web/`: generated Bun/React/Tailwind web app,
   frontend container source, browser UI, and same-origin API proxy.
-- `templates/default/view/web/src/component/l1/`: generated React design
-  primitives.
+- `templates/default/view/web/src/component/l1/`: generated design tokens,
+  font/color scheme variables, semantic UI classes, and React primitives.
 - `templates/default/view/web/src/component/l2/`: generated reusable UI/UX
   patterns, layout patterns, and integration adapters.
 - `templates/default/view/web/src/component/l3/`: generated product surfaces

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button } from '../l1/index.js';
+import { Button, ui } from '../l1/index.js';
+import { cx } from '../utils.js';
 
 export function Carousel({ items = [], label = 'Carousel' }) {
   const [index, setIndex] = useState(0);
@@ -11,12 +12,12 @@ export function Carousel({ items = [], label = 'Carousel' }) {
 
   return (
     <section aria-label={label} className="grid gap-3">
-      <div className="min-h-36 rounded-lg border border-emerald-950/10 bg-white p-5">
-        <p className="m-0 text-xs font-bold uppercase text-teal-700">
+      <div className={cx('min-h-36 rounded-lg border p-5', ui.border, ui.surface)}>
+        <p className={cx('m-0 text-xs font-bold uppercase', ui.accent)}>
           {index + 1} / {items.length}
         </p>
-        <h3 className="m-0 mt-2 text-xl text-[#16211b]">{item.title}</h3>
-        {item.detail ? <p className="m-0 mt-2 text-sm text-[#66786e]">{item.detail}</p> : null}
+        <h3 className={cx('m-0 mt-2 text-xl', ui.text)}>{item.title}</h3>
+        {item.detail ? <p className={cx('m-0 mt-2 text-sm', ui.subtle)}>{item.detail}</p> : null}
       </div>
       <div className="flex gap-2">
         <Button onClick={() => setIndex((index - 1 + items.length) % items.length)} size="sm" variant="secondary">

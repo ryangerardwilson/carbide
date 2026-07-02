@@ -1,0 +1,293 @@
+@layer base {
+  :root {
+    --cb-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --cb-color-page: #f6f8f5;
+    --cb-color-surface: #ffffff;
+    --cb-color-surface-soft: #fbfdfb;
+    --cb-color-surface-quiet: #eef7f0;
+    --cb-color-text: #16211b;
+    --cb-color-muted: #5d6f64;
+    --cb-color-subtle: #6b7e72;
+    --cb-color-border: color-mix(in srgb, #14382f 12%, transparent);
+    --cb-color-border-strong: color-mix(in srgb, #14382f 22%, transparent);
+    --cb-color-action: #0f766e;
+    --cb-color-action-hover: #115e59;
+    --cb-color-action-soft: #e7f4f1;
+    --cb-color-action-text: #0f766e;
+    --cb-color-danger: #be123c;
+    --cb-color-danger-hover: #9f1239;
+    --cb-color-danger-soft: #fff1f2;
+    --cb-color-danger-text: #9f1239;
+    --cb-color-success-soft: #ecfdf5;
+    --cb-color-success-text: #166534;
+    --cb-color-warning-soft: #fffbeb;
+    --cb-color-warning-text: #92400e;
+    --cb-color-neutral-soft: #f5f5f4;
+    --cb-color-neutral-text: #57534e;
+    --cb-color-on-action: #ffffff;
+    --cb-color-on-hero: #ffffff;
+    --cb-color-on-hero-muted: color-mix(in srgb, #ffffff 78%, transparent);
+    --cb-color-overlay: color-mix(in srgb, #10201c 45%, transparent);
+    --cb-color-overlay-soft: color-mix(in srgb, #10201c 40%, transparent);
+    --cb-color-focus: color-mix(in srgb, #0f766e 18%, transparent);
+    --cb-shadow-subtle: 0 1px 2px color-mix(in srgb, #14382f 8%, transparent);
+    --cb-shadow-elevated: 0 16px 36px color-mix(in srgb, #10201c 18%, transparent);
+    color: var(--cb-color-text);
+    background: var(--cb-color-page);
+    font-family: var(--cb-font-sans);
+    font-synthesis: none;
+    line-height: 1.5;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100svh;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: wait;
+  }
+}
+
+@layer components {
+  .cb-page {
+    background: var(--cb-color-page);
+  }
+
+  .cb-surface {
+    background: var(--cb-color-surface);
+  }
+
+  .cb-surface-soft {
+    background: var(--cb-color-surface-soft);
+  }
+
+  .cb-surface-quiet {
+    background: var(--cb-color-surface-quiet);
+  }
+
+  .cb-hero {
+    background:
+      linear-gradient(
+        150deg,
+        var(--cb-color-action) 0%,
+        color-mix(in srgb, var(--cb-color-action) 44%, var(--cb-color-text)) 48%,
+        var(--cb-color-text) 100%
+      );
+  }
+
+  .cb-text {
+    color: var(--cb-color-text);
+  }
+
+  .cb-muted {
+    color: var(--cb-color-muted);
+  }
+
+  .cb-subtle {
+    color: var(--cb-color-subtle);
+  }
+
+  .cb-accent {
+    color: var(--cb-color-action-text);
+  }
+
+  .cb-on-action {
+    color: var(--cb-color-on-action);
+  }
+
+  .cb-on-hero {
+    color: var(--cb-color-on-hero);
+  }
+
+  .cb-on-hero-muted {
+    color: var(--cb-color-on-hero-muted);
+  }
+
+  .cb-border {
+    border-color: var(--cb-color-border);
+  }
+
+  .cb-border-strong {
+    border-color: var(--cb-color-border-strong);
+  }
+
+  .cb-divider {
+    background: var(--cb-color-border);
+  }
+
+  .cb-grid-lines {
+    background: var(--cb-color-border);
+  }
+
+  .cb-divide-y > :not([hidden]) ~ :not([hidden]) {
+    border-top: 1px solid var(--cb-color-border);
+  }
+
+  .cb-shadow-subtle {
+    box-shadow: var(--cb-shadow-subtle);
+  }
+
+  .cb-shadow-elevated {
+    box-shadow: var(--cb-shadow-elevated);
+  }
+
+  .cb-focus {
+    outline: none;
+  }
+
+  .cb-focus:focus-visible {
+    box-shadow: 0 0 0 4px var(--cb-color-focus);
+  }
+
+  .cb-action {
+    background: var(--cb-color-action);
+    color: var(--cb-color-on-action);
+  }
+
+  .cb-action:hover {
+    background: var(--cb-color-action-hover);
+  }
+
+  .cb-secondary-action {
+    background: var(--cb-color-surface);
+    border-color: var(--cb-color-border);
+    color: var(--cb-color-text);
+  }
+
+  .cb-secondary-action:hover {
+    border-color: var(--cb-color-border-strong);
+  }
+
+  .cb-ghost-action {
+    background: transparent;
+    color: var(--cb-color-action-text);
+  }
+
+  .cb-ghost-action:hover {
+    background: var(--cb-color-action-soft);
+  }
+
+  .cb-danger-action {
+    background: var(--cb-color-danger);
+    color: var(--cb-color-on-action);
+  }
+
+  .cb-danger-action:hover {
+    background: var(--cb-color-danger-hover);
+  }
+
+  .cb-input {
+    background: var(--cb-color-surface);
+    border-color: var(--cb-color-border-strong);
+    color: var(--cb-color-text);
+  }
+
+  .cb-input:focus {
+    border-color: var(--cb-color-action);
+    box-shadow: 0 0 0 4px var(--cb-color-focus);
+  }
+
+  .cb-menu-item {
+    color: var(--cb-color-text);
+  }
+
+  .cb-menu-item:hover {
+    background: var(--cb-color-action-soft);
+  }
+
+  .cb-selection {
+    background: var(--cb-color-surface);
+    border-color: var(--cb-color-border);
+    color: var(--cb-color-text);
+  }
+
+  .cb-selection-active {
+    background: var(--cb-color-action-soft);
+    border-color: var(--cb-color-action);
+    color: var(--cb-color-text);
+  }
+
+  .cb-tab-active {
+    border-color: var(--cb-color-action);
+    color: var(--cb-color-action-text);
+  }
+
+  .cb-tab-inactive {
+    border-color: transparent;
+    color: var(--cb-color-muted);
+  }
+
+  .cb-tab-inactive:hover {
+    color: var(--cb-color-text);
+  }
+
+  .cb-switch-track-on {
+    background: var(--cb-color-action);
+  }
+
+  .cb-switch-track-off {
+    background: var(--cb-color-border-strong);
+  }
+
+  .cb-error-surface {
+    background: var(--cb-color-danger-soft);
+  }
+
+  .cb-error-text {
+    color: var(--cb-color-danger-text);
+  }
+
+  .cb-code {
+    background: var(--cb-color-action-soft);
+    color: color-mix(in srgb, var(--cb-color-action) 55%, var(--cb-color-text));
+  }
+
+  .cb-overlay {
+    background: var(--cb-color-overlay);
+  }
+
+  .cb-overlay-soft {
+    background: var(--cb-color-overlay-soft);
+  }
+
+  .cb-chart-bar {
+    background: var(--cb-color-action);
+  }
+
+  .cb-tooltip {
+    background: var(--cb-color-text);
+    color: var(--cb-color-on-action);
+  }
+
+  .cb-badge-neutral {
+    background: var(--cb-color-neutral-soft);
+    color: var(--cb-color-neutral-text);
+  }
+
+  .cb-badge-good {
+    background: var(--cb-color-success-soft);
+    color: var(--cb-color-success-text);
+  }
+
+  .cb-badge-warn {
+    background: var(--cb-color-warning-soft);
+    color: var(--cb-color-warning-text);
+  }
+
+  .cb-badge-danger {
+    background: var(--cb-color-danger-soft);
+    color: var(--cb-color-danger-text);
+  }
+}

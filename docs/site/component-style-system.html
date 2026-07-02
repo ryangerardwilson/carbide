@@ -34,6 +34,8 @@
     `-- src/
         |-- component/
         |   |-- l1/
+        |   |   |-- theme.css
+        |   |   `-- tokens.js
         |   |-- l2/
         |   |-- l3/
         |   `-- utils.js
@@ -41,6 +43,7 @@
         |-- server.jsx
         `-- styles.css</code></pre>
         <p>The web app lives inside <code>view/web</code>. <code>main.jsx</code> owns browser route state and API calls, then renders L3 views. L3 views compose L2 patterns, and L2 patterns compose L1 primitives.</p>
+        <p>Fonts, color schemes, CSS custom properties, and semantic <code>cb-*</code> classes live in <code>component/l1/theme.css</code> and <code>component/l1/tokens.js</code>. Higher layers inherit that contract instead of choosing raw colors.</p>
         <p>The starter includes L2 patterns for lessons, dropdowns, modals, accordions, carousels, tabs, notifications, radio groups, toggles, tooltips, popovers, listboxes, comboboxes, text editor adapters, chart adapters, enhanced selects, calendars, carousel integrations, dashboard layouts, and landing-page layouts.</p>
       </section>
 
@@ -58,6 +61,7 @@
           <li>Frontend installs with <code>bun install --frozen-lockfile</code> and builds with <code>bun run build</code>.</li>
           <li>Tailwind is required in the generated frontend.</li>
           <li>The generated frontend includes <code>component/l1</code>, <code>component/l2</code>, and <code>component/l3</code>.</li>
+          <li>L1 owns <code>theme.css</code> and <code>tokens.js</code>, and <code>styles.css</code> imports the L1 theme.</li>
         </ul>
       </section>
     </main>

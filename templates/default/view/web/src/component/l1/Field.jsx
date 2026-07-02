@@ -1,12 +1,13 @@
 import { cx } from '../utils.js';
+import { ui } from './tokens.js';
 
 export function Field({ children, error = '', hint = '', label, className = '' }) {
   return (
-    <label className={cx('grid gap-2 font-bold text-[#16211b]', className)}>
+    <label className={cx('grid gap-2 font-bold', ui.text, className)}>
       <span>{label}</span>
       {children}
-      {hint && !error ? <span className="text-sm font-normal text-[#66786e]">{hint}</span> : null}
-      {error ? <span className="text-sm font-bold text-rose-800">{error}</span> : null}
+      {hint && !error ? <span className={cx('text-sm font-normal', ui.subtle)}>{hint}</span> : null}
+      {error ? <span className={cx('text-sm font-bold', ui.errorText)}>{error}</span> : null}
     </label>
   );
 }
@@ -15,7 +16,8 @@ export function TextInput({ className = '', ...props }) {
   return (
     <input
       className={cx(
-        'min-h-12 w-full rounded-md border border-emerald-900/20 bg-white px-3 py-2 text-[#16211b] outline-none transition focus:border-teal-700 focus:ring-4 focus:ring-teal-700/15',
+        'min-h-12 w-full rounded-md border px-3 py-2 outline-none transition',
+        ui.input,
         className
       )}
       {...props}

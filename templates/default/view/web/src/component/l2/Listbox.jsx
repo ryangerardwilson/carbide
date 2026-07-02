@@ -1,10 +1,11 @@
-import { Field } from '../l1/index.js';
+import { Field, ui } from '../l1/index.js';
+import { cx } from '../utils.js';
 
 export function Listbox({ label, onChange, options = [], value }) {
   return (
     <Field label={label}>
       <select
-        className="min-h-12 w-full rounded-md border border-emerald-900/20 bg-white px-3 py-2 text-[#16211b] outline-none focus:border-teal-700 focus:ring-4 focus:ring-teal-700/15"
+        className={cx('min-h-12 w-full rounded-md border px-3 py-2 outline-none', ui.input)}
         onChange={(event) => onChange?.(event.target.value)}
         value={value}
       >

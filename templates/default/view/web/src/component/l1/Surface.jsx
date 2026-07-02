@@ -1,9 +1,10 @@
 import { cx } from '../utils.js';
+import { ui } from './tokens.js';
 
 export function Panel({ children, className = '', as: Tag = 'section', ...props }) {
   return (
     <Tag
-      className={cx('rounded-lg border border-emerald-950/10 bg-white p-5 shadow-sm shadow-emerald-950/5', className)}
+      className={cx('rounded-lg border p-5', ui.border, ui.surface, ui.shadowSubtle, className)}
       {...props}
     >
       {children}
@@ -12,15 +13,15 @@ export function Panel({ children, className = '', as: Tag = 'section', ...props 
 }
 
 export function Divider({ className = '' }) {
-  return <div className={cx('h-px w-full bg-emerald-950/10', className)} aria-hidden="true" />;
+  return <div className={cx('h-px w-full', ui.divider, className)} aria-hidden="true" />;
 }
 
 export function Badge({ children, tone = 'neutral', className = '' }) {
   const tones = {
-    neutral: 'bg-stone-100 text-stone-700',
-    good: 'bg-emerald-50 text-emerald-800',
-    warn: 'bg-amber-50 text-amber-800',
-    danger: 'bg-rose-50 text-rose-800'
+    neutral: ui.neutralBadge,
+    good: ui.goodBadge,
+    warn: ui.warnBadge,
+    danger: ui.dangerBadge
   };
 
   return (
@@ -33,9 +34,9 @@ export function Badge({ children, tone = 'neutral', className = '' }) {
 export function Metric({ label, value, detail = '' }) {
   return (
     <div className="min-w-0">
-      <span className="mb-1 block text-sm text-[#6b7e72]">{label}</span>
-      <strong className="block truncate text-[#16211b]">{value}</strong>
-      {detail ? <span className="mt-1 block text-sm text-[#66786e]">{detail}</span> : null}
+      <span className={cx('mb-1 block text-sm', ui.subtle)}>{label}</span>
+      <strong className={cx('block truncate', ui.text)}>{value}</strong>
+      {detail ? <span className={cx('mt-1 block text-sm', ui.subtle)}>{detail}</span> : null}
     </div>
   );
 }

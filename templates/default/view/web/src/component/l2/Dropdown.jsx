@@ -28,7 +28,7 @@ export function Dropdown({ align = 'left', items = [], label = 'Open menu', onSe
         >
           {items.map((item) => (
             <button
-              className="block min-h-10 w-full rounded-md px-3 text-left text-sm text-[#16211b] hover:bg-emerald-50"
+              className="cb-menu-item block min-h-10 w-full rounded-md px-3 text-left text-sm"
               key={item.value || item.label}
               role="menuitem"
               type="button"

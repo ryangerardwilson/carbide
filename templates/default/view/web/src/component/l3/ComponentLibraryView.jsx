@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, CodeText, Metric, Muted, Panel } from '../l1/index.js';
+import { Button, CodeText, Metric, Muted, Panel, ui } from '../l1/index.js';
 import {
   Accordion,
   ApexChartsPanel,
@@ -27,6 +27,7 @@ import {
   Tooltip,
   TrixEditor
 } from '../l2/index.js';
+import { cx } from '../utils.js';
 
 const options = [
   { label: 'Frontend', value: 'frontend' },
@@ -53,7 +54,7 @@ export function ComponentLibraryView() {
         <Panel className="lg:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="m-0 text-2xl text-[#16211b]">Component library</h2>
+              <h2 className={cx('m-0 text-2xl', ui.text)}>Component library</h2>
               <Muted className="mt-1">
                 L3 screens compose L2 patterns. L2 patterns compose L1 primitives.
               </Muted>

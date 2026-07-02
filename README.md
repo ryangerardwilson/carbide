@@ -181,6 +181,11 @@ organized into `component/l1`, `component/l2`, and `component/l3`. `model/`
 owns Postgres state, `controller/` owns request flow and JSON responses, and
 `src/` owns the Go HTTP/API server.
 
+The generated component library keeps fonts, color schemes, and semantic UI
+classes in `component/l1/theme.css` and `component/l1/tokens.js`. L1
+primitives consume those tokens, L2 patterns consume primitives, and L3 app
+surfaces consume patterns.
+
 ## Roadmap
 
 ### Phase 0: Project Contract
