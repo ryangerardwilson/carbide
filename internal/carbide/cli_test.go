@@ -108,25 +108,28 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 	}
 
 	got := out.String()
-	if !strings.HasPrefix(got, "Start\n") {
-		t.Fatalf("help output = %q, should start with Start section", got)
+	if !strings.HasPrefix(got, "area") {
+		t.Fatalf("help output = %q, should start with table header", got)
 	}
 	for _, want := range []string{
-		"Start",
+		"area",
+		"command",
+		"purpose",
+		"start",
 		"carbide new <project-name>",
 		"carbide init",
-		"Develop",
+		"develop",
 		"carbide run dev",
 		"carbide status",
 		"carbide stop dev",
-		"Logs",
+		"logs",
 		"carbide follow logs",
+		"carbide follow logs service backend",
 		"carbide logs",
-		"Maintain",
+		"maintain",
 		"carbide help",
 		"carbide version",
 		"carbide upgrade",
-		"Examples",
 		"carbide logs containing \"/api/login\" json",
 	} {
 		if !strings.Contains(got, want) {

@@ -235,34 +235,22 @@ func (a app) printCommandList() {
 
 func (a app) printHelp() {
 	r := newRenderer(a.stdout)
-	r.HelpSection(
-		"Start",
-		outputRow{"carbide new <project-name>", "create a new project directory"},
-		outputRow{"carbide init", "initialize the current empty directory"},
-	)
-	r.HelpSection(
-		"Develop",
-		outputRow{"carbide run dev", "start the Docker dev stack"},
-		outputRow{"carbide status", "inspect containers, ports, and health"},
-		outputRow{"carbide stop dev", "stop local dev containers"},
-	)
-	r.HelpSection(
-		"Logs",
-		outputRow{"carbide follow logs", "stream live logs; add service <name> or containing <text>"},
-		outputRow{"carbide logs", "query saved logs; add service <name>, containing <text>, limit <count>, json"},
-	)
-	r.HelpSection(
-		"Maintain",
-		outputRow{"carbide help", "show this reference"},
-		outputRow{"carbide version", "print the installed version"},
-		outputRow{"carbide upgrade", "upgrade the installed CLI from GitHub"},
-	)
-	r.HelpSection(
-		"Examples",
-		outputRow{"carbide new demo", "create ./demo"},
-		outputRow{"carbide run dev", "start app, API, and Postgres containers"},
-		outputRow{"carbide follow logs service backend", "stream backend logs"},
-		outputRow{"carbide logs containing \"/api/login\" json", "query saved logs as JSON"},
+	r.Table(
+		[]string{"area", "command", "purpose"},
+		[]tableRow{
+			{"start", "carbide new <project-name>", "create a project directory"},
+			{"", "carbide init", "initialize current directory"},
+			{"develop", "carbide run dev", "start Docker dev stack"},
+			{"", "carbide status", "show containers, ports, and health"},
+			{"", "carbide stop dev", "stop dev containers"},
+			{"logs", "carbide follow logs", "stream live logs"},
+			{"", "carbide follow logs service backend", "stream one service"},
+			{"", "carbide logs", "query saved logs"},
+			{"", "carbide logs containing \"/api/login\" json", "query saved logs as JSON"},
+			{"maintain", "carbide help", "show this table"},
+			{"", "carbide version", "print installed version"},
+			{"", "carbide upgrade", "upgrade CLI from GitHub"},
+		},
 	)
 }
 
@@ -771,16 +759,6 @@ func (r renderer) Section(title string, subtitle string) {
 			fmt.Fprintln(r.out, subtitle)
 		}
 	}
-	fmt.Fprintln(r.out)
-}
-
-func (r renderer) HelpSection(title string, rows ...outputRow) {
-	if r.styled {
-		fmt.Fprintf(r.out, "%s\n", r.paint("1;38;5;245", title))
-	} else {
-		fmt.Fprintln(r.out, title)
-	}
-	r.Rows(rows...)
 	fmt.Fprintln(r.out)
 }
 
