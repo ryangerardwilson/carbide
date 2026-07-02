@@ -75,7 +75,8 @@ carbide follow logs service backend
 - Go backend/API container
 - Postgres service container
 - same-origin `/api` proxy from the Bun frontend to the Go backend
-- register, login, logout, and dashboard experience
+- register, login, logout, and dashboard experience with left-sidebar app
+  navigation
 - L1/L2/L3 React component library with built-in interaction, layout, and
   integration adapter components
 - Postgres-backed users and sessions

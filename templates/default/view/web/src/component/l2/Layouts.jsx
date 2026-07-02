@@ -20,20 +20,79 @@ export function LandingPageLayout({ appName, children, mode }) {
   );
 }
 
-export function DashboardLayout({ appName, busy, children, onLogout, userEmail }) {
+export function DashboardLayout({
+  activeItem = '',
+  appName,
+  busy,
+  children,
+  navItems = [],
+  onLogout,
+  onNavItem,
+  userEmail
+}) {
+  const activeNavItem = navItems.find((item) => item.value === activeItem) || navItems[0];
+
   return (
-    <main className={cx('mx-auto min-h-svh max-w-7xl px-6 py-8 sm:px-10 lg:py-12', ui.page)}>
-      <header className={cx('mb-9 flex flex-col gap-5 border-b pb-7 sm:flex-row sm:items-end sm:justify-between', ui.border)}>
-        <div>
-          <Eyebrow>Bun frontend + Go API + Postgres</Eyebrow>
-          <Heading className="mt-2 text-5xl sm:text-6xl">{appName}</Heading>
-          <Muted className="mt-3">Signed in as {userEmail}</Muted>
-        </div>
-        <Button disabled={busy} onClick={onLogout} variant="secondary">
-          {busy ? 'Logging out...' : 'Log out'}
-        </Button>
-      </header>
-      {children}
+    <main className={cx('min-h-svh', ui.page)}>
+      <div className="grid min-h-svh lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside
+          className={cx(
+            'flex min-w-0 flex-col border-b px-5 py-5 lg:sticky lg:top-0 lg:h-svh lg:border-b-0 lg:border-r',
+            ui.border,
+            ui.surface
+          )}
+        >
+          <div>
+            <Eyebrow>Bun + Go + Postgres</Eyebrow>
+            <Heading className="mt-2 text-3xl" level={2}>
+              {appName}
+            </Heading>
+            <Muted className="mt-2 text-sm">Signed in as {userEmail}</Muted>
+          </div>
+
+          {navItems.length ? (
+            <nav className="mt-6 flex gap-2 overflow-x-auto pb-1 lg:grid lg:overflow-visible lg:pb-0" aria-label="Dashboard">
+              {navItems.map((item) => {
+                const active = item.value === activeItem;
+
+                return (
+                  <button
+                    aria-current={active ? 'page' : undefined}
+                    className={cx(
+                      'min-h-11 shrink-0 rounded-md border px-3 text-left text-sm font-bold transition lg:w-full',
+                      active ? 'cb-selection-active' : 'cb-selection'
+                    )}
+                    key={item.value}
+                    type="button"
+                    onClick={() => onNavItem?.(item.value)}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
+          ) : null}
+
+          <div className="mt-6 hidden lg:block">
+            <div className={cx('h-px w-full', ui.divider)} />
+          </div>
+
+          <div className="mt-5 lg:mt-auto">
+            <Button className="w-full" disabled={busy} onClick={onLogout} variant="secondary">
+              {busy ? 'Logging out...' : 'Log out'}
+            </Button>
+          </div>
+        </aside>
+
+        <section className="min-w-0 px-6 py-8 sm:px-10 lg:py-12">
+          <header className={cx('mb-8 border-b pb-7', ui.border)}>
+            <Eyebrow>{activeNavItem?.eyebrow || 'Dashboard'}</Eyebrow>
+            <Heading className="mt-2 text-4xl sm:text-5xl">{activeNavItem?.label || 'Workspace'}</Heading>
+            {activeNavItem?.description ? <Muted className="mt-3 max-w-3xl">{activeNavItem.description}</Muted> : null}
+          </header>
+          {children}
+        </section>
+      </div>
     </main>
   );
 }

@@ -206,7 +206,7 @@ grep -q "./component/l3/index.js" templates/default/view/web/src/main.jsx
 grep -q "AuthView" templates/default/view/web/src/main.jsx
 grep -q "DashboardView" templates/default/view/web/src/main.jsx
 grep -q "LoadingView" templates/default/view/web/src/main.jsx
-grep -R -q "Bun frontend + Go API + Postgres" templates/default/view/web/src/component
+grep -R -q "Bun + Go + Postgres" templates/default/view/web/src/component
 grep -R -q "React + Bun container" templates/default/view/web/src/component
 grep -q "export function Button" templates/default/view/web/src/component/l1/Button.jsx
 grep -q "export function Field" templates/default/view/web/src/component/l1/Field.jsx
@@ -240,6 +240,10 @@ grep -q "export function Listbox" templates/default/view/web/src/component/l2/Li
 grep -q "export function Combobox" templates/default/view/web/src/component/l2/Combobox.jsx
 grep -q "export function Lessons" templates/default/view/web/src/component/l2/Lessons.jsx
 grep -q "export function DashboardLayout" templates/default/view/web/src/component/l2/Layouts.jsx
+grep -q "lg:grid-cols-\\[280px_minmax(0,1fr)\\]" templates/default/view/web/src/component/l2/Layouts.jsx
+grep -q "aria-label=\"Dashboard\"" templates/default/view/web/src/component/l2/Layouts.jsx
+grep -q "aria-current" templates/default/view/web/src/component/l2/Layouts.jsx
+grep -q "navItems" templates/default/view/web/src/component/l2/Layouts.jsx
 grep -q "export function LandingPageLayout" templates/default/view/web/src/component/l2/Layouts.jsx
 grep -q "export function TrixEditor" templates/default/view/web/src/component/l2/TextEditors.jsx
 grep -q "export function QuillEditor" templates/default/view/web/src/component/l2/TextEditors.jsx
@@ -255,6 +259,9 @@ grep -q "export function GlideCarousel" templates/default/view/web/src/component
 grep -q "export function SplideCarousel" templates/default/view/web/src/component/l2/CarouselIntegrations.jsx
 grep -q "export function AuthView" templates/default/view/web/src/component/l3/AuthView.jsx
 grep -q "export function DashboardView" templates/default/view/web/src/component/l3/DashboardView.jsx
+grep -q "dashboardNav" templates/default/view/web/src/component/l3/DashboardView.jsx
+grep -q "WorkspaceOverview" templates/default/view/web/src/component/l3/DashboardView.jsx
+grep -q "onNavItem={setActiveSection}" templates/default/view/web/src/component/l3/DashboardView.jsx
 grep -q "github.com/jackc/pgx/v5" templates/default/go.mod
 grep -q "package main" templates/default/src/main.go
 grep -q "/api/login" templates/default/controller/page_controller.go

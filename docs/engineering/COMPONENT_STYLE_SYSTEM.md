@@ -73,7 +73,9 @@ Generated apps enforce a three-level component structure:
   (Trix, Quill, SimpleMDE), chart adapters (Chart.js, ApexCharts), enhanced
   select adapters (Select2, Choices.js), calendar/date adapters (Flatpickr,
   Date Range Picker, FullCalendar), carousel adapters (Glide, Splide), and
-  layout patterns for dashboards and landing pages.
+  layout patterns for dashboards and landing pages. `DashboardLayout` is a
+  conventional app shell with a left sidebar, section nav, account footer, and
+  main work area.
 - `component/l3/`: product and app surfaces composed from L2 patterns. The
   starter ships `AuthView`, `DashboardView`, `ComponentLibraryView`, and
   `LoadingView`.

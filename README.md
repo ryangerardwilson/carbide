@@ -186,6 +186,9 @@ classes in `component/l1/theme.css` and `component/l1/tokens.js`. L1
 primitives consume those tokens, L2 patterns consume primitives, and L3 app
 surfaces consume patterns.
 
+The generated `DashboardLayout` is a conventional app shell: persistent left
+sidebar, section navigation, account/logout footer, and a main work area.
+
 ## Roadmap
 
 ### Phase 0: Project Contract
