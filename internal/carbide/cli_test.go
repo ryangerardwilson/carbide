@@ -133,6 +133,8 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		}
 	}
 	for _, unwanted := range []string{
+		"_____________________________________________________",
+		"________________________oo_______oo_______oo_________",
 		"install the CLI",
 		"<github-install-url>",
 		"curl -fsSL",
