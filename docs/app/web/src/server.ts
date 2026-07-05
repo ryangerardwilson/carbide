@@ -2,17 +2,18 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { stat, readFile } from "node:fs/promises";
 import { extname, join, normalize, sep } from "node:path";
-import { docsResponseHeaders, rewriteDocsHtml } from "./component/l3/index.js";
+import { docsResponseHeaders, rewriteDocsHtml } from "./component/l3";
 
 const port = Number(process.env.PORT || 8080);
+const defaultSiteRoot = join(import.meta.dir, "..", "..", "..", "site");
 const siteRootCandidates = [
   join(import.meta.dir, "..", "..", "..", "site"),
   join(import.meta.dir, "..", "site"),
 ];
-const siteRoot = siteRootCandidates.find((candidate) => existsSync(candidate) && statSync(candidate).isDirectory()) || siteRootCandidates[0];
+const siteRoot = siteRootCandidates.find((candidate) => existsSync(candidate) && statSync(candidate).isDirectory()) || defaultSiteRoot;
 const apiURL = process.env.API_URL || "http://api:8080";
 
-const contentTypes = {
+const contentTypes: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
   ".ico": "image/x-icon",
@@ -22,17 +23,17 @@ const contentTypes = {
   ".txt": "text/plain; charset=utf-8",
 };
 
-const versionedAssetPaths = new Map([
+const versionedAssetPaths = new Map<string, string>([
   ["assets/intro.js", versionedAssetPath("assets/intro.js")],
   ["assets/styles.css", versionedAssetPath("assets/styles.css")],
 ]);
 
-const routeAliases = {
+const routeAliases: Record<string, string> = {
   "/initial-user-experience": "/create-your-first-app",
   "/initial-user-experience.html": "/create-your-first-app",
 };
 
-function sitePath(pathname) {
+function sitePath(pathname: string): string | null {
   let requestPath = decodeURIComponent(pathname);
   if (requestPath === "/") requestPath = "/index.html";
   if (!extname(requestPath)) requestPath = `${requestPath}.html`;
@@ -44,7 +45,7 @@ function sitePath(pathname) {
   return candidate;
 }
 
-function canonicalDocsPath(pathname) {
+function canonicalDocsPath(pathname: string): string {
   if (routeAliases[pathname]) {
     return routeAliases[pathname];
   }
@@ -57,7 +58,7 @@ function canonicalDocsPath(pathname) {
   return "";
 }
 
-function redirectToCanonical(request, pathname) {
+function redirectToCanonical(request: Request, pathname: string): Response {
   const target = new URL(request.url);
   return new Response(null, {
     status: 308,
@@ -67,7 +68,7 @@ function redirectToCanonical(request, pathname) {
   });
 }
 
-async function proxy(request, pathname) {
+async function proxy(request: Request, pathname: string): Promise<Response> {
   const upstream = new URL(pathname, apiURL);
   upstream.search = new URL(request.url).search;
 
@@ -78,7 +79,7 @@ async function proxy(request, pathname) {
   });
 }
 
-async function serveStatic(pathname) {
+async function serveStatic(pathname: string): Promise<Response> {
   const path = sitePath(pathname);
   if (!path) return new Response("not found", { status: 404 });
 
@@ -95,14 +96,14 @@ async function serveStatic(pathname) {
       headers: docsResponseHeaders({ cache, type }),
     });
   } catch (error) {
-    if (error && error.code === "ENOENT") {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
       return new Response("not found", { status: 404 });
     }
     throw error;
   }
 }
 
-function cacheBustHtml(html) {
+function cacheBustHtml(html: string): string {
   let output = html;
   for (const [assetPath, versionedPath] of versionedAssetPaths) {
     output = output.replaceAll(`"${assetPath}"`, `"${versionedPath}"`);
@@ -110,7 +111,7 @@ function cacheBustHtml(html) {
   return output;
 }
 
-function cacheControlFor(pathname) {
+function cacheControlFor(pathname: string): string {
   if (pathname === "/assets/intro.js" || pathname === "/assets/styles.css") {
     return "no-cache";
   }
@@ -120,7 +121,7 @@ function cacheControlFor(pathname) {
   return "no-cache";
 }
 
-function versionedAssetPath(assetPath) {
+function versionedAssetPath(assetPath: string): string {
   try {
     const content = readFileSync(join(siteRoot, assetPath));
     const hash = createHash("sha256").update(content).digest("hex").slice(0, 12);

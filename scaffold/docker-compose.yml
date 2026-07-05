@@ -24,6 +24,8 @@ services:
         - action: rebuild
           path: ./web/bun.lock
         - action: rebuild
+          path: ./web/tsconfig.json
+        - action: rebuild
           path: ./web/Dockerfile
 
   api:

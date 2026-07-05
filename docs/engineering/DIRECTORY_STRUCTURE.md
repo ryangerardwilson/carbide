@@ -37,31 +37,34 @@ my-carbide-app/
     |-- bun.lock
     |-- index.html
     |-- package.json
+    |-- tsconfig.json
     `-- src/
         |-- component/
         |   |-- l1/
-        |   |   |-- Button.jsx
-        |   |   |-- Field.jsx
-        |   |   |-- Surface.jsx
-        |   |   |-- Text.jsx
-        |   |   |-- ThemeToggle.jsx
-        |   |   |-- index.js
-        |   |   `-- tokens.js
+        |   |   |-- Button.tsx
+        |   |   |-- Field.tsx
+        |   |   |-- Surface.tsx
+        |   |   |-- Text.tsx
+        |   |   |-- ThemeToggle.tsx
+        |   |   |-- index.ts
+        |   |   `-- tokens.ts
         |   |-- l2/
-        |   |   |-- AuthForm.jsx
-        |   |   |-- Layouts.jsx
-        |   |   `-- index.js
+        |   |   |-- AuthForm.tsx
+        |   |   |-- Layouts.tsx
+        |   |   `-- index.ts
         |   `-- l3/
-        |       |-- AuthView.jsx
-        |       |-- DashboardView.jsx
-        |       |-- LoadingView.jsx
-        |       `-- index.js
+        |       |-- AuthView.tsx
+        |       |-- DashboardView.tsx
+        |       |-- LoadingView.tsx
+        |       `-- index.ts
         |-- lib/
-        |   `-- cx.js
-        |-- main.jsx
-        |-- server.jsx
+        |   |-- cx.ts
+        |   `-- types.ts
+        |-- main.tsx
+        |-- server.ts
+        |-- styles.d.ts
         |-- styles.css
-        `-- write-index.mjs
+        `-- write-index.ts
 ```
 
 ## Root Contract
@@ -103,7 +106,7 @@ The generated web app uses Tailwind and keeps component tiers explicit:
 - `web/src/lib/`: small non-component browser helpers, including `cx()`.
 - `web/src/styles.css`: Tailwind input, theme variables, and global browser
   rules.
-- `web/src/write-index.mjs`: writes the generated app shell with hashed asset
+- `web/src/write-index.ts`: writes the generated app shell with hashed asset
   references after Bun builds React.
 
 Generated output such as `web/public/`, `web/src/tailwind.css`, `.carbide/`,

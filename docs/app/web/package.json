@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run tailwind:build && bun --hot src/server.jsx",
-    "start": "bun src/server.jsx",
-    "tailwind:build": "bun src/build-styles.js"
+    "dev": "bun run typecheck && bun run tailwind:build && bun --hot src/server.ts",
+    "start": "bun src/server.ts",
+    "tailwind:build": "bun src/build-styles.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@tailwindcss/cli": "4.3.2",
@@ -14,5 +15,10 @@
     "react-dom": "19.2.7",
     "tailwindcss": "4.3.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "typescript": "6.0.3"
+  }
 }

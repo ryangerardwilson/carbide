@@ -8,7 +8,7 @@ const apiOrigin = new URL(apiUrl);
 const publicRoot = join(import.meta.dir, '..', 'public');
 const shellRoutes = new Set(['/', '/login', '/register', '/dashboard']);
 
-const contentTypes = {
+const contentTypes: Record<string, string> = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -17,7 +17,7 @@ const contentTypes = {
   '.svg': 'image/svg+xml'
 };
 
-function proxyToAPI(request) {
+function proxyToAPI(request: Request): Promise<Response> {
   const incomingUrl = new URL(request.url);
   const upstreamUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, apiOrigin);
   const headers = new Headers(request.headers);
@@ -25,7 +25,7 @@ function proxyToAPI(request) {
   headers.set('x-forwarded-host', incomingUrl.host);
   headers.set('x-forwarded-proto', incomingUrl.protocol.replace(':', ''));
 
-  const options = {
+  const options: RequestInit = {
     method: request.method,
     headers,
     redirect: 'manual'
@@ -38,7 +38,7 @@ function proxyToAPI(request) {
   return fetch(upstreamUrl, options);
 }
 
-function safePublicPath(pathname) {
+function safePublicPath(pathname: string): string | null {
   let decoded;
   try {
     decoded = decodeURIComponent(pathname);
@@ -53,14 +53,14 @@ function safePublicPath(pathname) {
   return candidate;
 }
 
-function cacheControlFor(pathname) {
+function cacheControlFor(pathname: string): string {
   if (pathname.startsWith('/assets/')) {
     return 'public, max-age=31536000, immutable';
   }
   return 'no-store';
 }
 
-async function servePublicFile(request, pathname) {
+async function servePublicFile(request: Request, pathname: string): Promise<Response> {
   const path = safePublicPath(pathname);
   if (!path) {
     return new Response('Not found', {

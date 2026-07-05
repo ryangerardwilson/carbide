@@ -24,18 +24,19 @@ required_files=(
   "docs/app/docker-compose.yml"
   "docs/app/agents.d/TAILWIND_COMPONENTS.md"
   "docs/app/web/bun.lock"
-  "docs/app/web/src/build-styles.js"
-  "docs/app/web/src/server.jsx"
+  "docs/app/web/tsconfig.json"
+  "docs/app/web/src/build-styles.ts"
+  "docs/app/web/src/server.ts"
   "docs/app/web/src/styles.css"
-  "docs/app/web/src/lib/cx.js"
-  "docs/app/web/src/component/l1/Text.jsx"
-  "docs/app/web/src/component/l1/Surface.jsx"
-  "docs/app/web/src/component/l1/index.js"
-  "docs/app/web/src/component/l1/tokens.js"
-  "docs/app/web/src/component/l2/DocsChrome.jsx"
-  "docs/app/web/src/component/l2/index.js"
-  "docs/app/web/src/component/l3/DocsSite.jsx"
-  "docs/app/web/src/component/l3/index.js"
+  "docs/app/web/src/lib/cx.ts"
+  "docs/app/web/src/component/l1/Text.tsx"
+  "docs/app/web/src/component/l1/Surface.tsx"
+  "docs/app/web/src/component/l1/index.ts"
+  "docs/app/web/src/component/l1/tokens.ts"
+  "docs/app/web/src/component/l2/DocsChrome.tsx"
+  "docs/app/web/src/component/l2/index.ts"
+  "docs/app/web/src/component/l3/DocsSite.tsx"
+  "docs/app/web/src/component/l3/index.ts"
   "docs/site/index.html"
   "docs/site/deployment.html"
   "docs/site/frontend-starter-contract.html"
@@ -62,25 +63,28 @@ required_files=(
   "scaffold/web/index.html"
   "scaffold/web/package.json"
   "scaffold/web/bun.lock"
-  "scaffold/web/src/main.jsx"
-  "scaffold/web/src/server.jsx"
-  "scaffold/web/src/write-index.mjs"
+  "scaffold/web/tsconfig.json"
+  "scaffold/web/src/main.tsx"
+  "scaffold/web/src/server.ts"
+  "scaffold/web/src/write-index.ts"
   "scaffold/web/src/styles.css"
-  "scaffold/web/src/lib/cx.js"
-  "scaffold/web/src/component/l1/Button.jsx"
-  "scaffold/web/src/component/l1/Field.jsx"
-  "scaffold/web/src/component/l1/Surface.jsx"
-  "scaffold/web/src/component/l1/Text.jsx"
-  "scaffold/web/src/component/l1/ThemeToggle.jsx"
-  "scaffold/web/src/component/l1/index.js"
-  "scaffold/web/src/component/l1/tokens.js"
-  "scaffold/web/src/component/l2/AuthForm.jsx"
-  "scaffold/web/src/component/l2/Layouts.jsx"
-  "scaffold/web/src/component/l2/index.js"
-  "scaffold/web/src/component/l3/AuthView.jsx"
-  "scaffold/web/src/component/l3/DashboardView.jsx"
-  "scaffold/web/src/component/l3/LoadingView.jsx"
-  "scaffold/web/src/component/l3/index.js"
+  "scaffold/web/src/styles.d.ts"
+  "scaffold/web/src/lib/cx.ts"
+  "scaffold/web/src/lib/types.ts"
+  "scaffold/web/src/component/l1/Button.tsx"
+  "scaffold/web/src/component/l1/Field.tsx"
+  "scaffold/web/src/component/l1/Surface.tsx"
+  "scaffold/web/src/component/l1/Text.tsx"
+  "scaffold/web/src/component/l1/ThemeToggle.tsx"
+  "scaffold/web/src/component/l1/index.ts"
+  "scaffold/web/src/component/l1/tokens.ts"
+  "scaffold/web/src/component/l2/AuthForm.tsx"
+  "scaffold/web/src/component/l2/Layouts.tsx"
+  "scaffold/web/src/component/l2/index.ts"
+  "scaffold/web/src/component/l3/AuthView.tsx"
+  "scaffold/web/src/component/l3/DashboardView.tsx"
+  "scaffold/web/src/component/l3/LoadingView.tsx"
+  "scaffold/web/src/component/l3/index.ts"
   "scaffold/carbide.toml"
   "scaffold/api/go.mod"
   "scaffold/api/go.sum"
@@ -241,7 +245,7 @@ grep -q "Use L1/L2/L3 in two related ways" scaffold/agents.d/TAILWIND_COMPONENTS
 grep -q "component/l1/" scaffold/agents.d/TAILWIND_COMPONENTS.md
 grep -q "component/l2/" scaffold/agents.d/TAILWIND_COMPONENTS.md
 grep -q "component/l3/" scaffold/agents.d/TAILWIND_COMPONENTS.md
-grep -q "web/src/lib/cx.js" scaffold/agents.d/TAILWIND_COMPONENTS.md
+grep -q "web/src/lib/cx.ts" scaffold/agents.d/TAILWIND_COMPONENTS.md
 grep -q "visible focus styling" scaffold/agents.d/TAILWIND_COMPONENTS.md
 grep -q "Do not add a parallel .*theme.css" scaffold/agents.d/TAILWIND_COMPONENTS.md
 ! grep -q 'url = "http://localhost:8080"' scaffold/carbide.toml
@@ -268,6 +272,7 @@ grep -q "dockerfile: api/Dockerfile" scaffold/docker-compose.yml
 grep -q "path: ./web/src" scaffold/docker-compose.yml
 grep -q "path: ./web/package.json" scaffold/docker-compose.yml
 grep -q "path: ./web/bun.lock" scaffold/docker-compose.yml
+grep -q "path: ./web/tsconfig.json" scaffold/docker-compose.yml
 grep -q "path: ./api" scaffold/docker-compose.yml
 grep -q "path: ./db" scaffold/docker-compose.yml
 grep -q "path: ./api/Dockerfile" scaffold/docker-compose.yml
@@ -299,22 +304,35 @@ grep -q "go 1.25.0" scaffold/api/go.mod
 grep -q "go 1.25.0" scaffold/db/go.mod
 ! grep -q "go 1.23.0" scaffold/api/go.mod
 ! grep -q "go 1.23.0" scaffold/db/go.mod
-! grep -Eq '"(react|react-dom|tailwindcss|@tailwindcss/cli)": "[~^<>*xX]|"(react|react-dom|tailwindcss|@tailwindcss/cli)": "latest' scaffold/web/package.json
-grep -q "Bun.serve" scaffold/web/src/server.jsx
-grep -q "browser entrypoint" scaffold/web/src/server.jsx
-grep -q "listening inside container" scaffold/web/src/server.jsx
-grep -q "proxying /api and /health to api service" scaffold/web/src/server.jsx
-grep -q "publicRoot" scaffold/web/src/server.jsx
-grep -q "Cache-Control" scaffold/web/src/server.jsx
-grep -q "public, max-age=31536000, immutable" scaffold/web/src/server.jsx
-grep -q "return 'no-store'" scaffold/web/src/server.jsx
+! grep -Eq '"(react|react-dom|tailwindcss|@tailwindcss/cli|typescript|@types/bun|@types/react|@types/react-dom)": "[~^<>*xX]|"(react|react-dom|tailwindcss|@tailwindcss/cli|typescript|@types/bun|@types/react|@types/react-dom)": "latest' scaffold/web/package.json
+grep -q "Bun.serve" scaffold/web/src/server.ts
+grep -q "browser entrypoint" scaffold/web/src/server.ts
+grep -q "listening inside container" scaffold/web/src/server.ts
+grep -q "proxying /api and /health to api service" scaffold/web/src/server.ts
+grep -q "publicRoot" scaffold/web/src/server.ts
+grep -q "Cache-Control" scaffold/web/src/server.ts
+grep -q "public, max-age=31536000, immutable" scaffold/web/src/server.ts
+grep -q "return 'no-store'" scaffold/web/src/server.ts
 grep -q '"assets:build"' scaffold/web/package.json
+grep -q '"typecheck": "tsc --noEmit"' scaffold/web/package.json
+grep -q '"typescript": "6.0.3"' scaffold/web/package.json
+grep -q '"@types/bun": "1.3.14"' scaffold/web/package.json
+grep -q '"@types/react": "19.2.17"' scaffold/web/package.json
+grep -q '"@types/react-dom": "19.2.3"' scaffold/web/package.json
 grep -F -q "assets/[name]-[hash].[ext]" scaffold/web/package.json
+grep -q '"strict": true' scaffold/web/tsconfig.json
+grep -q '"jsx": "react-jsx"' scaffold/web/tsconfig.json
+grep -F -q '"types": ["bun-types"]' scaffold/web/tsconfig.json
+grep -q "bun run typecheck" scaffold/web/Dockerfile
 grep -q "bun run assets:build" scaffold/web/Dockerfile
-grep -q "asset-manifest.json" scaffold/web/src/write-index.mjs
-grep -F -q '/assets/${scripts[0]}' scaffold/web/src/write-index.mjs
-! grep -q "Bun frontend listening on http://localhost" scaffold/web/src/server.jsx
+grep -q "asset-manifest.json" scaffold/web/src/write-index.ts
+grep -F -q '/assets/${scripts[0]}' scaffold/web/src/write-index.ts
+! grep -q "Bun frontend listening on http://localhost" scaffold/web/src/server.ts
 grep -q '@import "tailwindcss";' scaffold/web/src/styles.css
+grep -F -q '@source "./component/**/*.tsx";' scaffold/web/src/styles.css
+grep -F -q '@source "./lib/**/*.ts";' scaffold/web/src/styles.css
+grep -F -q '@source "./main.tsx";' scaffold/web/src/styles.css
+grep -F -q '@source "./server.ts";' scaffold/web/src/styles.css
 grep -q "@theme" scaffold/web/src/styles.css
 grep -q -- "--color-carbide-action" scaffold/web/src/styles.css
 grep -q "\\[data-theme=\"dark\"\\]" scaffold/web/src/styles.css
@@ -324,41 +342,41 @@ grep -q "line-height: 1.4" scaffold/web/src/styles.css
 grep -q "var(--carbide-page)" scaffold/web/src/styles.css
 grep -q -- "--carbide-page: #ffffff" scaffold/web/src/styles.css
 grep -q -- "--carbide-page: #000000" scaffold/web/src/styles.css
-grep -q "bg-carbide-hero text-carbide-hero-text" scaffold/web/src/component/l1/tokens.js
+grep -q "bg-carbide-hero text-carbide-hero-text" scaffold/web/src/component/l1/tokens.ts
 ! grep -Eq "#0f766e|#115e59|#2dd4bf|#5eead4|#16433c|#0f302c|#16211b|#edf5ef|#ecfdf5|#166534" scaffold/web/src/styles.css
-! grep -q "from-carbide-action via-carbide-hero-via" scaffold/web/src/component/l1/tokens.js
+! grep -q "from-carbide-action via-carbide-hero-via" scaffold/web/src/component/l1/tokens.ts
 ! grep -q "theme.css" scaffold/web/src/styles.css
-grep -F -q "text-2xl/8 sm:text-3xl/9" scaffold/web/src/component/l1/Text.jsx
-grep -F -q "min-h-8 rounded-md border px-2 py-1 text-sm/6" scaffold/web/src/component/l1/Field.jsx
-grep -F -q "md: 'min-h-8 px-3 text-xs'" scaffold/web/src/component/l1/Button.jsx
-grep -F -q "gap-3 border-l px-4 py-5" scaffold/web/src/component/l2/AuthForm.jsx
-grep -F -q "w-full max-w-sm justify-self-center gap-3" scaffold/web/src/component/l2/AuthForm.jsx
-grep -F -q "lg:grid-cols-[216px_minmax(0,1fr)]" scaffold/web/src/component/l2/Layouts.jsx
-grep -F -q "px-3 py-4 sm:px-5 lg:py-5" scaffold/web/src/component/l2/Layouts.jsx
+grep -F -q "text-2xl/8 sm:text-3xl/9" scaffold/web/src/component/l1/Text.tsx
+grep -F -q "min-h-8 rounded-md border px-2 py-1 text-sm/6" scaffold/web/src/component/l1/Field.tsx
+grep -F -q "md: 'min-h-8 px-3 text-xs'" scaffold/web/src/component/l1/Button.tsx
+grep -F -q "gap-3 border-l px-4 py-5" scaffold/web/src/component/l2/AuthForm.tsx
+grep -F -q "w-full max-w-sm justify-self-center gap-3" scaffold/web/src/component/l2/AuthForm.tsx
+grep -F -q "lg:grid-cols-[216px_minmax(0,1fr)]" scaffold/web/src/component/l2/Layouts.tsx
+grep -F -q "px-3 py-4 sm:px-5 lg:py-5" scaffold/web/src/component/l2/Layouts.tsx
 ! grep -R -E "text-7xl|text-5xl|py-24|lg:py-12|min-h-12 rounded-md border|min-h-10 rounded-md border|lg:grid-cols-\[280px|lg:grid-cols-\[240px|gap-6|p-6|font-extrabold" scaffold/web/src/component >/dev/null
-grep -q '/api/${mode}' scaffold/web/src/main.jsx
-grep -q "carbide.theme" scaffold/web/src/main.jsx
-grep -q "useThemeMode" scaffold/web/src/main.jsx
+grep -q '/api/${mode}' scaffold/web/src/main.tsx
+grep -q "carbide.theme" scaffold/web/src/main.tsx
+grep -q "useThemeMode" scaffold/web/src/main.tsx
 grep -q "prefers-color-scheme: dark" scaffold/web/index.html
 grep -q "dataset.theme" scaffold/web/index.html
-grep -q "ThemeToggle" scaffold/web/src/component/l1/ThemeToggle.jsx
-grep -q "data-resolved-theme" scaffold/web/src/component/l1/ThemeToggle.jsx
-grep -q "data-theme-mode" scaffold/web/src/component/l1/ThemeToggle.jsx
-grep -q "SunIcon" scaffold/web/src/component/l1/ThemeToggle.jsx
-grep -q "MoonIcon" scaffold/web/src/component/l1/ThemeToggle.jsx
-grep -q "Switch to light theme" scaffold/web/src/component/l1/ThemeToggle.jsx
-grep -q "Switch to dark theme" scaffold/web/src/component/l1/ThemeToggle.jsx
-grep -q "size-8 rounded-full border" scaffold/web/src/component/l1/ThemeToggle.jsx
-grep -q "onClick={() => onMode?.(nextMode)}" scaffold/web/src/component/l1/ThemeToggle.jsx
-! grep -q "<select" scaffold/web/src/component/l1/ThemeToggle.jsx
-! grep -q "appearance-none" scaffold/web/src/component/l1/ThemeToggle.jsx
-! grep -q "border-x-4 border-t-4 border-x-transparent" scaffold/web/src/component/l1/ThemeToggle.jsx
-! grep -q "aria-pressed" scaffold/web/src/component/l1/ThemeToggle.jsx
-! grep -q "role=\"group\"" scaffold/web/src/component/l1/ThemeToggle.jsx
-grep -q "./component/l3/index.js" scaffold/web/src/main.jsx
-grep -q "AuthView" scaffold/web/src/main.jsx
-grep -q "DashboardView" scaffold/web/src/main.jsx
-grep -q "LoadingView" scaffold/web/src/main.jsx
+grep -q "ThemeToggle" scaffold/web/src/component/l1/ThemeToggle.tsx
+grep -q "data-resolved-theme" scaffold/web/src/component/l1/ThemeToggle.tsx
+grep -q "data-theme-mode" scaffold/web/src/component/l1/ThemeToggle.tsx
+grep -q "SunIcon" scaffold/web/src/component/l1/ThemeToggle.tsx
+grep -q "MoonIcon" scaffold/web/src/component/l1/ThemeToggle.tsx
+grep -q "Switch to light theme" scaffold/web/src/component/l1/ThemeToggle.tsx
+grep -q "Switch to dark theme" scaffold/web/src/component/l1/ThemeToggle.tsx
+grep -q "size-8 rounded-full border" scaffold/web/src/component/l1/ThemeToggle.tsx
+grep -q "onClick={() => onMode?.(nextMode)}" scaffold/web/src/component/l1/ThemeToggle.tsx
+! grep -q "<select" scaffold/web/src/component/l1/ThemeToggle.tsx
+! grep -q "appearance-none" scaffold/web/src/component/l1/ThemeToggle.tsx
+! grep -q "border-x-4 border-t-4 border-x-transparent" scaffold/web/src/component/l1/ThemeToggle.tsx
+! grep -q "aria-pressed" scaffold/web/src/component/l1/ThemeToggle.tsx
+! grep -q "role=\"group\"" scaffold/web/src/component/l1/ThemeToggle.tsx
+grep -q "./component/l3" scaffold/web/src/main.tsx
+grep -q "AuthView" scaffold/web/src/main.tsx
+grep -q "DashboardView" scaffold/web/src/main.tsx
+grep -q "LoadingView" scaffold/web/src/main.tsx
 grep -R -q "Lorem ipsum dolor sit amet" scaffold/web/src/component
 grep -R -q "Consectetur adipiscing elit" scaffold/web/src/component
 grep -R -q "Sed do eiusmod tempor" scaffold/web/src/component
@@ -370,52 +388,52 @@ grep -R -q "Sed do eiusmod tempor" scaffold/web/src/component
 ! grep -R -q "React and Tailwind" scaffold/web/src/component
 ! grep -R -q "Go owns" scaffold/web/src/component
 ! grep -R -q "Postgres" scaffold/web/src/component
-grep -q "export function Button" scaffold/web/src/component/l1/Button.jsx
-grep -q "export function Field" scaffold/web/src/component/l1/Field.jsx
-grep -q "export function Panel" scaffold/web/src/component/l1/Surface.jsx
-grep -q "export function ThemeToggle" scaffold/web/src/component/l1/ThemeToggle.jsx
-grep -q "ThemeToggle" scaffold/web/src/component/l1/index.js
-grep -q "export const ui" scaffold/web/src/component/l1/tokens.js
+grep -q "export function Button" scaffold/web/src/component/l1/Button.tsx
+grep -q "export function Field" scaffold/web/src/component/l1/Field.tsx
+grep -q "export function Panel" scaffold/web/src/component/l1/Surface.tsx
+grep -q "export function ThemeToggle" scaffold/web/src/component/l1/ThemeToggle.tsx
+grep -q "ThemeToggle" scaffold/web/src/component/l1/index.ts
+grep -q "export const ui" scaffold/web/src/component/l1/tokens.ts
 ! test -f scaffold/web/src/component/l1/theme.css
 ! grep -R "cb-" scaffold/web/src >/dev/null
 ! grep -R -- "--cb-" scaffold/web/src >/dev/null
-grep -q "ui.action" scaffold/web/src/component/l1/Button.jsx
-grep -q "ui.input" scaffold/web/src/component/l1/Field.jsx
-grep -q "buttonClassLayers" scaffold/web/src/component/l1/Button.jsx
-grep -q "fieldClassLayers" scaffold/web/src/component/l1/Field.jsx
-grep -q "fieldHintClassLayers" scaffold/web/src/component/l1/Field.jsx
-grep -q "fieldErrorClassLayers" scaffold/web/src/component/l1/Field.jsx
-grep -q "inputClassLayers" scaffold/web/src/component/l1/Field.jsx
-grep -q "panelClassLayers" scaffold/web/src/component/l1/Surface.jsx
-grep -q "dividerClassLayers" scaffold/web/src/component/l1/Surface.jsx
-grep -q "badgeClassLayers" scaffold/web/src/component/l1/Surface.jsx
-grep -q "metricClassLayers" scaffold/web/src/component/l1/Surface.jsx
-grep -q "eyebrowClassLayers" scaffold/web/src/component/l1/Text.jsx
-grep -q "headingClassLayers" scaffold/web/src/component/l1/Text.jsx
-grep -q "mutedClassLayers" scaffold/web/src/component/l1/Text.jsx
-grep -q "codeClassLayers" scaffold/web/src/component/l1/Text.jsx
-grep -q "formClassLayers" scaffold/web/src/component/l2/AuthForm.jsx
-grep -q "formStackClassLayers" scaffold/web/src/component/l2/AuthForm.jsx
-grep -q "errorClassLayers" scaffold/web/src/component/l2/AuthForm.jsx
-grep -q "modeButtonClassLayers" scaffold/web/src/component/l2/AuthForm.jsx
-grep -q "landingClassLayers" scaffold/web/src/component/l2/Layouts.jsx
-grep -q "dashboardClassLayers" scaffold/web/src/component/l2/Layouts.jsx
-grep -q "screenClassLayers" scaffold/web/src/component/l3/DashboardView.jsx
-grep -q "loadingClassLayers" scaffold/web/src/component/l3/LoadingView.jsx
-grep -q "ui.focus" scaffold/web/src/component/l1/Field.jsx
-grep -q "ui.focus" scaffold/web/src/component/l2/AuthForm.jsx
-grep -q "ui.focus" scaffold/web/src/component/l2/Layouts.jsx
+grep -q "ui.action" scaffold/web/src/component/l1/Button.tsx
+grep -q "ui.input" scaffold/web/src/component/l1/Field.tsx
+grep -q "buttonClassLayers" scaffold/web/src/component/l1/Button.tsx
+grep -q "fieldClassLayers" scaffold/web/src/component/l1/Field.tsx
+grep -q "fieldHintClassLayers" scaffold/web/src/component/l1/Field.tsx
+grep -q "fieldErrorClassLayers" scaffold/web/src/component/l1/Field.tsx
+grep -q "inputClassLayers" scaffold/web/src/component/l1/Field.tsx
+grep -q "panelClassLayers" scaffold/web/src/component/l1/Surface.tsx
+grep -q "dividerClassLayers" scaffold/web/src/component/l1/Surface.tsx
+grep -q "badgeClassLayers" scaffold/web/src/component/l1/Surface.tsx
+grep -q "metricClassLayers" scaffold/web/src/component/l1/Surface.tsx
+grep -q "eyebrowClassLayers" scaffold/web/src/component/l1/Text.tsx
+grep -q "headingClassLayers" scaffold/web/src/component/l1/Text.tsx
+grep -q "mutedClassLayers" scaffold/web/src/component/l1/Text.tsx
+grep -q "codeClassLayers" scaffold/web/src/component/l1/Text.tsx
+grep -q "formClassLayers" scaffold/web/src/component/l2/AuthForm.tsx
+grep -q "formStackClassLayers" scaffold/web/src/component/l2/AuthForm.tsx
+grep -q "errorClassLayers" scaffold/web/src/component/l2/AuthForm.tsx
+grep -q "modeButtonClassLayers" scaffold/web/src/component/l2/AuthForm.tsx
+grep -q "landingClassLayers" scaffold/web/src/component/l2/Layouts.tsx
+grep -q "dashboardClassLayers" scaffold/web/src/component/l2/Layouts.tsx
+grep -q "screenClassLayers" scaffold/web/src/component/l3/DashboardView.tsx
+grep -q "loadingClassLayers" scaffold/web/src/component/l3/LoadingView.tsx
+grep -q "ui.focus" scaffold/web/src/component/l1/Field.tsx
+grep -q "ui.focus" scaffold/web/src/component/l2/AuthForm.tsx
+grep -q "ui.focus" scaffold/web/src/component/l2/Layouts.tsx
 ! grep -R "text-\\[" scaffold/web/src/component >/dev/null
-grep -q "export function DashboardLayout" scaffold/web/src/component/l2/Layouts.jsx
-grep -q "lg:grid-cols-\\[216px_minmax(0,1fr)\\]" scaffold/web/src/component/l2/Layouts.jsx
-grep -q "aria-label=\"Dashboard\"" scaffold/web/src/component/l2/Layouts.jsx
-grep -q "aria-current" scaffold/web/src/component/l2/Layouts.jsx
-grep -q "navItems" scaffold/web/src/component/l2/Layouts.jsx
-grep -q "export function LandingPageLayout" scaffold/web/src/component/l2/Layouts.jsx
-grep -q "export function AuthView" scaffold/web/src/component/l3/AuthView.jsx
-grep -q "export function DashboardView" scaffold/web/src/component/l3/DashboardView.jsx
-grep -q "dashboardNav" scaffold/web/src/component/l3/DashboardView.jsx
-grep -q "WorkspaceOverview" scaffold/web/src/component/l3/DashboardView.jsx
+grep -q "export function DashboardLayout" scaffold/web/src/component/l2/Layouts.tsx
+grep -q "lg:grid-cols-\\[216px_minmax(0,1fr)\\]" scaffold/web/src/component/l2/Layouts.tsx
+grep -q "aria-label=\"Dashboard\"" scaffold/web/src/component/l2/Layouts.tsx
+grep -q "aria-current" scaffold/web/src/component/l2/Layouts.tsx
+grep -q "navItems" scaffold/web/src/component/l2/Layouts.tsx
+grep -q "export function LandingPageLayout" scaffold/web/src/component/l2/Layouts.tsx
+grep -q "export function AuthView" scaffold/web/src/component/l3/AuthView.tsx
+grep -q "export function DashboardView" scaffold/web/src/component/l3/DashboardView.tsx
+grep -q "dashboardNav" scaffold/web/src/component/l3/DashboardView.tsx
+grep -q "WorkspaceOverview" scaffold/web/src/component/l3/DashboardView.tsx
 ! grep -R "ComponentLibraryView" scaffold/web/src/component >/dev/null
 grep -q "module carbideapp/api" scaffold/api/go.mod
 grep -q "carbideapp/db" scaffold/api/go.mod
@@ -498,30 +516,30 @@ grep -q "prefers-reduced-motion" docs/site/assets/intro.js
 ! grep -q "docs-intro-skip" docs/site/assets/intro.js
 ! grep -q ">Skip<" docs/site/assets/intro.js
 ! grep -q "skipIntro" docs/site/assets/intro.js
-grep -q "canonicalDocsPath" docs/app/web/src/server.jsx
-grep -q '"/initial-user-experience": "/create-your-first-app"' docs/app/web/src/server.jsx
-grep -q 'pathname === "/index.html"' docs/app/web/src/server.jsx
-grep -q 'pathname.endsWith(".html")' docs/app/web/src/server.jsx
-grep -q "status: 308" docs/app/web/src/server.jsx
-grep -q 'location: `${pathname}${target.search}`' docs/app/web/src/server.jsx
-grep -q 'docsResponseHeaders' docs/app/web/src/server.jsx
-grep -q 'rewriteDocsHtml' docs/app/web/src/server.jsx
-grep -q 'createHash' docs/app/web/src/server.jsx
-grep -q 'cacheBustHtml' docs/app/web/src/server.jsx
-grep -q 'versionedAssetPath' docs/app/web/src/server.jsx
-grep -F -q '?v=${hash}' docs/app/web/src/server.jsx
-grep -q 'assets/intro.js' docs/app/web/src/server.jsx
-grep -q 'assets/styles.css' docs/app/web/src/server.jsx
-grep -q 'return "no-cache"' docs/app/web/src/server.jsx
+grep -q "canonicalDocsPath" docs/app/web/src/server.ts
+grep -q '"/initial-user-experience": "/create-your-first-app"' docs/app/web/src/server.ts
+grep -q 'pathname === "/index.html"' docs/app/web/src/server.ts
+grep -q 'pathname.endsWith(".html")' docs/app/web/src/server.ts
+grep -q "status: 308" docs/app/web/src/server.ts
+grep -q 'location: `${pathname}${target.search}`' docs/app/web/src/server.ts
+grep -q 'docsResponseHeaders' docs/app/web/src/server.ts
+grep -q 'rewriteDocsHtml' docs/app/web/src/server.ts
+grep -q 'createHash' docs/app/web/src/server.ts
+grep -q 'cacheBustHtml' docs/app/web/src/server.ts
+grep -q 'versionedAssetPath' docs/app/web/src/server.ts
+grep -F -q '?v=${hash}' docs/app/web/src/server.ts
+grep -q 'assets/intro.js' docs/app/web/src/server.ts
+grep -q 'assets/styles.css' docs/app/web/src/server.ts
+grep -q 'return "no-cache"' docs/app/web/src/server.ts
 grep -q '@import "tailwindcss";' docs/app/web/src/styles.css
-grep -F -q '@source "./component/**/*.jsx";' docs/app/web/src/styles.css
+grep -F -q '@source "./component/**/*.tsx";' docs/app/web/src/styles.css
 expected_docs_styles="$(mktemp)"
 cat > "$expected_docs_styles" <<'CSS'
 @import "tailwindcss";
 
-@source "./component/**/*.jsx";
-@source "./lib/**/*.js";
-@source "./server.jsx";
+@source "./component/**/*.tsx";
+@source "./lib/**/*.ts";
+@source "./server.ts";
 CSS
 cmp -s "$expected_docs_styles" docs/app/web/src/styles.css
 rm -f "$expected_docs_styles"
@@ -530,20 +548,29 @@ grep -q "docs Tailwind input must contain only import/source directives" cli/int
 ! grep -q "docs-intro-skip" docs/app/web/src/styles.css
 ! grep -q "docs-intro" docs/app/web/src/styles.css
 grep -q '"tailwind:build"' docs/app/web/package.json
-grep -q "tailwindcss" docs/app/web/src/build-styles.js
+grep -q '"typecheck": "tsc --noEmit"' docs/app/web/package.json
+grep -q "tailwindcss" docs/app/web/src/build-styles.ts
 grep -q '"@tailwindcss/cli": "4.3.2"' docs/app/web/package.json
 grep -q '"tailwindcss": "4.3.2"' docs/app/web/package.json
 grep -q '"react": "19.2.7"' docs/app/web/package.json
 grep -q '"react-dom": "19.2.7"' docs/app/web/package.json
+grep -q '"typescript": "6.0.3"' docs/app/web/package.json
+grep -q '"@types/bun": "1.3.14"' docs/app/web/package.json
+grep -q '"@types/react": "19.2.17"' docs/app/web/package.json
+grep -q '"@types/react-dom": "19.2.3"' docs/app/web/package.json
+grep -q '"strict": true' docs/app/web/tsconfig.json
+grep -q '"jsx": "react-jsx"' docs/app/web/tsconfig.json
+grep -F -q '"types": ["bun-types"]' docs/app/web/tsconfig.json
+grep -q "bun run typecheck" docs/app/web/Dockerfile
 grep -q "bun run tailwind:build" docs/app/web/Dockerfile
-grep -q "docsClassLayers" docs/app/web/src/component/l1/tokens.js
-grep -q "docsStaticClassMap" docs/app/web/src/component/l2/DocsChrome.jsx
-grep -q "rewriteDocsClasses" docs/app/web/src/component/l2/DocsChrome.jsx
-grep -F -q "[&_pre+p]:mt-[18px]" docs/app/web/src/component/l2/DocsChrome.jsx
-grep -F -q "max-[860px]:mt-[34px]" docs/app/web/src/component/l2/DocsChrome.jsx
-grep -q "docsChromeClassLayers" docs/app/web/src/component/l2/DocsChrome.jsx
-grep -q "docsWebContract" docs/app/web/src/component/l3/DocsSite.jsx
-grep -q "rewriteDocsHtml" docs/app/web/src/component/l3/DocsSite.jsx
+grep -q "docsClassLayers" docs/app/web/src/component/l1/tokens.ts
+grep -q "docsStaticClassMap" docs/app/web/src/component/l2/DocsChrome.tsx
+grep -q "rewriteDocsClasses" docs/app/web/src/component/l2/DocsChrome.tsx
+grep -F -q "[&_pre+p]:mt-[18px]" docs/app/web/src/component/l2/DocsChrome.tsx
+grep -F -q "max-[860px]:mt-[34px]" docs/app/web/src/component/l2/DocsChrome.tsx
+grep -q "docsChromeClassLayers" docs/app/web/src/component/l2/DocsChrome.tsx
+grep -q "docsWebContract" docs/app/web/src/component/l3/DocsSite.tsx
+grep -q "rewriteDocsHtml" docs/app/web/src/component/l3/DocsSite.tsx
 grep -q "fileLineCount" cli/internal/cli/cli.go
 grep -q "component/l1" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "component/l2" docs/app/agents.d/TAILWIND_COMPONENTS.md

@@ -11,7 +11,7 @@ The docs app must dogfood Carbide's frontend contract.
 - `web/src/component/l1/` owns primitive tokens and primitives only.
 - `web/src/component/l2/` owns reusable docs chrome and presentation patterns.
   Static docs classes from `docs/site/*.html` are mapped to Tailwind utility
-  classes in `web/src/component/l2/DocsChrome.jsx`.
+  classes in `web/src/component/l2/DocsChrome.tsx`.
 - The opening animation owns its one-off presentation in
   `docs/site/assets/intro.js`.
 - `web/src/component/l3/` owns docs-product composition and the runtime

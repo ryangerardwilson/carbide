@@ -1,5 +1,7 @@
-import { cx } from '../../lib/cx.js';
-import { ui } from './tokens.js';
+import type { SVGProps } from 'react';
+import { cx } from '../../lib/cx';
+import type { ResolvedTheme, ThemeMode } from '../../lib/types';
+import { ui } from './tokens';
 
 const themeToggleClassLayers = {
   button: {
@@ -14,7 +16,7 @@ const themeToggleClassLayers = {
   }
 };
 
-function SunIcon({ className = '' }) {
+function SunIcon({ className = '' }: SVGProps<SVGSVGElement>) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
@@ -28,7 +30,7 @@ function SunIcon({ className = '' }) {
   );
 }
 
-function MoonIcon({ className = '' }) {
+function MoonIcon({ className = '' }: SVGProps<SVGSVGElement>) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" aria-hidden="true">
       <path
@@ -42,7 +44,14 @@ function MoonIcon({ className = '' }) {
   );
 }
 
-export function ThemeToggle({ className = '', mode = 'system', onMode, resolved = 'light' }) {
+interface ThemeToggleProps {
+  className?: string;
+  mode?: ThemeMode;
+  onMode?: (mode: ThemeMode) => void;
+  resolved?: ResolvedTheme;
+}
+
+export function ThemeToggle({ className = '', mode = 'system', onMode, resolved = 'light' }: ThemeToggleProps) {
   const isDark = resolved === 'dark';
   const nextMode = isDark ? 'light' : 'dark';
   const label = isDark ? 'Switch to light theme' : 'Switch to dark theme';

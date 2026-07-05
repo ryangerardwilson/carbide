@@ -6,8 +6,8 @@ const publicRoot = join(root, 'public');
 const assetsRoot = join(publicRoot, 'assets');
 
 const files = (await readdir(assetsRoot)).sort();
-const scripts = files.filter((file) => /^main-[a-z0-9]+\.js$/.test(file));
-const stylesheets = files.filter((file) => /^main-[a-z0-9]+\.css$/.test(file));
+const scripts = files.filter((file: string) => /^main-[a-z0-9]+\.js$/.test(file));
+const stylesheets = files.filter((file: string) => /^main-[a-z0-9]+\.css$/.test(file));
 
 if (scripts.length !== 1) {
   throw new Error(`expected one hashed main script, found ${scripts.length}`);
@@ -18,7 +18,7 @@ const styleTags = stylesheets.map((file) => `    <link rel="stylesheet" href="/a
 const scriptTag = `    <script type="module" src="/assets/${scripts[0]}"></script>`;
 const replacement = [styleTags, scriptTag].filter(Boolean).join('\n');
 
-html = html.replace(/\s*<script type="module" src="\.\/src\/main\.jsx"><\/script>/, `\n${replacement}`);
+html = html.replace(/\s*<script type="module" src="\.\/src\/main\.tsx"><\/script>/, `\n${replacement}`);
 if (!html.includes(`/assets/${scripts[0]}`)) {
   throw new Error('failed to write hashed browser asset references');
 }

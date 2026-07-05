@@ -112,31 +112,34 @@
     |-- bun.lock
     |-- index.html
     |-- package.json
+    |-- tsconfig.json
     `-- src/
         |-- component/
         |   |-- l1/
-        |   |   |-- Button.jsx
-        |   |   |-- Field.jsx
-        |   |   |-- Surface.jsx
-        |   |   |-- Text.jsx
-        |   |   |-- ThemeToggle.jsx
-        |   |   |-- index.js
-        |   |   `-- tokens.js
+        |   |   |-- Button.tsx
+        |   |   |-- Field.tsx
+        |   |   |-- Surface.tsx
+        |   |   |-- Text.tsx
+        |   |   |-- ThemeToggle.tsx
+        |   |   |-- index.ts
+        |   |   `-- tokens.ts
         |   |-- l2/
-        |   |   |-- AuthForm.jsx
-        |   |   |-- Layouts.jsx
-        |   |   `-- index.js
+        |   |   |-- AuthForm.tsx
+        |   |   |-- Layouts.tsx
+        |   |   `-- index.ts
         |   `-- l3/
-        |       |-- AuthView.jsx
-        |       |-- DashboardView.jsx
-        |       |-- LoadingView.jsx
-        |       `-- index.js
+        |       |-- AuthView.tsx
+        |       |-- DashboardView.tsx
+        |       |-- LoadingView.tsx
+        |       `-- index.ts
         |-- lib/
-        |   `-- cx.js
-        |-- main.jsx
-        |-- server.jsx
+        |   |-- cx.ts
+        |   `-- types.ts
+        |-- main.tsx
+        |-- server.ts
+        |-- styles.d.ts
         |-- styles.css
-        `-- write-index.mjs</code></pre>
+        `-- write-index.ts</code></pre>
         </section>
 
         <section id="root-contract">
@@ -169,7 +172,8 @@
             <li><strong>web/src/component/l3:</strong> product screens such as auth, dashboard, and loading states.</li>
             <li><strong>web/src/lib:</strong> small non-component browser helpers, including <code>cx()</code>.</li>
             <li><strong>web/src/styles.css:</strong> Tailwind input, theme variables, and global browser rules.</li>
-            <li><strong>web/src/write-index.mjs:</strong> writes the generated app shell with hashed asset references after Bun builds React.</li>
+            <li><strong>web/tsconfig.json:</strong> owns the strict TypeScript contract for the web container.</li>
+            <li><strong>web/src/write-index.ts:</strong> writes the generated app shell with hashed asset references after Bun builds React.</li>
           </ul>
           <p>Generated output such as <code>web/public</code>, <code>web/src/tailwind.css</code>, <code>.carbide</code>, and <code>web/node_modules</code> is ignored.</p>
         </section>

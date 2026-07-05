@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Button } from '../l1/Button.jsx';
-import { Field, TextInput } from '../l1/Field.jsx';
-import { Muted } from '../l1/Text.jsx';
-import { ui } from '../l1/tokens.js';
-import { cx } from '../../lib/cx.js';
+import type { FormEvent } from 'react';
+import { Button } from '../l1/Button';
+import { Field, TextInput } from '../l1/Field';
+import { Muted } from '../l1/Text';
+import { ui } from '../l1/tokens';
+import { cx } from '../../lib/cx';
+import type { AuthMode, AuthPayload } from '../../lib/types';
 
 const formClassLayers = {
   l1: 'grid content-center',
@@ -29,7 +31,15 @@ const modeButtonClassLayers = {
   l3: cx('bg-transparent', ui.accent, ui.focus, 'hover:underline')
 };
 
-export function AuthForm({ busy, error = '', mode, onMode, onSubmit }) {
+interface AuthFormProps {
+  busy: boolean;
+  error?: string;
+  mode: AuthMode;
+  onMode: (mode: AuthMode) => void;
+  onSubmit: (payload: AuthPayload) => void | Promise<void>;
+}
+
+export function AuthForm({ busy, error = '', mode, onMode, onSubmit }: AuthFormProps) {
   const isRegister = mode === 'register';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,7 +51,7 @@ export function AuthForm({ busy, error = '', mode, onMode, onSubmit }) {
   return (
     <form
       className={cx(formClassLayers.l1, formClassLayers.l2, formClassLayers.l3)}
-      onSubmit={(event) => {
+      onSubmit={(event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         onSubmit({ email, password });
       }}

@@ -92,32 +92,35 @@
 |-- bun.lock
 |-- index.html
 |-- package.json
+|-- tsconfig.json
 `-- src/
     |-- component/
     |   |-- l1/
-    |   |   |-- Button.jsx
-    |   |   |-- Field.jsx
-    |   |   |-- Surface.jsx
-    |   |   |-- Text.jsx
-    |   |   |-- ThemeToggle.jsx
-    |   |   |-- index.js
-    |   |   `-- tokens.js
+    |   |   |-- Button.tsx
+    |   |   |-- Field.tsx
+    |   |   |-- Surface.tsx
+    |   |   |-- Text.tsx
+    |   |   |-- ThemeToggle.tsx
+    |   |   |-- index.ts
+    |   |   `-- tokens.ts
     |   |-- l2/
-    |   |   |-- AuthForm.jsx
-    |   |   |-- Layouts.jsx
-    |   |   `-- index.js
+    |   |   |-- AuthForm.tsx
+    |   |   |-- Layouts.tsx
+    |   |   `-- index.ts
     |   |-- l3/
-    |   |   |-- AuthView.jsx
-    |   |   |-- DashboardView.jsx
-    |   |   |-- LoadingView.jsx
-    |   |   `-- index.js
+    |   |   |-- AuthView.tsx
+    |   |   |-- DashboardView.tsx
+    |   |   |-- LoadingView.tsx
+    |   |   `-- index.ts
     |-- lib/
-    |   `-- cx.js
-    |-- main.jsx
-    |-- server.jsx
-    |-- write-index.mjs
+    |   |-- cx.ts
+    |   `-- types.ts
+    |-- main.tsx
+    |-- server.ts
+    |-- styles.d.ts
+    |-- write-index.ts
     `-- styles.css</code></pre>
-          <p>The web app lives inside <code>web</code>. <code>main.jsx</code> owns browser route state and API calls, then renders the starter screens.</p>
+          <p>The web app lives inside <code>web</code>. It is TypeScript-first: <code>main.tsx</code> owns browser route state and API calls, then renders the starter screens.</p>
           <p><code>component/l1</code>, <code>component/l2</code>, and <code>component/l3</code> mirror the Tailwind organization model: primitives, composed patterns, and product screens.</p>
           <p><code>DashboardLayout</code> is a conventional app shell with a left sidebar, section navigation, account footer, and main work area.</p>
         </section>
@@ -125,7 +128,8 @@
         <section id="styling">
           <h2>Styling</h2>
           <p>The starter uses Tailwind as the required styling path. The web container installs with Bun and builds generated CSS from the checked-in Tailwind input.</p>
-          <p><code>styles.css</code> contains the Tailwind import and a small Tailwind v4 <code>@theme</code> block. <code>tokens.js</code> contains reusable Tailwind utility groups. The scaffold does not add a parallel <code>theme.css</code> file.</p>
+          <p><code>styles.css</code> contains the Tailwind import, TypeScript-aware source directives, and a small Tailwind v4 <code>@theme</code> block. <code>tokens.ts</code> contains reusable Tailwind utility groups. The scaffold does not add a parallel <code>theme.css</code> file.</p>
+          <p><code>typecheck</code> runs <code>tsc --noEmit</code>. Docker builds run typecheck before building browser assets.</p>
         </section>
 
         <section id="browser-assets">

@@ -1,5 +1,6 @@
-import { cx } from '../../lib/cx.js';
-import { ui } from './tokens.js';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { cx } from '../../lib/cx';
+import { ui } from './tokens';
 
 const variants = {
   primary: ui.action,
@@ -14,6 +15,16 @@ const sizes = {
   lg: 'min-h-9 px-3.5 text-sm'
 };
 
+type ButtonSize = keyof typeof sizes;
+type ButtonVariant = keyof typeof variants;
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  children: ReactNode;
+  className?: string;
+  size?: ButtonSize;
+  variant?: ButtonVariant;
+}
+
 const buttonClassLayers = {
   l1: 'inline-flex items-center justify-center',
   l2: 'gap-1.5 rounded-md font-semibold outline-none',
@@ -27,7 +38,7 @@ export function Button({
   type = 'button',
   variant = 'primary',
   ...props
-}) {
+}: ButtonProps) {
   return (
     <button
       className={cx(

@@ -796,6 +796,7 @@ func doctorComposeContract() doctorResult {
 		"watch:",
 		"action: rebuild",
 		"path: ./web/src",
+		"path: ./web/tsconfig.json",
 		"path: ./api",
 		"path: ./db",
 	}
@@ -810,23 +811,26 @@ func doctorFrontendContract() doctorResult {
 		"web/Dockerfile",
 		"web/package.json",
 		"web/bun.lock",
+		"web/tsconfig.json",
 		"web/index.html",
-		"web/src/main.jsx",
-		"web/src/server.jsx",
-		"web/src/write-index.mjs",
+		"web/src/main.tsx",
+		"web/src/server.ts",
+		"web/src/write-index.ts",
 		"web/src/styles.css",
-		"web/src/lib/cx.js",
-		"web/src/component/l1/Button.jsx",
-		"web/src/component/l1/Field.jsx",
-		"web/src/component/l1/Surface.jsx",
-		"web/src/component/l1/Text.jsx",
-		"web/src/component/l1/ThemeToggle.jsx",
-		"web/src/component/l1/tokens.js",
-		"web/src/component/l2/AuthForm.jsx",
-		"web/src/component/l2/Layouts.jsx",
-		"web/src/component/l3/AuthView.jsx",
-		"web/src/component/l3/DashboardView.jsx",
-		"web/src/component/l3/LoadingView.jsx",
+		"web/src/styles.d.ts",
+		"web/src/lib/cx.ts",
+		"web/src/lib/types.ts",
+		"web/src/component/l1/Button.tsx",
+		"web/src/component/l1/Field.tsx",
+		"web/src/component/l1/Surface.tsx",
+		"web/src/component/l1/Text.tsx",
+		"web/src/component/l1/ThemeToggle.tsx",
+		"web/src/component/l1/tokens.ts",
+		"web/src/component/l2/AuthForm.tsx",
+		"web/src/component/l2/Layouts.tsx",
+		"web/src/component/l3/AuthView.tsx",
+		"web/src/component/l3/DashboardView.tsx",
+		"web/src/component/l3/LoadingView.tsx",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
 		return doctorFail("frontend", "missing "+strings.Join(missing, ", "))
@@ -838,6 +842,9 @@ func doctorFrontendContract() doctorResult {
 	forbiddenFiles := []string{"web/package-lock.json", "web/vite.config.js", "web/src/component/l1/theme.css"}
 	if found := existingFiles(forbiddenFiles); len(found) > 0 {
 		return doctorFail("frontend", "forbidden "+strings.Join(found, ", "))
+	}
+	if anyPathWithExtension("web/src", ".jsx") || anyPathWithExtension("web/src", ".js") || anyPathWithExtension("web/src", ".mjs") {
+		return doctorFail("frontend", "frontend source must use TypeScript")
 	}
 	if fileContains("web/src/styles.css", "theme.css") || treeContains("web/src", "cb-") || treeContains("web/src", "--cb-") {
 		return doctorFail("frontend", "parallel CSS theme detected")
@@ -851,66 +858,79 @@ func doctorFrontendContract() doctorResult {
 		fileContains("web/src/styles.css", "#5eead4") ||
 		fileContains("web/src/styles.css", "#16433c") ||
 		fileContains("web/src/styles.css", "#0f302c") ||
-		fileContains("web/src/component/l1/tokens.js", "from-carbide-action via-carbide-hero-via") {
+		fileContains("web/src/component/l1/tokens.ts", "from-carbide-action via-carbide-hero-via") {
 		return doctorFail("frontend", "green scaffold palette detected")
 	}
-	if fileContains("web/src/component/l2/Layouts.jsx", "text-7xl") ||
-		fileContains("web/src/component/l2/Layouts.jsx", "text-5xl") ||
-		fileContains("web/src/component/l2/Layouts.jsx", "py-24") ||
-		fileContains("web/src/component/l2/Layouts.jsx", "lg:py-12") ||
-		fileContains("web/src/component/l2/Layouts.jsx", "lg:grid-cols-[280px") ||
-		fileContains("web/src/component/l2/Layouts.jsx", "lg:grid-cols-[240px") ||
-		fileContains("web/src/component/l3/DashboardView.jsx", "gap-6") ||
-		fileContains("web/src/component/l3/DashboardView.jsx", "p-6") ||
-		fileContains("web/src/component/l1/Field.jsx", "min-h-12 rounded-md border") ||
-		fileContains("web/src/component/l1/Field.jsx", "min-h-10 rounded-md border") ||
+	if fileContains("web/src/component/l2/Layouts.tsx", "text-7xl") ||
+		fileContains("web/src/component/l2/Layouts.tsx", "text-5xl") ||
+		fileContains("web/src/component/l2/Layouts.tsx", "py-24") ||
+		fileContains("web/src/component/l2/Layouts.tsx", "lg:py-12") ||
+		fileContains("web/src/component/l2/Layouts.tsx", "lg:grid-cols-[280px") ||
+		fileContains("web/src/component/l2/Layouts.tsx", "lg:grid-cols-[240px") ||
+		fileContains("web/src/component/l3/DashboardView.tsx", "gap-6") ||
+		fileContains("web/src/component/l3/DashboardView.tsx", "p-6") ||
+		fileContains("web/src/component/l1/Field.tsx", "min-h-12 rounded-md border") ||
+		fileContains("web/src/component/l1/Field.tsx", "min-h-10 rounded-md border") ||
 		treeContains("web/src/component", "font-extrabold") {
 		return doctorFail("frontend", "oversized scaffold density detected")
 	}
-	if fileContains("web/src/component/l1/ThemeToggle.jsx", "aria-pressed") ||
-		fileContains("web/src/component/l1/ThemeToggle.jsx", `role="group"`) ||
-		fileContains("web/src/component/l1/ThemeToggle.jsx", `<select`) ||
-		fileContains("web/src/component/l1/ThemeToggle.jsx", `appearance-none`) {
+	if fileContains("web/src/component/l1/ThemeToggle.tsx", "aria-pressed") ||
+		fileContains("web/src/component/l1/ThemeToggle.tsx", `role="group"`) ||
+		fileContains("web/src/component/l1/ThemeToggle.tsx", `<select`) ||
+		fileContains("web/src/component/l1/ThemeToggle.tsx", `appearance-none`) {
 		return doctorFail("frontend", "non-icon theme toggle detected")
 	}
 	if !fileContains("web/package.json", `"react":`) ||
 		!fileContains("web/package.json", `"tailwindcss":`) ||
 		!fileContains("web/package.json", `"@tailwindcss/cli":`) ||
+		!fileContains("web/package.json", `"typescript": "6.0.3"`) ||
+		!fileContains("web/package.json", `"@types/bun": "1.3.14"`) ||
+		!fileContains("web/package.json", `"@types/react": "19.2.17"`) ||
+		!fileContains("web/package.json", `"@types/react-dom": "19.2.3"`) ||
+		!fileContains("web/package.json", `"typecheck": "tsc --noEmit"`) ||
 		!fileContains("web/package.json", `"assets:build":`) ||
 		!fileContains("web/package.json", `--entry-naming='assets/[name]-[hash].[ext]'`) ||
+		!fileContains("web/tsconfig.json", `"strict": true`) ||
+		!fileContains("web/tsconfig.json", `"jsx": "react-jsx"`) ||
+		!fileContains("web/tsconfig.json", `"types": ["bun-types"]`) ||
+		!fileContains("web/Dockerfile", `bun run typecheck`) ||
 		!fileContains("web/Dockerfile", `bun run assets:build`) ||
-		!fileContains("web/src/server.jsx", `publicRoot`) ||
-		!fileContains("web/src/server.jsx", `Cache-Control`) ||
-		!fileContains("web/src/server.jsx", `public, max-age=31536000, immutable`) ||
-		!fileContains("web/src/server.jsx", `return 'no-store'`) ||
-		!fileContains("web/src/write-index.mjs", `asset-manifest.json`) ||
-		!fileContains("web/src/write-index.mjs", `/assets/${scripts[0]}`) ||
+		!fileContains("web/src/server.ts", `publicRoot`) ||
+		!fileContains("web/src/server.ts", `Cache-Control`) ||
+		!fileContains("web/src/server.ts", `public, max-age=31536000, immutable`) ||
+		!fileContains("web/src/server.ts", `return 'no-store'`) ||
+		!fileContains("web/src/write-index.ts", `asset-manifest.json`) ||
+		!fileContains("web/src/write-index.ts", `/assets/${scripts[0]}`) ||
 		!fileContains("web/src/styles.css", `@import "tailwindcss";`) ||
+		!fileContains("web/src/styles.css", `@source "./component/**/*.tsx";`) ||
+		!fileContains("web/src/styles.css", `@source "./lib/**/*.ts";`) ||
+		!fileContains("web/src/styles.css", `@source "./main.tsx";`) ||
+		!fileContains("web/src/styles.css", `@source "./server.ts";`) ||
 		!fileContains("web/src/styles.css", `[data-theme="dark"]`) ||
 		!fileContains("web/src/styles.css", `font-size: 14px`) ||
 		!fileContains("web/src/styles.css", `line-height: 1.4`) ||
 		!fileContains("web/src/styles.css", `--carbide-page: #ffffff`) ||
 		!fileContains("web/src/styles.css", `--carbide-page: #000000`) ||
 		!fileContains("web/index.html", `prefers-color-scheme: dark`) ||
-		!fileContains("web/src/main.jsx", `carbide.theme`) ||
-		!fileContains("web/src/component/l1/ThemeToggle.jsx", `SunIcon`) ||
-		!fileContains("web/src/component/l1/ThemeToggle.jsx", `MoonIcon`) ||
-		!fileContains("web/src/component/l1/ThemeToggle.jsx", `Switch to light theme`) ||
-		!fileContains("web/src/component/l1/ThemeToggle.jsx", `Switch to dark theme`) ||
-		!fileContains("web/src/component/l1/ThemeToggle.jsx", `size-8 rounded-full border`) ||
-		!fileContains("web/src/component/l1/ThemeToggle.jsx", `data-theme-mode`) ||
-		!fileContains("web/src/component/l1/tokens.js", `bg-carbide-hero text-carbide-hero-text`) ||
-		!fileContains("web/src/component/l1/Text.jsx", `text-2xl/8 sm:text-3xl/9`) ||
-		!fileContains("web/src/component/l1/Field.jsx", `min-h-8 rounded-md border px-2 py-1 text-sm/6`) ||
-		!fileContains("web/src/component/l1/Button.jsx", `md: 'min-h-8 px-3 text-xs'`) ||
-		!fileContains("web/src/component/l2/AuthForm.jsx", `gap-3 border-l px-4 py-5`) ||
-		!fileContains("web/src/component/l2/AuthForm.jsx", `w-full max-w-sm justify-self-center gap-3`) ||
-		!fileContains("web/src/component/l2/Layouts.jsx", `lg:grid-cols-[216px_minmax(0,1fr)]`) ||
-		!fileContains("web/src/component/l2/Layouts.jsx", `px-3 py-4 sm:px-5 lg:py-5`) ||
-		!fileContains("web/src/main.jsx", "./component/l3/index.js") {
+		!fileContains("web/src/main.tsx", `carbide.theme`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.tsx", `SunIcon`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.tsx", `MoonIcon`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.tsx", `Switch to light theme`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.tsx", `Switch to dark theme`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.tsx", `size-8 rounded-full border`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.tsx", `data-theme-mode`) ||
+		!fileContains("web/src/component/l1/tokens.ts", `bg-carbide-hero text-carbide-hero-text`) ||
+		!fileContains("web/src/component/l1/Text.tsx", `text-2xl/8 sm:text-3xl/9`) ||
+		!fileContains("web/src/component/l1/Field.tsx", `min-h-8 rounded-md border px-2 py-1 text-sm/6`) ||
+		!fileContains("web/src/component/l1/Button.tsx", `md: 'min-h-8 px-3 text-xs'`) ||
+		!fileContains("web/src/component/l2/AuthForm.tsx", `gap-3 border-l px-4 py-5`) ||
+		!fileContains("web/src/component/l2/AuthForm.tsx", `w-full max-w-sm justify-self-center gap-3`) ||
+		!fileContains("web/src/component/l2/Layouts.tsx", `lg:grid-cols-[216px_minmax(0,1fr)]`) ||
+		!fileContains("web/src/component/l2/Layouts.tsx", `px-3 py-4 sm:px-5 lg:py-5`) ||
+		!fileContains("web/src/main.tsx", "./component/l3") {
 		return doctorFail("frontend", "React/Bun/Tailwind contract drifted")
 	}
-	return doctorOK("frontend", "Bun React Tailwind")
+	return doctorOK("frontend", "Bun React Tailwind TypeScript")
 }
 
 func doctorAPIContract() doctorResult {
@@ -1138,18 +1158,19 @@ func doctorDocsWebContract() doctorResult {
 		"web/Dockerfile",
 		"web/package.json",
 		"web/bun.lock",
-		"web/src/build-styles.js",
-		"web/src/server.jsx",
+		"web/tsconfig.json",
+		"web/src/build-styles.ts",
+		"web/src/server.ts",
 		"web/src/styles.css",
-		"web/src/lib/cx.js",
-		"web/src/component/l1/Text.jsx",
-		"web/src/component/l1/Surface.jsx",
-		"web/src/component/l1/index.js",
-		"web/src/component/l1/tokens.js",
-		"web/src/component/l2/DocsChrome.jsx",
-		"web/src/component/l2/index.js",
-		"web/src/component/l3/DocsSite.jsx",
-		"web/src/component/l3/index.js",
+		"web/src/lib/cx.ts",
+		"web/src/component/l1/Text.tsx",
+		"web/src/component/l1/Surface.tsx",
+		"web/src/component/l1/index.ts",
+		"web/src/component/l1/tokens.ts",
+		"web/src/component/l2/DocsChrome.tsx",
+		"web/src/component/l2/index.ts",
+		"web/src/component/l3/DocsSite.tsx",
+		"web/src/component/l3/index.ts",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
 		return doctorFail("web", "missing "+strings.Join(missing, ", "))
@@ -1158,15 +1179,19 @@ func doctorDocsWebContract() doctorResult {
 	if missing := missingDirs(requiredDirs); len(missing) > 0 {
 		return doctorFail("web", "missing "+strings.Join(missing, ", "))
 	}
+	if anyPathWithExtension("web/src", ".jsx") || anyPathWithExtension("web/src", ".js") {
+		return doctorFail("web", "docs web source must use TypeScript")
+	}
 	required := map[string][]string{
-		"web/Dockerfile":                      {"COPY app/web/src ./src", "bun run tailwind:build", `CMD ["bun", "run", "start"]`, "COPY site ./site"},
-		"web/package.json":                    {`"tailwind:build"`, `"@tailwindcss/cli":`, `"react":`, `"react-dom":`, `"tailwindcss":`},
-		"web/src/build-styles.js":             {"tailwindcss", "./src/styles.css", "styles.css"},
-		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.jsx";`},
-		"web/src/server.jsx":                  {"serveStatic", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3/index.js`, "docsResponseHeaders", "rewriteDocsHtml", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`},
-		"web/src/component/l1/tokens.js":      {"docsClassLayers", "l1:", "l2:", "l3:"},
-		"web/src/component/l2/DocsChrome.jsx": {"docsChromeClassLayers", "docsStaticClassMap", "rewriteDocsClasses", "docsStaticHeaders"},
-		"web/src/component/l3/DocsSite.jsx":   {"docsSiteClassLayers", "docsWebContract", "rewriteDocsHtml", "docsResponseHeaders"},
+		"web/Dockerfile":                      {"COPY app/web/src ./src", "bun run typecheck", "bun run tailwind:build", `CMD ["bun", "run", "start"]`, "COPY site ./site"},
+		"web/package.json":                    {`"tailwind:build"`, `"typecheck": "tsc --noEmit"`, `"@tailwindcss/cli":`, `"react":`, `"react-dom":`, `"tailwindcss":`, `"typescript": "6.0.3"`, `"@types/bun": "1.3.14"`, `"@types/react": "19.2.17"`, `"@types/react-dom": "19.2.3"`},
+		"web/tsconfig.json":                   {`"strict": true`, `"jsx": "react-jsx"`, `"types": ["bun-types"]`},
+		"web/src/build-styles.ts":             {"tailwindcss", "./src/styles.css", "styles.css"},
+		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.tsx";`},
+		"web/src/server.ts":                   {"serveStatic", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3`, "docsResponseHeaders", "rewriteDocsHtml", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`},
+		"web/src/component/l1/tokens.ts":      {"docsClassLayers", "l1:", "l2:", "l3:"},
+		"web/src/component/l2/DocsChrome.tsx": {"docsChromeClassLayers", "docsStaticClassMap", "rewriteDocsClasses", "docsStaticHeaders"},
+		"web/src/component/l3/DocsSite.tsx":   {"docsSiteClassLayers", "docsWebContract", "rewriteDocsHtml", "docsResponseHeaders"},
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
@@ -1176,14 +1201,14 @@ func doctorDocsWebContract() doctorResult {
 	if strings.TrimSpace(readFileString("web/src/styles.css")) != strings.TrimSpace(docsTailwindInputContract) {
 		return doctorFail("web", "docs Tailwind input must contain only import/source directives")
 	}
-	return doctorOK("web", "Bun React Tailwind docs")
+	return doctorOK("web", "Bun React Tailwind TypeScript docs")
 }
 
 const docsTailwindInputContract = `@import "tailwindcss";
 
-@source "./component/**/*.jsx";
-@source "./lib/**/*.js";
-@source "./server.jsx";
+@source "./component/**/*.tsx";
+@source "./lib/**/*.ts";
+@source "./server.ts";
 `
 
 func doctorDocsAPIContract() doctorResult {

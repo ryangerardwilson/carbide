@@ -5,8 +5,9 @@ COPY app/web/package.json app/web/bun.lock ./
 RUN bun install --frozen-lockfile
 
 COPY app/web/src ./src
+COPY app/web/tsconfig.json ./
 COPY site ./site
-RUN bun run tailwind:build
+RUN bun run typecheck && bun run tailwind:build
 
 EXPOSE 8080
 CMD ["bun", "run", "start"]

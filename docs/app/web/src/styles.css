@@ -1,5 +1,5 @@
 @import "tailwindcss";
 
-@source "./component/**/*.jsx";
-@source "./lib/**/*.js";
-@source "./server.jsx";
+@source "./component/**/*.tsx";
+@source "./lib/**/*.ts";
+@source "./server.ts";

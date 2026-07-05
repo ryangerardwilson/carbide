@@ -38,30 +38,33 @@ web/
 |-- bun.lock
 |-- index.html
 |-- package.json
+|-- tsconfig.json
 `-- src/
     |-- component/
     |   |-- l1/
-    |   |   |-- Button.jsx
-    |   |   |-- Field.jsx
-    |   |   |-- Surface.jsx
-    |   |   |-- Text.jsx
-    |   |   |-- ThemeToggle.jsx
-    |   |   |-- index.js
-    |   |   `-- tokens.js
+    |   |   |-- Button.tsx
+    |   |   |-- Field.tsx
+    |   |   |-- Surface.tsx
+    |   |   |-- Text.tsx
+    |   |   |-- ThemeToggle.tsx
+    |   |   |-- index.ts
+    |   |   `-- tokens.ts
     |   |-- l2/
-    |   |   |-- AuthForm.jsx
-    |   |   |-- Layouts.jsx
-    |   |   `-- index.js
+    |   |   |-- AuthForm.tsx
+    |   |   |-- Layouts.tsx
+    |   |   `-- index.ts
     |   |-- l3/
-    |   |   |-- AuthView.jsx
-    |   |   |-- DashboardView.jsx
-    |   |   |-- LoadingView.jsx
-    |   |   `-- index.js
+    |   |   |-- AuthView.tsx
+    |   |   |-- DashboardView.tsx
+    |   |   |-- LoadingView.tsx
+    |   |   `-- index.ts
     |-- lib/
-    |   `-- cx.js
-    |-- main.jsx
-    |-- server.jsx
-    |-- write-index.mjs
+    |   |-- cx.ts
+    |   `-- types.ts
+    |-- main.tsx
+    |-- server.ts
+    |-- styles.d.ts
+    |-- write-index.ts
     `-- styles.css
 ```
 
@@ -69,9 +72,10 @@ Generated apps place the web app under `web/` so the project mirrors
 runtime boundaries. HTTP code and its Go module live under `api/`; Postgres
 access, its Go module, and migrations live under `db/`.
 
-The default UI includes register, login, logout, dashboard, and a conventional
-left-sidebar app shell. React components call same-origin `/api` endpoints
-with `credentials: "include"` so the API can own HttpOnly cookies.
+The default UI uses TypeScript and includes register, login, logout,
+dashboard, and a conventional left-sidebar app shell. React components call
+same-origin `/api` endpoints with `credentials: "include"` so the API can own
+HttpOnly cookies.
 
 ## Component Stance
 
@@ -93,8 +97,12 @@ Tailwind input file, and the container builds generated CSS with the checked-in
 Bun lockfile.
 
 `styles.css` contains the Tailwind import and a small Tailwind v4 `@theme`
-block. `tokens.js` contains reusable Tailwind utility groups for the generated
+block. `tokens.ts` contains reusable Tailwind utility groups for the generated
 auth and dashboard UI. The scaffold does not add a parallel `theme.css` file.
+
+`typecheck` runs `tsc --noEmit`. Docker builds run typecheck before building
+browser assets, so broken component props, API response shapes, or Bun server
+types fail before the container starts.
 
 ## Browser Asset Contract
 
@@ -129,10 +137,11 @@ The frontend contract needs dedicated regression coverage:
 - web, API, and db watch paths are present in Compose;
 - generated web service installs with `bun install --frozen-lockfile` and builds
   with `bun run build`;
+- generated web service runs `tsc --noEmit` through `bun run typecheck`;
 - Tailwind is present and required in the generated web service;
 - generated web app includes `component/l1`, `component/l2`, and `component/l3`
   starter tiers;
-- generated `main.jsx` imports starter screens and does not reimplement
+- generated `main.tsx` imports starter screens and does not reimplement
   dashboard or auth screen markup inline;
 - generated apps keep primitive UI in L1, reusable patterns in L2, and product
   screens in L3.

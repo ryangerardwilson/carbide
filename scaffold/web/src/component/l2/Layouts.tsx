@@ -1,9 +1,11 @@
-import { Button } from '../l1/Button.jsx';
-import { Divider } from '../l1/Surface.jsx';
-import { ThemeToggle } from '../l1/ThemeToggle.jsx';
-import { Eyebrow, Heading, Muted } from '../l1/Text.jsx';
-import { ui } from '../l1/tokens.js';
-import { cx } from '../../lib/cx.js';
+import type { ReactNode } from 'react';
+import { Button } from '../l1/Button';
+import { Divider } from '../l1/Surface';
+import { ThemeToggle } from '../l1/ThemeToggle';
+import { Eyebrow, Heading, Muted } from '../l1/Text';
+import { ui } from '../l1/tokens';
+import { cx } from '../../lib/cx';
+import type { NavItem, ResolvedTheme, ThemeMode } from '../../lib/types';
 
 const landingClassLayers = {
   shell: {
@@ -86,7 +88,29 @@ const dashboardClassLayers = {
   }
 };
 
-export function LandingPageLayout({ appName, children, onThemeMode, resolvedTheme, themeMode }) {
+interface ThemeControlProps {
+  onThemeMode: (mode: ThemeMode) => void;
+  resolvedTheme: ResolvedTheme;
+  themeMode: ThemeMode;
+}
+
+interface LandingPageLayoutProps extends ThemeControlProps {
+  appName: string;
+  children: ReactNode;
+}
+
+interface DashboardLayoutProps extends ThemeControlProps {
+  activeItem?: string;
+  appName: string;
+  busy: boolean;
+  children: ReactNode;
+  navItems?: NavItem[];
+  onLogout: () => void | Promise<void>;
+  onNavItem?: (value: string) => void;
+  userEmail: string;
+}
+
+export function LandingPageLayout({ appName, children, onThemeMode, resolvedTheme, themeMode }: LandingPageLayoutProps) {
   return (
     <main className={cx(landingClassLayers.shell.l1, landingClassLayers.shell.l2, landingClassLayers.shell.l3)}>
       <ThemeToggle
@@ -123,7 +147,7 @@ export function DashboardLayout({
   resolvedTheme,
   themeMode,
   userEmail
-}) {
+}: DashboardLayoutProps) {
   const activeNavItem = navItems.find((item) => item.value === activeItem) || navItems[0];
 
   return (

@@ -1,5 +1,6 @@
-import { cx } from '../../lib/cx.js';
-import { ui } from './tokens.js';
+import type { ElementType, ReactNode } from 'react';
+import { cx } from '../../lib/cx';
+import { ui } from './tokens';
 
 const eyebrowClassLayers = {
   l1: '',
@@ -25,7 +26,20 @@ const codeClassLayers = {
   l3: ui.code
 };
 
-export function Eyebrow({ children, className = '' }) {
+interface TextProps {
+  children: ReactNode;
+  className?: string;
+}
+
+interface HeadingProps extends TextProps {
+  level?: 1 | 2 | 3;
+}
+
+interface MutedProps extends TextProps {
+  as?: ElementType;
+}
+
+export function Eyebrow({ children, className = '' }: TextProps) {
   return (
     <p className={cx(eyebrowClassLayers.l1, eyebrowClassLayers.l2, eyebrowClassLayers.l3, className)}>
       {children}
@@ -33,8 +47,8 @@ export function Eyebrow({ children, className = '' }) {
   );
 }
 
-export function Heading({ children, className = '', level = 1 }) {
-  const Tag = `h${level}`;
+export function Heading({ children, className = '', level = 1 }: HeadingProps) {
+  const Tag = `h${level}` as ElementType;
   const sizes = {
     1: 'text-2xl/8 sm:text-3xl/9',
     2: 'text-xl/7',
@@ -44,10 +58,10 @@ export function Heading({ children, className = '', level = 1 }) {
   return <Tag className={cx(headingClassLayers.l1, headingClassLayers.l2, sizes[level] || sizes[3], headingClassLayers.l3, className)}>{children}</Tag>;
 }
 
-export function Muted({ children, className = '', as: Tag = 'p' }) {
+export function Muted({ children, className = '', as: Tag = 'p' }: MutedProps) {
   return <Tag className={cx(mutedClassLayers.l1, mutedClassLayers.l2, mutedClassLayers.l3, className)}>{children}</Tag>;
 }
 
-export function CodeText({ children }) {
+export function CodeText({ children }: { children: ReactNode }) {
   return <code className={cx(codeClassLayers.l1, codeClassLayers.l2, codeClassLayers.l3)}>{children}</code>;
 }

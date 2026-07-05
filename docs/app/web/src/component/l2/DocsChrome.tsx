@@ -1,4 +1,4 @@
-import { docsClassLayers } from "../l1/index.js";
+import { docsClassLayers } from "../l1";
 
 const docsHtmlClass = [
   "scroll-smooth",
@@ -18,7 +18,7 @@ const docsBodyClass = [
   "selection:text-neutral-100",
 ].join(" ");
 
-export const docsStaticClassMap = {
+export const docsStaticClassMap: Record<string, string> = {
   "skip-link": [
     "absolute",
     "left-2.5",
@@ -341,7 +341,13 @@ export const docsChromeClassLayers = {
   },
 };
 
-export function docsStaticHeaders({ cache, type, contract }) {
+interface DocsStaticHeadersOptions {
+  cache: string;
+  contract: string;
+  type: string;
+}
+
+export function docsStaticHeaders({ cache, type, contract }: DocsStaticHeadersOptions): Record<string, string> {
   return {
     "cache-control": cache,
     "content-type": type,
@@ -349,23 +355,23 @@ export function docsStaticHeaders({ cache, type, contract }) {
   };
 }
 
-export function rewriteDocsClasses(html) {
-  return addDocumentClasses(html).replace(/class="([^"]*)"/g, (_match, classValue) => {
+export function rewriteDocsClasses(html: string): string {
+  return addDocumentClasses(html).replace(/class="([^"]*)"/g, (_match: string, classValue: string) => {
     const classes = classValue
       .split(/\s+/)
       .filter(Boolean)
-      .flatMap((name) => (docsStaticClassMap[name] || name).split(/\s+/));
+      .flatMap((name: string) => (docsStaticClassMap[name] || name).split(/\s+/));
 
     return `class="${dedupeClasses(classes).join(" ")}"`;
   });
 }
 
-function addDocumentClasses(html) {
+function addDocumentClasses(html: string): string {
   return html
     .replace("<html lang=\"en\">", `<html lang="en" class="${docsHtmlClass}">`)
     .replace("<body>", `<body class="${docsBodyClass}">`);
 }
 
-function dedupeClasses(classes) {
+function dedupeClasses(classes: string[]): string[] {
   return [...new Set(classes)];
 }

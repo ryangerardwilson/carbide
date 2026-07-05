@@ -6,7 +6,8 @@ RUN bun install --frozen-lockfile
 
 COPY index.html ./
 COPY src ./src
-RUN bun run assets:build
+COPY tsconfig.json ./
+RUN bun run typecheck && bun run assets:build
 
 EXPOSE 8080
 

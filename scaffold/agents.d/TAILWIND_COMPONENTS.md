@@ -2,7 +2,7 @@
 
 The generated web app uses Tailwind as the required styling path. Keep UI
 changes inside the Tailwind utility system unless a repeated pattern clearly
-belongs in `web/src/component/l1/tokens.js`. Tailwind theme variables belong
+belongs in `web/src/component/l1/tokens.ts`. Tailwind theme variables belong
 in `web/src/styles.css`.
 
 ## File Ownership
@@ -16,12 +16,12 @@ in `web/src/styles.css`.
 - `web/src/component/l3/` owns product screens and domain sections composed
   from L2 patterns and L1 primitives. L3 may know authenticated user data,
   dashboard copy, and route-level product facts.
-- `web/src/component/l1/tokens.js` owns stable names for shared Tailwind
+- `web/src/component/l1/tokens.ts` owns stable names for shared Tailwind
   utility groups.
-- `web/src/styles.css` owns the Tailwind import, small `@theme` block, and
-  light/dark CSS variables.
+- `web/src/styles.css` owns the Tailwind import, TypeScript-aware `@source`
+  directives, small `@theme` block, and light/dark CSS variables.
 - `web/index.html` owns the no-flash theme bootstrap before React loads.
-- `web/src/lib/cx.js` owns the small class-name helper used by components.
+- `web/src/lib/cx.ts` owns the small class-name helper used by components.
 
 ## Tailwind Class Layers
 
@@ -88,9 +88,9 @@ add `sm:`, `md:`, `lg:`, `xl:`, and `2xl:` variants only as needed.
   Tailwind color tokens through CSS variables.
 - Keep theme choice as browser-local React state plus `localStorage`; do not
   send theme preference to the API or database by default.
-- Use `ThemeToggle.jsx` for the built-in `light`, `dark`, and `system`
+- Use `ThemeToggle.tsx` for the built-in `light`, `dark`, and `system`
   controls instead of creating one-off theme switches in screens.
-- Keep repeated component utility groups in `tokens.js`.
+- Keep repeated component utility groups in `tokens.ts`.
 - Do not add a parallel `theme.css` file or custom `cb-*` component classes.
 - Use custom CSS only for behavior that utilities cannot express cleanly.
 - Avoid arbitrary values unless the exact value is required by the design.

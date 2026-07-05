@@ -1,5 +1,6 @@
-import { cx } from '../../lib/cx.js';
-import { ui } from './tokens.js';
+import type { InputHTMLAttributes, ReactNode } from 'react';
+import { cx } from '../../lib/cx';
+import { ui } from './tokens';
 
 const fieldClassLayers = {
   l1: 'grid',
@@ -25,7 +26,19 @@ const inputClassLayers = {
   l3: cx(ui.input, ui.focus, 'transition')
 };
 
-export function Field({ children, error = '', hint = '', label, className = '' }) {
+interface FieldProps {
+  children: ReactNode;
+  className?: string;
+  error?: string;
+  hint?: string;
+  label: string;
+}
+
+interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
+  className?: string;
+}
+
+export function Field({ children, error = '', hint = '', label, className = '' }: FieldProps) {
   return (
     <label className={cx(fieldClassLayers.l1, fieldClassLayers.l2, fieldClassLayers.l3, className)}>
       <span>{label}</span>
@@ -40,7 +53,7 @@ export function Field({ children, error = '', hint = '', label, className = '' }
   );
 }
 
-export function TextInput({ className = '', ...props }) {
+export function TextInput({ className = '', ...props }: TextInputProps) {
   return (
     <input
       className={cx(

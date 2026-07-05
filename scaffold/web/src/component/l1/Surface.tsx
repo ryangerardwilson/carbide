@@ -1,5 +1,6 @@
-import { cx } from '../../lib/cx.js';
-import { ui } from './tokens.js';
+import type { ElementType, HTMLAttributes, ReactNode } from 'react';
+import { cx } from '../../lib/cx';
+import { ui } from './tokens';
 
 const panelClassLayers = {
   l1: '',
@@ -41,7 +42,27 @@ const metricClassLayers = {
   }
 };
 
-export function Panel({ children, className = '', as: Tag = 'section', ...props }) {
+interface PanelProps extends HTMLAttributes<HTMLElement> {
+  as?: ElementType;
+  children: ReactNode;
+  className?: string;
+}
+
+type BadgeTone = 'neutral' | 'good' | 'warn' | 'danger';
+
+interface BadgeProps {
+  children: ReactNode;
+  className?: string;
+  tone?: BadgeTone;
+}
+
+interface MetricProps {
+  detail?: string;
+  label: string;
+  value: string;
+}
+
+export function Panel({ children, className = '', as: Tag = 'section', ...props }: PanelProps) {
   return (
     <Tag
       className={cx(panelClassLayers.l1, panelClassLayers.l2, panelClassLayers.l3, className)}
@@ -52,11 +73,11 @@ export function Panel({ children, className = '', as: Tag = 'section', ...props 
   );
 }
 
-export function Divider({ className = '' }) {
+export function Divider({ className = '' }: { className?: string }) {
   return <div className={cx(dividerClassLayers.l1, dividerClassLayers.l2, dividerClassLayers.l3, className)} aria-hidden="true" />;
 }
 
-export function Badge({ children, tone = 'neutral', className = '' }) {
+export function Badge({ children, tone = 'neutral', className = '' }: BadgeProps) {
   const tones = {
     neutral: ui.neutralBadge,
     good: ui.goodBadge,
@@ -71,7 +92,7 @@ export function Badge({ children, tone = 'neutral', className = '' }) {
   );
 }
 
-export function Metric({ label, value, detail = '' }) {
+export function Metric({ label, value, detail = '' }: MetricProps) {
   return (
     <div className={cx(metricClassLayers.root.l1, metricClassLayers.root.l2, metricClassLayers.root.l3)}>
       <span className={cx(metricClassLayers.label.l1, metricClassLayers.label.l2, metricClassLayers.label.l3)}>

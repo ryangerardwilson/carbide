@@ -74,9 +74,11 @@ currently refuses to mutate anything.
 
 ## Where Code Lives
 
-- `web/src/` owns the Bun web server, React app flow, and Tailwind
-  CSS input.
-- `web/src/write-index.mjs` writes the generated browser shell with hashed
+- `web/src/` owns the Bun web server, React app flow, TypeScript source, and
+  Tailwind CSS input.
+- `web/tsconfig.json` owns the strict TypeScript contract for the web
+  container. `bun run typecheck` runs `tsc --noEmit`.
+- `web/src/write-index.ts` writes the generated browser shell with hashed
   asset references after Bun builds React.
 - `web/src/component/l1/` owns primitive UI elements and Tailwind utility
   tokens, including the built-in light/dark/system theme toggle.
@@ -84,7 +86,8 @@ currently refuses to mutate anything.
   layouts.
 - `web/src/component/l3/` owns generated auth, dashboard, and loading
   screens.
-- `web/src/lib/` owns small non-component browser helpers such as `cx()`.
+- `web/src/lib/` owns small non-component browser helpers such as `cx()` and
+  shared frontend contract types.
 - `web/src/styles.css` owns light and dark color variables and maps them into
   Tailwind theme tokens. `web/index.html` applies the stored theme before the
   React app paints.

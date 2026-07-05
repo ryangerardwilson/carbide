@@ -1,6 +1,7 @@
-import { Metric, Muted, Panel, ui } from '../l1/index.js';
-import { DashboardLayout } from '../l2/index.js';
-import { cx } from '../../lib/cx.js';
+import { Metric, Muted, Panel, ui } from '../l1';
+import { DashboardLayout } from '../l2';
+import { cx } from '../../lib/cx';
+import type { NavItem, ResolvedTheme, ThemeMode, User } from '../../lib/types';
 
 const screenClassLayers = {
   workspace: {
@@ -30,13 +31,19 @@ const screenClassLayers = {
   }
 };
 
-const dashboardNav = [
+const dashboardNav: NavItem[] = [
   {
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
     eyebrow: 'Lorem',
     label: 'Ipsum',
     value: 'workspace'
   }
+];
+
+const workspaceMetrics = [
+  { label: 'Lorem', value: 'Ipsum dolor' },
+  { label: 'Sit', value: 'Amet' },
+  { label: 'Consectetur', value: 'Adipiscing' }
 ];
 
 function WorkspaceOverview() {
@@ -46,13 +53,9 @@ function WorkspaceOverview() {
         className={cx(screenClassLayers.statusGrid.l1, screenClassLayers.statusGrid.l2, screenClassLayers.statusGrid.l3)}
         aria-label="Application status"
       >
-        {[
-          ['Lorem', 'Ipsum dolor'],
-          ['Sit', 'Amet'],
-          ['Consectetur', 'Adipiscing']
-        ].map(([label, value]) => (
-          <div className={cx(screenClassLayers.statusCell.l1, screenClassLayers.statusCell.l2, screenClassLayers.statusCell.l3)} key={label}>
-            <Metric label={label} value={value} />
+        {workspaceMetrics.map((metric) => (
+          <div className={cx(screenClassLayers.statusCell.l1, screenClassLayers.statusCell.l2, screenClassLayers.statusCell.l3)} key={metric.label}>
+            <Metric label={metric.label} value={metric.value} />
           </div>
         ))}
       </section>
@@ -68,7 +71,17 @@ function WorkspaceOverview() {
   );
 }
 
-export function DashboardView({ appName, busy, onLogout, onThemeMode, resolvedTheme, themeMode, user }) {
+interface DashboardViewProps {
+  appName: string;
+  busy: boolean;
+  onLogout: () => void | Promise<void>;
+  onThemeMode: (mode: ThemeMode) => void;
+  resolvedTheme: ResolvedTheme;
+  themeMode: ThemeMode;
+  user: User;
+}
+
+export function DashboardView({ appName, busy, onLogout, onThemeMode, resolvedTheme, themeMode, user }: DashboardViewProps) {
   return (
     <DashboardLayout
       activeItem="workspace"

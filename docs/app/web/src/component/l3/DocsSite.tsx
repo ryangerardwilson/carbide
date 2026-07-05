@@ -1,4 +1,4 @@
-import { docsStaticHeaders, rewriteDocsClasses } from "../l2/index.js";
+import { docsStaticHeaders, rewriteDocsClasses } from "../l2";
 
 export const docsSiteClassLayers = {
   shell: {
@@ -13,6 +13,11 @@ export const docsSiteClassLayers = {
   },
 };
 
+interface DocsResponseOptions {
+  cache: string;
+  type: string;
+}
+
 export function docsWebContract() {
   return {
     id: "docs-web:l1-l2-l3-tailwind",
@@ -21,13 +26,13 @@ export function docsWebContract() {
   };
 }
 
-export function docsResponseHeaders(options) {
+export function docsResponseHeaders(options: DocsResponseOptions): Record<string, string> {
   return docsStaticHeaders({
     ...options,
     contract: docsWebContract().id,
   });
 }
 
-export function rewriteDocsHtml(html) {
+export function rewriteDocsHtml(html: string): string {
   return rewriteDocsClasses(html);
 }

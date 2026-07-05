@@ -7,6 +7,9 @@ const outputs = [
 ];
 
 const output = outputs.find((candidate) => existsSync(dirname(candidate))) || outputs[0];
+if (!output) {
+  throw new Error("missing Tailwind output path");
+}
 mkdirSync(dirname(output), { recursive: true });
 
 const result = Bun.spawnSync([

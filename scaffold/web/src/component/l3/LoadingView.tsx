@@ -1,5 +1,5 @@
-import { Eyebrow, Heading, ui } from '../l1/index.js';
-import { cx } from '../../lib/cx.js';
+import { Eyebrow, Heading, ui } from '../l1';
+import { cx } from '../../lib/cx';
 
 const loadingClassLayers = {
   shell: {
