@@ -502,6 +502,13 @@ grep -q 'pathname.endsWith(".html")' docs/app/web/src/server.jsx
 grep -q "status: 308" docs/app/web/src/server.jsx
 grep -q 'location: `${pathname}${target.search}`' docs/app/web/src/server.jsx
 grep -q 'docsResponseHeaders' docs/app/web/src/server.jsx
+grep -q 'createHash' docs/app/web/src/server.jsx
+grep -q 'cacheBustHtml' docs/app/web/src/server.jsx
+grep -q 'versionedAssetPath' docs/app/web/src/server.jsx
+grep -F -q '?v=${hash}' docs/app/web/src/server.jsx
+grep -q 'assets/intro.js' docs/app/web/src/server.jsx
+grep -q 'assets/styles.css' docs/app/web/src/server.jsx
+grep -q 'return "no-cache"' docs/app/web/src/server.jsx
 grep -q '@import "tailwindcss";' docs/app/web/src/styles.css
 grep -F -q '@source "./component/**/*.jsx";' docs/app/web/src/styles.css
 grep -q "margin-top: 44px" docs/app/web/src/styles.css

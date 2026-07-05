@@ -1160,7 +1160,7 @@ func doctorDocsWebContract() doctorResult {
 		"web/package.json":                    {`"tailwind:build"`, `"@tailwindcss/cli":`, `"react":`, `"react-dom":`, `"tailwindcss":`},
 		"web/src/build-styles.js":             {"tailwindcss", "./src/styles.css", "styles.css"},
 		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.jsx";`},
-		"web/src/server.jsx":                  {"serveStatic", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3/index.js`, "docsResponseHeaders"},
+		"web/src/server.jsx":                  {"serveStatic", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3/index.js`, "docsResponseHeaders", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`},
 		"web/src/component/l1/tokens.js":      {"docsClassLayers", "l1:", "l2:", "l3:"},
 		"web/src/component/l2/DocsChrome.jsx": {"docsChromeClassLayers", "docsStaticHeaders"},
 		"web/src/component/l3/DocsSite.jsx":   {"docsSiteClassLayers", "docsWebContract", "docsResponseHeaders"},

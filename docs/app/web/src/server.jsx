@@ -1,4 +1,5 @@
-import { existsSync, statSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { stat, readFile } from "node:fs/promises";
 import { extname, join, normalize, sep } from "node:path";
 import { docsResponseHeaders } from "./component/l3/index.js";
@@ -20,6 +21,11 @@ const contentTypes = {
   ".svg": "image/svg+xml",
   ".txt": "text/plain; charset=utf-8",
 };
+
+const versionedAssetPaths = new Map([
+  ["assets/intro.js", versionedAssetPath("assets/intro.js")],
+  ["assets/styles.css", versionedAssetPath("assets/styles.css")],
+]);
 
 const routeAliases = {
   "/initial-user-experience": "/create-your-first-app",
@@ -79,11 +85,12 @@ async function serveStatic(pathname) {
   try {
     const info = await stat(path);
     if (!info.isFile()) return new Response("not found", { status: 404 });
-    const body = await readFile(path);
     const type = contentTypes[extname(path)] || "application/octet-stream";
-    const cache = pathname.startsWith("/assets/")
-      ? "public, max-age=31536000, immutable"
-      : "no-cache";
+    const rawBody = await readFile(path);
+    const body = type.startsWith("text/html")
+      ? cacheBustHtml(rawBody.toString("utf8"))
+      : rawBody;
+    const cache = cacheControlFor(pathname);
     return new Response(body, {
       headers: docsResponseHeaders({ cache, type }),
     });
@@ -92,6 +99,34 @@ async function serveStatic(pathname) {
       return new Response("not found", { status: 404 });
     }
     throw error;
+  }
+}
+
+function cacheBustHtml(html) {
+  let output = html;
+  for (const [assetPath, versionedPath] of versionedAssetPaths) {
+    output = output.replaceAll(`"${assetPath}"`, `"${versionedPath}"`);
+  }
+  return output;
+}
+
+function cacheControlFor(pathname) {
+  if (pathname === "/assets/intro.js" || pathname === "/assets/styles.css") {
+    return "no-cache";
+  }
+  if (pathname.startsWith("/assets/")) {
+    return "public, max-age=31536000, immutable";
+  }
+  return "no-cache";
+}
+
+function versionedAssetPath(assetPath) {
+  try {
+    const content = readFileSync(join(siteRoot, assetPath));
+    const hash = createHash("sha256").update(content).digest("hex").slice(0, 12);
+    return `${assetPath}?v=${hash}`;
+  } catch (_error) {
+    return assetPath;
   }
 }
 
