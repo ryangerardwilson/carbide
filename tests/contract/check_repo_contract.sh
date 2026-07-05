@@ -488,6 +488,13 @@ grep -q 'href="/frontend-starter-contract"' docs/site/index.html
 grep -q 'href="/deployment"' docs/site/index.html
 grep -q 'href="/ci-cd-regression-tests"' docs/site/index.html
 ! grep -R -E 'href="[^"]+\.html' docs/site >/dev/null
+grep -q "function isHomePage()" docs/site/assets/intro.js
+grep -q 'pathname === "/"' docs/site/assets/intro.js
+grep -q 'pathname === "/index.html"' docs/site/assets/intro.js
+grep -q "intro=1" docs/site/assets/intro.js
+grep -q "prefers-reduced-motion" docs/site/assets/intro.js
+! grep -q "sessionStorage" docs/site/assets/intro.js
+! grep -q "storageKey" docs/site/assets/intro.js
 grep -q "canonicalDocsPath" docs/app/web/src/server.jsx
 grep -q '"/initial-user-experience": "/create-your-first-app"' docs/app/web/src/server.jsx
 grep -q 'pathname === "/index.html"' docs/app/web/src/server.jsx

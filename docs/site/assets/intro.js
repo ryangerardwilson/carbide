@@ -1,29 +1,16 @@
 (function () {
   "use strict";
 
-  var storageKey = "carbide-docs-intro-v1";
   var replayRequested = window.location.search.indexOf("intro=1") !== -1;
   var reducedMotion = window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  function hasSeenIntro() {
-    try {
-      return window.sessionStorage.getItem(storageKey) === "1";
-    } catch (_error) {
-      return false;
-    }
+  function isHomePage() {
+    var pathname = window.location.pathname;
+    return pathname === "/" || pathname === "/index.html";
   }
 
-  function markSeen() {
-    try {
-      window.sessionStorage.setItem(storageKey, "1");
-    } catch (_error) {
-      // Session storage can be unavailable in private or locked-down contexts.
-    }
-  }
-
-  if (reducedMotion || (!replayRequested && hasSeenIntro())) {
-    markSeen();
+  if (reducedMotion || (!replayRequested && !isHomePage())) {
     return;
   }
 
@@ -68,7 +55,6 @@
   function removeIntro(intro) {
     intro.classList.add("docs-intro-exit");
     document.body.classList.remove("intro-active");
-    markSeen();
     window.setTimeout(function () {
       intro.remove();
     }, 460);
