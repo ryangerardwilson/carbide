@@ -18,9 +18,11 @@ variable palette for colors that can live as ordinary Tailwind classes.
   dashboard copy, and route-level product facts.
 - `web/src/component/l1/tokens.ts` owns stable names for shared Tailwind
   utility groups, including the starter light/dark visual choices.
-- `web/src/styles.css` owns the Tailwind import, TypeScript-aware `@source`
-  directives, the `data-theme` dark variant, and minimal `html`/`body`
-  browser defaults.
+- `web/src/styles.css` owns only the Tailwind import, TypeScript-aware
+  `@source` directives, and the `data-theme` dark variant.
+- Do not put global `html`/`body` font-size, width, line-height, layout, color,
+  or component styling rules in `web/src/styles.css`; use Tailwind utilities
+  and component tokens instead.
 - `web/index.html` owns the no-flash theme bootstrap before React loads.
 - `web/src/lib/cx.ts` owns the small class-name helper used by components.
 

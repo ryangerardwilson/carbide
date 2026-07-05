@@ -128,8 +128,8 @@
         <section id="styling">
           <h2>Styling</h2>
           <p>The starter uses Tailwind as the required styling path. The web container installs with Bun and builds generated CSS from the checked-in Tailwind input.</p>
-          <p><code>styles.css</code> contains the Tailwind import, TypeScript-aware source directives, the <code>data-theme</code> dark variant, and minimal <code>html</code>/<code>body</code> defaults. It does not own a generated color-variable palette. <code>tokens.ts</code> contains reusable Tailwind utility groups, including starter light/dark visual choices. The scaffold does not add a parallel <code>theme.css</code> file.</p>
-          <p><code>carbide doctor</code> rejects custom selectors, <code>--carbide-*</code> color variables, <code>@theme</code>, <code>@apply</code>, <code>@layer</code>, keyframes, media rules, and container rules in <code>styles.css</code>; component styling belongs in Tailwind utility classes and component class layers.</p>
+          <p><code>styles.css</code> contains only the Tailwind import, TypeScript-aware source directives, and the <code>data-theme</code> dark variant. It does not own global <code>html</code>/<code>body</code> sizing, layout defaults, or a generated color-variable palette. <code>tokens.ts</code> contains reusable Tailwind utility groups, including starter light/dark visual choices. The scaffold does not add a parallel <code>theme.css</code> file.</p>
+          <p><code>carbide doctor</code> rejects global <code>html</code>/<code>body</code> sizing, custom selectors, <code>--carbide-*</code> color variables, <code>@theme</code>, <code>@apply</code>, <code>@layer</code>, keyframes, media rules, and container rules in <code>styles.css</code>; component styling belongs in Tailwind utility classes and component class layers.</p>
           <p><code>typecheck</code> runs <code>tsc --noEmit</code>. Docker builds run typecheck before building browser assets.</p>
         </section>
 

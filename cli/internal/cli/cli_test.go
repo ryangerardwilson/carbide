@@ -390,6 +390,32 @@ func TestDoctorRejectsScaffoldTailwindInputDrift(t *testing.T) {
 	})
 }
 
+func TestDoctorRejectsGlobalDefaultsInTailwindInput(t *testing.T) {
+	withGeneratedScaffold(t, func(dir string) {
+		stylesPath := filepath.Join(dir, "web", "src", "styles.css")
+		styles, err := os.ReadFile(stylesPath)
+		if err != nil {
+			t.Fatalf("ReadFile returned %v", err)
+		}
+		styles = append(styles, []byte("\nhtml { font-size: 14px; }\nbody { min-width: 320px; line-height: 1.4; }\n")...)
+		if err := os.WriteFile(stylesPath, styles, 0644); err != nil {
+			t.Fatalf("WriteFile returned %v", err)
+		}
+
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		err = a.run([]string{"doctor"})
+		if err == nil {
+			t.Fatalf("doctor should reject global defaults in styles.css")
+		}
+		if !strings.Contains(out.String(), "scaffold Tailwind input contract") ||
+			!strings.Contains(out.String(), "forbidden html {") ||
+			!strings.Contains(out.String(), "forbidden body {") {
+			t.Fatalf("doctor output = %q", out.String())
+		}
+	})
+}
+
 func TestDoctorRejectsGeneratedThemeVariablesInStyles(t *testing.T) {
 	withGeneratedScaffold(t, func(dir string) {
 		stylesPath := filepath.Join(dir, "web", "src", "styles.css")

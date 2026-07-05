@@ -27,8 +27,11 @@ Every root directory except `agents.d/` is a standalone Docker service.
 - Bun owns install/build/server inside the web container.
 - React owns browser state and auth/dashboard views.
 - Tailwind is mandatory.
-- `web/src/styles.css` must stay small: Tailwind import, `@source` globs,
-  `@custom-variant dark`, and minimal browser defaults.
+- `web/src/styles.css` must stay small: Tailwind import, `@source` globs, and
+  `@custom-variant dark`.
+- Do not put `html`, `body`, root font-size, width, line-height, layout, or
+  component styling rules in `styles.css`; those belong in Tailwind utility
+  classes and component tokens.
 - Generated colors and light/dark variants belong in component Tailwind
   classes, especially `web/src/component/l1/tokens.ts`.
 - Do not reintroduce generated `--carbide-*` color variables or `@theme` into
@@ -50,4 +53,3 @@ Any scaffold contract change should update:
 - `cli/internal/cli/cli_test.go` when CLI behavior changes,
 - relevant docs under `docs/engineering/`,
 - docs site HTML when public docs copy changes.
-

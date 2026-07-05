@@ -6,13 +6,3 @@
 @source "./server.ts";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
-html {
-  font-size: 14px;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  line-height: 1.4;
-}

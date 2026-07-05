@@ -971,8 +971,6 @@ func doctorFrontendContract() doctorResult {
 		!fileContains("web/src/styles.css", `@source "./main.tsx";`) ||
 		!fileContains("web/src/styles.css", `@source "./server.ts";`) ||
 		!fileContains("web/src/styles.css", `@custom-variant dark`) ||
-		!fileContains("web/src/styles.css", `font-size: 14px`) ||
-		!fileContains("web/src/styles.css", `line-height: 1.4`) ||
 		!fileContains("web/index.html", `prefers-color-scheme: dark`) ||
 		!fileContains("web/src/main.tsx", `carbide.theme`) ||
 		!fileContains("web/src/component/l1/ThemeToggle.tsx", `SunIcon`) ||
@@ -1266,7 +1264,7 @@ func doctorDocsWebContract() doctorResult {
 		"web/tsconfig.json":                   {`"strict": true`, `"jsx": "react-jsx"`, `"types": ["bun-types"]`},
 		"web/src/build-styles.ts":             {"tailwindcss", "./src/styles.css", "styles.css"},
 		"web/src/main.tsx":                    {"createRoot", "DocsRuntime", "./tailwind.css"},
-		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.tsx";`, `@source "./lib/**/*.ts";`, `@source "./main.tsx";`, `@source "./server.ts";`, `@custom-variant dark`, `font-size: 14px`, `line-height: 1.4`},
+		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.tsx";`, `@source "./lib/**/*.ts";`, `@source "./main.tsx";`, `@source "./server.ts";`, `@custom-variant dark`},
 		"web/src/write-index.ts":              {"asset-manifest.json", `/assets/${scripts[0]}`},
 		"web/index.html":                      {"carbide.theme", "./src/main.tsx", "Carbide Docs"},
 		"web/src/server.ts":                   {"serveStatic", "servePublicFile", "publicRoot", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3`, "docsResponseHeaders", "rewriteDocsHtml", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`, "Cache-Control", "public, max-age=31536000, immutable", `return "no-store"`},
@@ -1293,6 +1291,10 @@ const scaffoldTailwindInputHeader = `@import "tailwindcss";
 @source "./server.ts";
 `
 
+const scaffoldTailwindInputExpected = scaffoldTailwindInputHeader + `
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+`
+
 func scaffoldTailwindInputFindings(path string) []string {
 	content := readFileString(path)
 	var findings []string
@@ -1302,15 +1304,14 @@ func scaffoldTailwindInputFindings(path string) []string {
 	if !strings.HasPrefix(content, scaffoldTailwindInputHeader) {
 		findings = append(findings, "must start with Tailwind import/source directives")
 	}
+	if strings.TrimSpace(content) != strings.TrimSpace(scaffoldTailwindInputExpected) {
+		findings = append(findings, "must contain only Tailwind import/source directives and dark variant")
+	}
 	if lines := fileLineCount(path); lines > 60 {
 		findings = append(findings, fmt.Sprintf("too large: %d lines", lines))
 	}
 	for _, needle := range []string{
 		`@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));`,
-		`html {`,
-		`body {`,
-		`font-size: 14px;`,
-		`line-height: 1.4;`,
 	} {
 		if !strings.Contains(content, needle) {
 			findings = append(findings, "missing "+needle)
@@ -1327,6 +1328,13 @@ func scaffoldTailwindInputFindings(path string) []string {
 		"@theme",
 		"--carbide-",
 		"<style",
+		"html {",
+		"body {",
+		"font-size:",
+		"line-height:",
+		"min-width:",
+		"margin:",
+		"padding:",
 	} {
 		if strings.Contains(content, forbidden) {
 			findings = append(findings, "forbidden "+forbidden)
@@ -1357,6 +1365,11 @@ func docsGeneratedTailwindFindings(path string) []string {
 	forbidden := regexp.MustCompile(`\.(docs-layout|docs-sidebar|docs-toc|docs-topbar|docs-content|docs-intro|skip-link|topbar-inner|brand-mark)(?:[\s,{:.#]|$)`)
 	if forbidden.MatchString(content) {
 		return []string{"generated docs CSS contains custom docs selectors"}
+	}
+	if strings.Contains(content, "html{font-size:14px}") ||
+		strings.Contains(content, "body{min-width:320px") ||
+		strings.Contains(content, "body{margin:0;min-width:320px") {
+		return []string{"generated docs CSS contains global html/body defaults"}
 	}
 	return nil
 }

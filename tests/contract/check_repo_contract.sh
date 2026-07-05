@@ -361,8 +361,13 @@ grep -F -q '@source "./main.tsx";' scaffold/web/src/styles.css
 grep -F -q '@source "./server.ts";' scaffold/web/src/styles.css
 grep -q "@custom-variant dark" scaffold/web/src/styles.css
 grep -q "\\[data-theme=\"dark\"\\]" scaffold/web/src/styles.css
-grep -q "font-size: 14px" scaffold/web/src/styles.css
-grep -q "line-height: 1.4" scaffold/web/src/styles.css
+! grep -q "html {" scaffold/web/src/styles.css
+! grep -q "body {" scaffold/web/src/styles.css
+! grep -q "font-size:" scaffold/web/src/styles.css
+! grep -q "line-height:" scaffold/web/src/styles.css
+! grep -q "min-width:" scaffold/web/src/styles.css
+! grep -q "margin:" scaffold/web/src/styles.css
+! grep -q "padding:" scaffold/web/src/styles.css
 ! grep -q "@theme" scaffold/web/src/styles.css
 ! grep -q -- "--carbide-" scaffold/web/src/styles.css
 ! grep -q "carbide-" scaffold/web/src/component/l1/tokens.ts
@@ -569,6 +574,13 @@ grep -F -q '@source "./lib/**/*.ts";' docs/app/web/src/styles.css
 grep -F -q '@source "./main.tsx";' docs/app/web/src/styles.css
 grep -F -q '@source "./server.ts";' docs/app/web/src/styles.css
 grep -q "@custom-variant dark" docs/app/web/src/styles.css
+! grep -q "html {" docs/app/web/src/styles.css
+! grep -q "body {" docs/app/web/src/styles.css
+! grep -q "font-size:" docs/app/web/src/styles.css
+! grep -q "line-height:" docs/app/web/src/styles.css
+! grep -q "min-width:" docs/app/web/src/styles.css
+! grep -q "margin:" docs/app/web/src/styles.css
+! grep -q "padding:" docs/app/web/src/styles.css
 ! grep -q "@theme" docs/app/web/src/styles.css
 ! grep -q -- "--carbide-" docs/app/web/src/styles.css
 cmp -s scaffold/web/src/styles.css docs/app/web/src/styles.css
@@ -623,7 +635,8 @@ grep -q "generated docs CSS contains custom" docs/app/agents.d/TAILWIND_COMPONEN
 grep -q 'docs-\*' docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
 grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
-grep -q "carbide doctor.*rejects custom selectors" docs/site/frontend-starter-contract.html
+grep -q "carbide doctor.*rejects global" docs/site/frontend-starter-contract.html
+grep -q "custom selectors" docs/site/frontend-starter-contract.html
 grep -q "component styling belongs in Tailwind utility classes" docs/site/frontend-starter-contract.html
 grep -q "carbide follow logs" docs/site/create-your-first-app.html
 grep -q "carbide status" docs/site/create-your-first-app.html
@@ -646,7 +659,7 @@ grep -q "my-carbide-app/" docs/site/repo-structure.html
 grep -q "web/src/component/l1" docs/site/repo-structure.html
 grep -q "web/src/component/l2" docs/site/repo-structure.html
 grep -q "web/src/component/l3" docs/site/repo-structure.html
-grep -q "minimal .*html.*body.* browser defaults" docs/site/repo-structure.html
+grep -q "Global .*html.*body.* sizing" docs/site/repo-structure.html
 grep -q "web, api, db" docs/site/repo-structure.html
 grep -q "Generated apps do not include root" docs/site/repo-structure.html
 ! grep -q ".github/workflows" docs/site/repo-structure.html
@@ -669,6 +682,9 @@ grep -q "Getting Started" docs/site/index.html
 grep -q "Architecture" docs/site/index.html
 grep -q "On this page" docs/site/index.html
 ! grep -E -q '\.(docs-layout|docs-sidebar|docs-toc|docs-topbar)' docs/site/assets/styles.css
+! grep -q 'html{font-size:14px}' docs/site/assets/styles.css
+! grep -q 'body{min-width:320px' docs/site/assets/styles.css
+! grep -q 'body{margin:0;min-width:320px' docs/site/assets/styles.css
 grep -F -q ".max-\\[860px\\]\\:grid-cols-1" docs/site/assets/styles.css
 
 for page in docs/site/*.html; do
