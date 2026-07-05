@@ -390,6 +390,31 @@ func TestDoctorRejectsScaffoldTailwindInputDrift(t *testing.T) {
 	})
 }
 
+func TestDoctorRejectsGeneratedThemeVariablesInStyles(t *testing.T) {
+	withGeneratedScaffold(t, func(dir string) {
+		stylesPath := filepath.Join(dir, "web", "src", "styles.css")
+		styles, err := os.ReadFile(stylesPath)
+		if err != nil {
+			t.Fatalf("ReadFile returned %v", err)
+		}
+		styles = append(styles, []byte("\n@theme { --color-carbide-page: var(--carbide-page); }\n:root { --carbide-page: #ffffff; }\n")...)
+		if err := os.WriteFile(stylesPath, styles, 0644); err != nil {
+			t.Fatalf("WriteFile returned %v", err)
+		}
+
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		err = a.run([]string{"doctor"})
+		if err == nil {
+			t.Fatalf("doctor should reject generated theme variables in styles.css")
+		}
+		if !strings.Contains(out.String(), "scaffold Tailwind input contract") ||
+			!strings.Contains(out.String(), "forbidden @theme") {
+			t.Fatalf("doctor output = %q", out.String())
+		}
+	})
+}
+
 func TestProjectMigrateCreatesAgentWorkspace(t *testing.T) {
 	repoRoot, err := filepath.Abs(filepath.Join("..", "..", ".."))
 	if err != nil {

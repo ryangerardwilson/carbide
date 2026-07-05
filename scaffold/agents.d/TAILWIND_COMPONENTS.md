@@ -2,8 +2,8 @@
 
 The generated web app uses Tailwind as the required styling path. Keep UI
 changes inside the Tailwind utility system unless a repeated pattern clearly
-belongs in `web/src/component/l1/tokens.ts`. Tailwind theme variables belong
-in `web/src/styles.css`.
+belongs in `web/src/component/l1/tokens.ts`. Do not create a generated CSS
+variable palette for colors that can live as ordinary Tailwind classes.
 
 ## File Ownership
 
@@ -17,9 +17,10 @@ in `web/src/styles.css`.
   from L2 patterns and L1 primitives. L3 may know authenticated user data,
   dashboard copy, and route-level product facts.
 - `web/src/component/l1/tokens.ts` owns stable names for shared Tailwind
-  utility groups.
+  utility groups, including the starter light/dark visual choices.
 - `web/src/styles.css` owns the Tailwind import, TypeScript-aware `@source`
-  directives, small `@theme` block, and light/dark CSS variables.
+  directives, the `data-theme` dark variant, and minimal `html`/`body`
+  browser defaults.
 - `web/index.html` owns the no-flash theme bootstrap before React loads.
 - `web/src/lib/cx.ts` owns the small class-name helper used by components.
 
@@ -82,10 +83,10 @@ add `sm:`, `md:`, `lg:`, `xl:`, and `2xl:` variants only as needed.
 ## CSS And Theme Rules
 
 - Prefer Tailwind utilities for one-off layout and styling.
-- Keep shared colors and theme variables in the `@theme` block in
-  `web/src/styles.css`.
-- Keep light/dark color values in `web/src/styles.css` and map them to
-  Tailwind color tokens through CSS variables.
+- Keep generated colors, focus rings, borders, and light/dark variants in
+  `web/src/component/l1/tokens.ts`, using Tailwind utility classes.
+- Do not add generated `--carbide-*` color variables or a generated `@theme`
+  palette in `web/src/styles.css`.
 - Keep theme choice as browser-local React state plus `localStorage`; do not
   send theme preference to the API or database by default.
 - Use `ThemeToggle.tsx` for the built-in `light`, `dark`, and `system`

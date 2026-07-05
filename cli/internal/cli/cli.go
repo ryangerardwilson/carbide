@@ -902,13 +902,18 @@ func doctorFrontendContract() doctorResult {
 	if anyPathWithExtension("web/src", ".jsx") || anyPathWithExtension("web/src", ".js") || anyPathWithExtension("web/src", ".mjs") {
 		return doctorFail("frontend", "frontend source must use TypeScript")
 	}
-	if fileContains("web/src/styles.css", "theme.css") || treeContains("web/src", "cb-") || treeContains("web/src", "--cb-") {
+	if fileContains("web/src/styles.css", "theme.css") ||
+		treeContains("web/src", "cb-") ||
+		treeContains("web/src", "--cb-") {
 		return doctorFail("frontend", "parallel CSS theme detected")
 	}
 	if findings := scaffoldTailwindInputFindings("web/src/styles.css"); len(findings) > 0 {
 		return doctorFail("frontend", "scaffold Tailwind input contract: "+strings.Join(findings, "; "))
 	}
-	if lines := fileLineCount("web/src/styles.css"); lines > 220 {
+	if treeContains("web/src", "carbide-") || treeContains("web/src", "--carbide-") {
+		return doctorFail("frontend", "generated carbide styling hooks detected")
+	}
+	if lines := fileLineCount("web/src/styles.css"); lines > 60 {
 		return doctorFail("frontend", fmt.Sprintf("Tailwind input too large: %d lines", lines))
 	}
 	if fileContains("web/src/styles.css", "#0f766e") ||
@@ -965,11 +970,9 @@ func doctorFrontendContract() doctorResult {
 		!fileContains("web/src/styles.css", `@source "./lib/**/*.ts";`) ||
 		!fileContains("web/src/styles.css", `@source "./main.tsx";`) ||
 		!fileContains("web/src/styles.css", `@source "./server.ts";`) ||
-		!fileContains("web/src/styles.css", `[data-theme="dark"]`) ||
+		!fileContains("web/src/styles.css", `@custom-variant dark`) ||
 		!fileContains("web/src/styles.css", `font-size: 14px`) ||
 		!fileContains("web/src/styles.css", `line-height: 1.4`) ||
-		!fileContains("web/src/styles.css", `--carbide-page: #ffffff`) ||
-		!fileContains("web/src/styles.css", `--carbide-page: #000000`) ||
 		!fileContains("web/index.html", `prefers-color-scheme: dark`) ||
 		!fileContains("web/src/main.tsx", `carbide.theme`) ||
 		!fileContains("web/src/component/l1/ThemeToggle.tsx", `SunIcon`) ||
@@ -978,7 +981,7 @@ func doctorFrontendContract() doctorResult {
 		!fileContains("web/src/component/l1/ThemeToggle.tsx", `Switch to dark theme`) ||
 		!fileContains("web/src/component/l1/ThemeToggle.tsx", `size-8 rounded-full border`) ||
 		!fileContains("web/src/component/l1/ThemeToggle.tsx", `data-theme-mode`) ||
-		!fileContains("web/src/component/l1/tokens.ts", `bg-carbide-hero text-carbide-hero-text`) ||
+		!fileContains("web/src/component/l1/tokens.ts", `bg-white text-neutral-950 dark:bg-black dark:text-neutral-50`) ||
 		!fileContains("web/src/component/l1/Text.tsx", `text-2xl/8 sm:text-3xl/9`) ||
 		!fileContains("web/src/component/l1/Field.tsx", `min-h-8 rounded-md border px-2 py-1 text-sm/6`) ||
 		!fileContains("web/src/component/l1/Button.tsx", `md: 'min-h-8 px-3 text-xs'`) ||
@@ -1263,7 +1266,7 @@ func doctorDocsWebContract() doctorResult {
 		"web/tsconfig.json":                   {`"strict": true`, `"jsx": "react-jsx"`, `"types": ["bun-types"]`},
 		"web/src/build-styles.ts":             {"tailwindcss", "./src/styles.css", "styles.css"},
 		"web/src/main.tsx":                    {"createRoot", "DocsRuntime", "./tailwind.css"},
-		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.tsx";`, `@source "./lib/**/*.ts";`, `@source "./main.tsx";`, `@source "./server.ts";`, `@theme`, `--color-carbide-page: var(--carbide-page);`},
+		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.tsx";`, `@source "./lib/**/*.ts";`, `@source "./main.tsx";`, `@source "./server.ts";`, `@custom-variant dark`, `font-size: 14px`, `line-height: 1.4`},
 		"web/src/write-index.ts":              {"asset-manifest.json", `/assets/${scripts[0]}`},
 		"web/index.html":                      {"carbide.theme", "./src/main.tsx", "Carbide Docs"},
 		"web/src/server.ts":                   {"serveStatic", "servePublicFile", "publicRoot", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3`, "docsResponseHeaders", "rewriteDocsHtml", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`, "Cache-Control", "public, max-age=31536000, immutable", `return "no-store"`},
@@ -1299,20 +1302,15 @@ func scaffoldTailwindInputFindings(path string) []string {
 	if !strings.HasPrefix(content, scaffoldTailwindInputHeader) {
 		findings = append(findings, "must start with Tailwind import/source directives")
 	}
-	if lines := fileLineCount(path); lines > 160 {
+	if lines := fileLineCount(path); lines > 60 {
 		findings = append(findings, fmt.Sprintf("too large: %d lines", lines))
 	}
 	for _, needle := range []string{
-		`:root,`,
-		`[data-theme="light"]`,
-		`[data-theme="dark"]`,
+		`@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));`,
 		`html {`,
 		`body {`,
-		`@theme {`,
-		`--color-carbide-page: var(--carbide-page);`,
-		`--color-carbide-text: var(--carbide-text);`,
-		`--color-carbide-action: var(--carbide-action);`,
-		`--shadow-carbide-subtle: var(--carbide-shadow-subtle);`,
+		`font-size: 14px;`,
+		`line-height: 1.4;`,
 	} {
 		if !strings.Contains(content, needle) {
 			findings = append(findings, "missing "+needle)
@@ -1326,6 +1324,8 @@ func scaffoldTailwindInputFindings(path string) []string {
 		"@container",
 		"@plugin",
 		"@config",
+		"@theme",
+		"--carbide-",
 		"<style",
 	} {
 		if strings.Contains(content, forbidden) {

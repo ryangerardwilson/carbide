@@ -341,22 +341,20 @@ grep -F -q '@source "./component/**/*.tsx";' scaffold/web/src/styles.css
 grep -F -q '@source "./lib/**/*.ts";' scaffold/web/src/styles.css
 grep -F -q '@source "./main.tsx";' scaffold/web/src/styles.css
 grep -F -q '@source "./server.ts";' scaffold/web/src/styles.css
-grep -q "@theme" scaffold/web/src/styles.css
-grep -q -- "--color-carbide-action" scaffold/web/src/styles.css
+grep -q "@custom-variant dark" scaffold/web/src/styles.css
 grep -q "\\[data-theme=\"dark\"\\]" scaffold/web/src/styles.css
-grep -q "color-scheme: dark" scaffold/web/src/styles.css
 grep -q "font-size: 14px" scaffold/web/src/styles.css
 grep -q "line-height: 1.4" scaffold/web/src/styles.css
-grep -q "var(--carbide-page)" scaffold/web/src/styles.css
-grep -q -- "--carbide-page: #ffffff" scaffold/web/src/styles.css
-grep -q -- "--carbide-page: #000000" scaffold/web/src/styles.css
-grep -q "bg-carbide-hero text-carbide-hero-text" scaffold/web/src/component/l1/tokens.ts
+! grep -q "@theme" scaffold/web/src/styles.css
+! grep -q -- "--carbide-" scaffold/web/src/styles.css
+! grep -q "carbide-" scaffold/web/src/component/l1/tokens.ts
+grep -q "bg-white text-neutral-950 dark:bg-black dark:text-neutral-50" scaffold/web/src/component/l1/tokens.ts
 ! grep -Eq "#0f766e|#115e59|#2dd4bf|#5eead4|#16433c|#0f302c|#16211b|#edf5ef|#ecfdf5|#166534" scaffold/web/src/styles.css
 ! grep -q "from-carbide-action via-carbide-hero-via" scaffold/web/src/component/l1/tokens.ts
 ! grep -q "theme.css" scaffold/web/src/styles.css
 ! grep -Eq '^[[:space:]]*\.[A-Za-z_-]' scaffold/web/src/styles.css
 ! grep -Eq '^[[:space:]]*#[A-Za-z_-]' scaffold/web/src/styles.css
-! grep -Eq '@apply|@layer|@keyframes|@media|@container|@plugin|@config' scaffold/web/src/styles.css
+! grep -Eq '@theme|@apply|@layer|@keyframes|@media|@container|@plugin|@config' scaffold/web/src/styles.css
 grep -q "scaffoldTailwindInputFindings" cli/internal/cli/cli.go
 grep -q "scaffold Tailwind input contract" cli/internal/cli/cli.go
 grep -F -q "text-2xl/8 sm:text-3xl/9" scaffold/web/src/component/l1/Text.tsx
@@ -552,6 +550,9 @@ grep -F -q '@source "./component/**/*.tsx";' docs/app/web/src/styles.css
 grep -F -q '@source "./lib/**/*.ts";' docs/app/web/src/styles.css
 grep -F -q '@source "./main.tsx";' docs/app/web/src/styles.css
 grep -F -q '@source "./server.ts";' docs/app/web/src/styles.css
+grep -q "@custom-variant dark" docs/app/web/src/styles.css
+! grep -q "@theme" docs/app/web/src/styles.css
+! grep -q -- "--carbide-" docs/app/web/src/styles.css
 cmp -s scaffold/web/src/styles.css docs/app/web/src/styles.css
 grep -q "docsTailwindInputFindings" cli/internal/cli/cli.go
 grep -q "docsGeneratedTailwindFindings" cli/internal/cli/cli.go

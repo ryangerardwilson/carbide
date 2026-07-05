@@ -7,7 +7,7 @@ const themeToggleClassLayers = {
   button: {
     l1: 'inline-flex items-center justify-center',
     l2: 'size-8 rounded-full border outline-none',
-    l3: cx(ui.secondaryAction, ui.focus, 'transition hover:border-carbide-border-strong')
+    l3: cx(ui.secondaryAction, ui.focus, 'transition')
   },
   icon: {
     l1: 'shrink-0',

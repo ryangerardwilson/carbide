@@ -88,9 +88,10 @@ currently refuses to mutate anything.
   screens.
 - `web/src/lib/` owns small non-component browser helpers such as `cx()` and
   shared frontend contract types.
-- `web/src/styles.css` owns light and dark color variables and maps them into
-  Tailwind theme tokens. `web/index.html` applies the stored theme before the
-  React app paints.
+- `web/src/styles.css` owns the Tailwind import, source globs, the `data-theme`
+  dark variant, and minimal browser defaults. Starter colors live in Tailwind
+  utility tokens, not a generated CSS variable palette. `web/index.html`
+  applies the stored theme before the React app paints.
 - `api/` owns the Go HTTP/API server, auth, sessions, routing, and JSON
   responses, its Go module, and its Dockerfile.
 - `db/` owns Postgres-backed data access, its Go module, and migration

@@ -104,8 +104,8 @@ The generated web app uses Tailwind and keeps component tiers explicit:
 - `web/src/component/l3/`: product screens such as auth, dashboard, and loading
   states.
 - `web/src/lib/`: small non-component browser helpers, including `cx()`.
-- `web/src/styles.css`: Tailwind input, theme variables, and minimal
-  `html`/`body` browser defaults.
+- `web/src/styles.css`: Tailwind input, source globs, the `data-theme` dark
+  variant, and minimal `html`/`body` browser defaults.
 - `web/src/write-index.ts`: writes the generated app shell with hashed asset
   references after Bun builds React.
 

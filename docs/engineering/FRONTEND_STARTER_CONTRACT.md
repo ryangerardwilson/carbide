@@ -96,12 +96,15 @@ Generated apps use Tailwind as the mandatory styling path. `styles.css` is the
 Tailwind input file, and the container builds generated CSS with the checked-in
 Bun lockfile.
 
-`styles.css` contains the Tailwind import and a small Tailwind v4 `@theme`
-block. `tokens.ts` contains reusable Tailwind utility groups for the generated
-auth and dashboard UI. The scaffold does not add a parallel `theme.css` file.
-`carbide doctor` rejects custom class selectors, ID selectors, `@apply`,
-`@layer`, keyframes, media rules, and container rules in `styles.css`; those
-belong in Tailwind utility classes and component class layers.
+`styles.css` contains the Tailwind import, TypeScript-aware source directives,
+the `data-theme` dark variant, and minimal `html`/`body` defaults. It does not
+own a generated color-variable palette. `tokens.ts` contains reusable Tailwind
+utility groups for the generated auth and dashboard UI, including starter
+light/dark visual choices. The scaffold does not add a parallel `theme.css`
+file. `carbide doctor` rejects custom class selectors, ID selectors,
+`--carbide-*` color variables, `@theme`, `@apply`, `@layer`, keyframes, media
+rules, and container rules in `styles.css`; those belong in Tailwind utility
+classes and component class layers.
 
 `typecheck` runs `tsc --noEmit`. Docker builds run typecheck before building
 browser assets, so broken component props, API response shapes, or Bun server
