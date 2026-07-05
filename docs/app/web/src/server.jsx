@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { stat, readFile } from "node:fs/promises";
 import { extname, join, normalize, sep } from "node:path";
-import { docsResponseHeaders } from "./component/l3/index.js";
+import { docsResponseHeaders, rewriteDocsHtml } from "./component/l3/index.js";
 
 const port = Number(process.env.PORT || 8080);
 const siteRootCandidates = [
@@ -88,7 +88,7 @@ async function serveStatic(pathname) {
     const type = contentTypes[extname(path)] || "application/octet-stream";
     const rawBody = await readFile(path);
     const body = type.startsWith("text/html")
-      ? cacheBustHtml(rawBody.toString("utf8"))
+      ? cacheBustHtml(rewriteDocsHtml(rawBody.toString("utf8")))
       : rawBody;
     const cache = cacheControlFor(pathname);
     return new Response(body, {

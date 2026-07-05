@@ -505,6 +505,7 @@ grep -q 'pathname.endsWith(".html")' docs/app/web/src/server.jsx
 grep -q "status: 308" docs/app/web/src/server.jsx
 grep -q 'location: `${pathname}${target.search}`' docs/app/web/src/server.jsx
 grep -q 'docsResponseHeaders' docs/app/web/src/server.jsx
+grep -q 'rewriteDocsHtml' docs/app/web/src/server.jsx
 grep -q 'createHash' docs/app/web/src/server.jsx
 grep -q 'cacheBustHtml' docs/app/web/src/server.jsx
 grep -q 'versionedAssetPath' docs/app/web/src/server.jsx
@@ -514,11 +515,9 @@ grep -q 'assets/styles.css' docs/app/web/src/server.jsx
 grep -q 'return "no-cache"' docs/app/web/src/server.jsx
 grep -q '@import "tailwindcss";' docs/app/web/src/styles.css
 grep -F -q '@source "./component/**/*.jsx";' docs/app/web/src/styles.css
-grep -q "margin-top: 44px" docs/app/web/src/styles.css
-grep -q "margin-top: 34px" docs/app/web/src/styles.css
-grep -F -q ".docs-content pre + p" docs/app/web/src/styles.css
-grep -F -q ".docs-content pre + ul" docs/app/web/src/styles.css
-grep -F -q ".docs-content pre + ol" docs/app/web/src/styles.css
+styles_lines="$(wc -l < docs/app/web/src/styles.css)"
+test "$styles_lines" -le 260
+! grep -E -q '\.(article-header|brand|breadcrumb|callout|docs-content|docs-footer|docs-layout|docs-sidebar|docs-toc|docs-topbar|footer-inner|github-link|lead|nav-|runtime-|search-box|sidebar-nav|skip-link|toc-|topbar-|version-pill)' docs/app/web/src/styles.css
 ! grep -q "docs-intro-skip" docs/app/web/src/styles.css
 grep -q '"tailwind:build"' docs/app/web/package.json
 grep -q "tailwindcss" docs/app/web/src/build-styles.js
@@ -528,8 +527,15 @@ grep -q '"react": "19.2.7"' docs/app/web/package.json
 grep -q '"react-dom": "19.2.7"' docs/app/web/package.json
 grep -q "bun run tailwind:build" docs/app/web/Dockerfile
 grep -q "docsClassLayers" docs/app/web/src/component/l1/tokens.js
+grep -q "docsStaticClassMap" docs/app/web/src/component/l2/DocsChrome.jsx
+grep -q "rewriteDocsClasses" docs/app/web/src/component/l2/DocsChrome.jsx
+grep -F -q "[&_pre+p]:mt-[18px]" docs/app/web/src/component/l2/DocsChrome.jsx
+grep -F -q "max-[860px]:mt-[34px]" docs/app/web/src/component/l2/DocsChrome.jsx
 grep -q "docsChromeClassLayers" docs/app/web/src/component/l2/DocsChrome.jsx
 grep -q "docsWebContract" docs/app/web/src/component/l3/DocsSite.jsx
+grep -q "rewriteDocsHtml" docs/app/web/src/component/l3/DocsSite.jsx
+grep -q "fileLineCount" cli/internal/cli/cli.go
+grep -q "parallel docs CSS selectors" cli/internal/cli/cli.go
 grep -q "component/l1" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "component/l2" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "component/l3" docs/app/agents.d/TAILWIND_COMPONENTS.md
@@ -574,11 +580,8 @@ grep -q "Prologue" docs/site/index.html
 grep -q "Getting Started" docs/site/index.html
 grep -q "Architecture" docs/site/index.html
 grep -q "On this page" docs/site/index.html
-grep -q ".docs-layout" docs/site/assets/styles.css
-grep -q ".docs-sidebar" docs/site/assets/styles.css
-grep -q ".docs-toc" docs/site/assets/styles.css
-grep -q ".docs-topbar" docs/site/assets/styles.css
-grep -E -q '@media \(max-width: ?860px\)' docs/site/assets/styles.css
+! grep -E -q '\.(docs-layout|docs-sidebar|docs-toc|docs-topbar)' docs/site/assets/styles.css
+grep -F -q ".max-\\[860px\\]\\:grid-cols-1" docs/site/assets/styles.css
 
 for page in docs/site/*.html; do
   grep -q 'class="docs-topbar"' "$page"

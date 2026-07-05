@@ -1,4 +1,4 @@
-import { docsStaticHeaders } from "../l2/index.js";
+import { docsStaticHeaders, rewriteDocsClasses } from "../l2/index.js";
 
 export const docsSiteClassLayers = {
   shell: {
@@ -26,4 +26,8 @@ export function docsResponseHeaders(options) {
     ...options,
     contract: docsWebContract().id,
   });
+}
+
+export function rewriteDocsHtml(html) {
+  return rewriteDocsClasses(html);
 }

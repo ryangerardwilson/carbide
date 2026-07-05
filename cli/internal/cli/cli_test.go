@@ -729,6 +729,39 @@ func TestDoctorPrintsDocsProjectContract(t *testing.T) {
 	})
 }
 
+func TestDoctorRejectsOversizedDocsTailwindInput(t *testing.T) {
+	source, err := filepath.Abs(filepath.Join("..", "..", "..", "docs", "app"))
+	if err != nil {
+		t.Fatalf("Abs docs app returned %v", err)
+	}
+	target := filepath.Join(t.TempDir(), "docs-app")
+	if err := copyScaffoldPart(source, target, "Carbide Docs", "carbide-docs"); err != nil {
+		t.Fatalf("copyScaffoldPart returned %v", err)
+	}
+
+	stylesPath := filepath.Join(target, "web", "src", "styles.css")
+	styles, err := os.ReadFile(stylesPath)
+	if err != nil {
+		t.Fatalf("ReadFile returned %v", err)
+	}
+	styles = append(styles, []byte(strings.Repeat("/* layout drift */\n", 120))...)
+	if err := os.WriteFile(stylesPath, styles, 0644); err != nil {
+		t.Fatalf("WriteFile returned %v", err)
+	}
+
+	withWorkingDir(t, target, func() {
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		err := a.run([]string{"doctor"})
+		if err == nil {
+			t.Fatalf("doctor should reject oversized docs Tailwind input")
+		}
+		if !strings.Contains(out.String(), "docs Tailwind input too large") {
+			t.Fatalf("doctor output = %q", out.String())
+		}
+	})
+}
+
 func withWorkingDir(t *testing.T, dir string, work func()) {
 	t.Helper()
 	previous, err := os.Getwd()

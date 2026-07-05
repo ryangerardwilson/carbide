@@ -842,6 +842,9 @@ func doctorFrontendContract() doctorResult {
 	if fileContains("web/src/styles.css", "theme.css") || treeContains("web/src", "cb-") || treeContains("web/src", "--cb-") {
 		return doctorFail("frontend", "parallel CSS theme detected")
 	}
+	if lines := fileLineCount("web/src/styles.css"); lines > 220 {
+		return doctorFail("frontend", fmt.Sprintf("Tailwind input too large: %d lines", lines))
+	}
 	if fileContains("web/src/styles.css", "#0f766e") ||
 		fileContains("web/src/styles.css", "#115e59") ||
 		fileContains("web/src/styles.css", "#2dd4bf") ||
@@ -1160,15 +1163,44 @@ func doctorDocsWebContract() doctorResult {
 		"web/package.json":                    {`"tailwind:build"`, `"@tailwindcss/cli":`, `"react":`, `"react-dom":`, `"tailwindcss":`},
 		"web/src/build-styles.js":             {"tailwindcss", "./src/styles.css", "styles.css"},
 		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.jsx";`},
-		"web/src/server.jsx":                  {"serveStatic", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3/index.js`, "docsResponseHeaders", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`},
+		"web/src/server.jsx":                  {"serveStatic", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3/index.js`, "docsResponseHeaders", "rewriteDocsHtml", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`},
 		"web/src/component/l1/tokens.js":      {"docsClassLayers", "l1:", "l2:", "l3:"},
-		"web/src/component/l2/DocsChrome.jsx": {"docsChromeClassLayers", "docsStaticHeaders"},
-		"web/src/component/l3/DocsSite.jsx":   {"docsSiteClassLayers", "docsWebContract", "docsResponseHeaders"},
+		"web/src/component/l2/DocsChrome.jsx": {"docsChromeClassLayers", "docsStaticClassMap", "rewriteDocsClasses", "docsStaticHeaders"},
+		"web/src/component/l3/DocsSite.jsx":   {"docsSiteClassLayers", "docsWebContract", "rewriteDocsHtml", "docsResponseHeaders"},
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
 			return doctorFail("web", path+" missing "+strings.Join(missing, ", "))
 		}
+	}
+	if lines := fileLineCount("web/src/styles.css"); lines > 260 {
+		return doctorFail("web", fmt.Sprintf("docs Tailwind input too large: %d lines", lines))
+	}
+	forbiddenSelectors := []string{
+		".article-header",
+		".brand",
+		".breadcrumb",
+		".callout",
+		".docs-content",
+		".docs-footer",
+		".docs-layout",
+		".docs-sidebar",
+		".docs-toc",
+		".docs-topbar",
+		".footer-inner",
+		".github-link",
+		".lead",
+		".nav-",
+		".runtime-",
+		".search-box",
+		".sidebar-nav",
+		".skip-link",
+		".toc-",
+		".topbar-",
+		".version-pill",
+	}
+	if hits := containedNeedles(readFileString("web/src/styles.css"), forbiddenSelectors); len(hits) > 0 {
+		return doctorFail("web", "parallel docs CSS selectors: "+strings.Join(hits, ", "))
 	}
 	return doctorOK("web", "Bun React Tailwind docs")
 }
@@ -1501,6 +1533,24 @@ func readFileString(path string) string {
 
 func fileContains(path string, needle string) bool {
 	return strings.Contains(readFileString(path), needle)
+}
+
+func fileLineCount(path string) int {
+	content := strings.TrimSuffix(readFileString(path), "\n")
+	if content == "" {
+		return 0
+	}
+	return strings.Count(content, "\n") + 1
+}
+
+func containedNeedles(content string, needles []string) []string {
+	var found []string
+	for _, needle := range needles {
+		if strings.Contains(content, needle) {
+			found = append(found, needle)
+		}
+	}
+	return found
 }
 
 func floatingDockerReferences(paths []string) []string {
