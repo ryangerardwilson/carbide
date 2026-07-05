@@ -64,8 +64,8 @@ separate secrets container.
 Infrastructure uses a preview-before-apply rule:
 
 ```sh
-carbide deploy preview dev
-carbide deploy apply dev
+carbide deploy preview prod
+carbide deploy apply prod
 ```
 
 `preview` shows what would change. `apply` is the only command allowed to make

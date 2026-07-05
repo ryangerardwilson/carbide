@@ -298,7 +298,7 @@ func (a app) run(args []string) error {
 		if len(args) == 3 && args[1] == "apply" {
 			return a.commandDeployApply(args[2])
 		}
-		return errors.New("usage: carbide deploy preview <target> | carbide deploy apply <target>")
+		return errors.New("usage: carbide deploy preview prod | carbide deploy apply prod")
 	case "run":
 		if len(args) == 2 && args[1] == "dev" {
 			return a.commandRunDev()
@@ -347,8 +347,8 @@ func (a app) printHelp() {
 	r.CommandList([]helpCommandSection{
 		{
 			rows: []outputRow{
-				{"deploy apply <target>", "apply deploy changes"},
-				{"deploy preview <target>", "show deploy changes"},
+				{"deploy apply prod", "apply production deploy"},
+				{"deploy preview prod", "preview production deploy"},
 				{"doctor", "check project contract"},
 				{"doctor env", "validate env contract"},
 				{"doctor framework", "run framework regressions"},

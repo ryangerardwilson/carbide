@@ -217,8 +217,8 @@ grep -q "carbide doctor env" scaffold/README.md
 grep -q "carbide doctor runtime" scaffold/README.md
 grep -q "explicit runtime baseline" scaffold/README.md
 grep -q "Postgres major-version baseline change" scaffold/README.md
-grep -q "carbide deploy preview dev" scaffold/README.md
-grep -q "carbide deploy apply dev" scaffold/README.md
+grep -q "carbide deploy preview prod" scaffold/README.md
+grep -q "carbide deploy apply prod" scaffold/README.md
 grep -q "POSTGRES_PASSWORD" scaffold/.env.example
 grep -q "separate secrets container" scaffold/agents.d/ENVIRONMENT.md
 grep -q "preview-before-apply" scaffold/agents.d/DEPLOY.md

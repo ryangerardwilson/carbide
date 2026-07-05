@@ -6,8 +6,8 @@ Preview means: show what would change.
 
 Apply means: actually change infrastructure.
 
-Until this app has a real deploy target, `carbide deploy preview <target>`
-prints a non-mutating plan and `carbide deploy apply <target>` refuses to run.
+Until this app has a real deploy target, `carbide deploy preview prod`
+prints a non-mutating plan and `carbide deploy apply prod` refuses to run.
 
 Deploy targets should be modeled as environments. A small app can use one
 `ssh-compose` host. A larger app should define `deploy.hosts.*` and an
@@ -18,19 +18,13 @@ explicit migration, health, load-balancer, and rollback rules.
 ## Intended Flow
 
 ```sh
-carbide deploy preview dev
-carbide deploy apply dev
-```
-
-Production must be stricter:
-
-```sh
 carbide deploy preview prod
 carbide deploy apply prod
 ```
 
-The production apply path must require explicit confirmation once a production
-target exists.
+The production target is always named `prod` unless the project deliberately
+adds another checked-in environment name. The production apply path must require
+explicit confirmation once a production target exists.
 
 ## Rules
 

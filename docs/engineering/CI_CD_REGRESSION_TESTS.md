@@ -156,11 +156,11 @@ Future checks:
 - browser-exposed variables cannot be marked secret;
 - framework-owned keys are visible in the contract and protected from casual app
   override;
-- `carbide deploy preview <target>` is non-mutating and reports either the
-  checked-in target plan, including environment hosts and roles, or the guarded
-  unknown-target state;
-- `carbide deploy apply <target>` refuses unknown targets and runs only for
-  checked-in deploy targets with implemented apply semantics;
+- `carbide deploy preview prod` is non-mutating and reports either the
+  checked-in production target plan, including environment hosts and roles, or
+  the guarded unknown-target state;
+- `carbide deploy apply prod` refuses unknown targets and runs only when `prod`
+  is a checked-in deploy target with implemented apply semantics;
 - `ssh-compose-environment` targets are previewable and validated while
   clustered apply remains guarded.
 
@@ -195,8 +195,8 @@ Future checks:
   printing secret values;
 - `carbide doctor framework` runs source-repo regressions: shell syntax, Go
   CLI tests, repo contract, scaffold checks, and Docker smoke;
-- `carbide deploy preview <target>` prints the non-mutating deploy plan;
-- `carbide deploy apply <target>` applies only checked-in deploy targets and
+- `carbide deploy preview prod` prints the non-mutating deploy plan;
+- `carbide deploy apply prod` applies only a checked-in production target and
   remains guarded for unknown targets and preview-only environment targets;
 - `carbide follow logs` reattaches to live container logs and preserves
   timestamped, service-tagged rendering;

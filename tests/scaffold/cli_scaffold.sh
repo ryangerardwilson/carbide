@@ -32,8 +32,8 @@ awk 'length($0) > 79 { print "help line exceeds 79 chars: " $0; exit 1 }' "$tmp_
 grep -q "^Usage:$" "$tmp_dir/help.out"
 grep -q "^  carbide <command> \\[arguments\\]$" "$tmp_dir/help.out"
 grep -q "^Available commands:$" "$tmp_dir/help.out"
-grep -q "^  deploy apply <target> " "$tmp_dir/help.out"
-grep -q "^  deploy preview <target> " "$tmp_dir/help.out"
+grep -q "^  deploy apply prod " "$tmp_dir/help.out"
+grep -q "^  deploy preview prod " "$tmp_dir/help.out"
 grep -q "^  doctor " "$tmp_dir/help.out"
 grep -q "^  doctor env " "$tmp_dir/help.out"
 grep -q "^  doctor framework " "$tmp_dir/help.out"
@@ -379,13 +379,13 @@ grep -Eq "^regressions[[:space:]]+ok[[:space:]]+no legacy markers" "$tmp_dir/doc
 grep -Eq "^runtime[[:space:]]+skip[[:space:]]+run carbide doctor runtime" "$tmp_dir/doctor.out"
 ! grep -q "postgres://carbide:carbide" "$tmp_dir/doctor.out"
 
-CARBIDE_HOME="$repo_root" "$repo_root/cli/bin/carbide" deploy preview dev > "$tmp_dir/deploy-preview.out"
+CARBIDE_HOME="$repo_root" "$repo_root/cli/bin/carbide" deploy preview prod > "$tmp_dir/deploy-preview.out"
 grep -q "Carbide deploy" "$tmp_dir/deploy-preview.out"
-grep -q "preview dev" "$tmp_dir/deploy-preview.out"
+grep -q "preview prod" "$tmp_dir/deploy-preview.out"
 grep -Eq "^mutates[[:space:]]+no" "$tmp_dir/deploy-preview.out"
 grep -q "refuse apply until target is implemented" "$tmp_dir/deploy-preview.out"
 
-if CARBIDE_HOME="$repo_root" "$repo_root/cli/bin/carbide" deploy apply dev > "$tmp_dir/deploy-apply.out" 2> "$tmp_dir/deploy-apply.err"; then
+if CARBIDE_HOME="$repo_root" "$repo_root/cli/bin/carbide" deploy apply prod > "$tmp_dir/deploy-apply.out" 2> "$tmp_dir/deploy-apply.err"; then
   printf 'carbide deploy apply should be guarded until a target exists\n' >&2
   exit 1
 fi

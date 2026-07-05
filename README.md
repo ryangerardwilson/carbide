@@ -127,8 +127,8 @@ layer; Carbide does not add a separate secrets container by default.
 Deploy commands follow the preview/apply contract:
 
 ```sh
-carbide deploy preview dev
-carbide deploy apply dev
+carbide deploy preview prod
+carbide deploy apply prod
 ```
 
 `preview` is non-mutating and shows the planned change set. `apply` is the only
@@ -204,10 +204,11 @@ agent docs, and legacy-regression markers.
 local defaults, and secret/browser exposure rules without printing secret
 values. `carbide doctor runtime` runs the heavier Docker-backed health and auth
 flow check. `carbide doctor framework` runs framework source regressions from a
-Carbide source checkout. `carbide deploy preview <target>` prints the
-non-mutating deploy plan, while `carbide deploy apply <target>` runs only for
-checked-in deploy targets such as the docs app `de-sci` target; otherwise it
-remains guarded. Multi-server environment targets are previewable and
+Carbide source checkout. `carbide deploy preview prod` is the canonical
+production preview command; `carbide deploy apply prod` runs only when `prod` is
+a checked-in deploy target with implemented apply semantics. Additional target
+names are allowed when a project intentionally defines them, such as the docs
+app `de-sci` target. Multi-server environment targets are previewable and
 validated, but `apply` is intentionally guarded until clustered orchestration is
 implemented.
 

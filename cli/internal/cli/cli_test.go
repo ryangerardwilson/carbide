@@ -212,8 +212,8 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"Usage:",
 		"  carbide <command> [arguments]",
 		"Available commands:",
-		"  deploy apply <target>",
-		"  deploy preview <target>",
+		"  deploy apply prod",
+		"  deploy preview prod",
 		"  doctor",
 		"  doctor env",
 		"  doctor framework",
@@ -239,8 +239,8 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"Usage:",
 		"Available commands:",
 		"new <project-name>",
-		"deploy preview <target>",
-		"deploy apply <target>",
+		"deploy preview prod",
+		"deploy apply prod",
 		"doctor",
 		"doctor env",
 		"doctor runtime",
@@ -432,14 +432,14 @@ local_default = "development"
 
 		var out bytes.Buffer
 		a := app{stdout: &out}
-		if err := a.run([]string{"deploy", "preview", "dev"}); err != nil {
+		if err := a.run([]string{"deploy", "preview", "prod"}); err != nil {
 			t.Fatalf("preview returned %v", err)
 		}
 		got := out.String()
 		for _, want := range []string{
 			"Carbide deploy",
-			"preview dev",
-			"target   dev",
+			"preview prod",
+			"target   prod",
 			"mutates  no",
 			"plan     validate env contract",
 			"refuse apply until target is implemented",
@@ -450,7 +450,7 @@ local_default = "development"
 		}
 
 		out.Reset()
-		err := a.run([]string{"deploy", "apply", "dev"})
+		err := a.run([]string{"deploy", "apply", "prod"})
 		if err == nil {
 			t.Fatalf("deploy apply should be disabled")
 		}

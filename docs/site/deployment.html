@@ -81,9 +81,9 @@
 
         <section id="deploy-model">
           <h2>Deploy Model</h2>
-          <p>Always preview first. <code>carbide deploy preview &lt;target&gt;</code> is non-mutating and validates the checked-in target. <code>carbide deploy apply &lt;target&gt;</code> mutates infrastructure only for target types with implemented apply semantics.</p>
-          <pre><code>carbide deploy preview production
-carbide deploy apply production</code></pre>
+          <p>Always preview first. <code>carbide deploy preview prod</code> is the canonical production preview. <code>carbide deploy apply prod</code> mutates infrastructure only when <code>prod</code> is a checked-in target with implemented apply semantics.</p>
+          <pre><code>carbide deploy preview prod
+carbide deploy apply prod</code></pre>
           <p>Today, <code>ssh-compose</code> applies to one VM. <code>ssh-compose-environment</code> validates and previews multi-VM topology, but apply is guarded until clustered orchestration is implemented.</p>
         </section>
 
@@ -93,7 +93,7 @@ carbide deploy apply production</code></pre>
           <pre><code>[deploy]
 preview_before_apply = true
 
-[deploy.targets.production]
+[deploy.targets.prod]
 type = "ssh-compose"
 host = "app-prod"
 domain = "app.example.com"
@@ -127,7 +127,7 @@ description = "Private API host."
 ssh = "db-1"
 description = "Primary Postgres host."
 
-[deploy.targets.production]
+[deploy.targets.prod]
 type = "ssh-compose-environment"
 domain = "app.example.com"
 remote_path = "/opt/my-carbide-app"
@@ -137,20 +137,20 @@ project_directory = "."
 health_path = "/health"
 strategy = "preview-only"
 
-[deploy.targets.production.roles.web]
+[deploy.targets.prod.roles.web]
 hosts = ["web-1"]
 public_port = 18080
 nginx = true
 
-[deploy.targets.production.roles.api]
+[deploy.targets.prod.roles.api]
 hosts = ["api-1"]
 
-[deploy.targets.production.roles.db]
+[deploy.targets.prod.roles.db]
 hosts = ["db-1"]
 primary = "db-1"
 migration = "once"</code></pre>
           <p>The preview validates that each role references known hosts, that <code>web</code>, <code>api</code>, and <code>db</code> roles exist, that the <code>db</code> role has a primary host, and that migrations are declared as <code>once</code>.</p>
-          <p><code>carbide deploy apply production</code> is intentionally guarded for this target type until Carbide implements clustered orchestration, migration ordering, health gates, load-balancer changes, and rollback behavior.</p>
+          <p><code>carbide deploy apply prod</code> is intentionally guarded for this target type until Carbide implements clustered orchestration, migration ordering, health gates, load-balancer changes, and rollback behavior.</p>
         </section>
 
         <section id="field-reference">

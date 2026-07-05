@@ -8,11 +8,12 @@ reviewable before anything mutates.
 Always preview first:
 
 ```sh
-carbide deploy preview production
+carbide deploy preview prod
 ```
 
-`carbide deploy apply <target>` mutates infrastructure only for target types
-with implemented apply semantics. Today, `ssh-compose` applies to one VM.
+`prod` is the canonical production target name. `carbide deploy apply prod`
+mutates infrastructure only when `prod` is a checked-in target with implemented
+apply semantics. Today, `ssh-compose` applies to one VM.
 `ssh-compose-environment` validates and previews multi-VM topology, but apply is
 guarded until clustered orchestration is implemented.
 
@@ -25,7 +26,7 @@ containers through Docker Compose.
 [deploy]
 preview_before_apply = true
 
-[deploy.targets.production]
+[deploy.targets.prod]
 type = "ssh-compose"
 host = "app-prod"
 domain = "app.example.com"
@@ -50,8 +51,8 @@ to `public_port`, and uses Certbot when a certificate is not already present.
 Deploy with:
 
 ```sh
-carbide deploy preview production
-carbide deploy apply production
+carbide deploy preview prod
+carbide deploy apply prod
 ```
 
 On apply, Carbide syncs `source_path` to `remote_path`, creates `.env` on the
@@ -79,7 +80,7 @@ description = "Private API host."
 ssh = "db-1"
 description = "Primary Postgres host."
 
-[deploy.targets.production]
+[deploy.targets.prod]
 type = "ssh-compose-environment"
 domain = "app.example.com"
 remote_path = "/opt/my-carbide-app"
@@ -89,15 +90,15 @@ project_directory = "."
 health_path = "/health"
 strategy = "preview-only"
 
-[deploy.targets.production.roles.web]
+[deploy.targets.prod.roles.web]
 hosts = ["web-1"]
 public_port = 18080
 nginx = true
 
-[deploy.targets.production.roles.api]
+[deploy.targets.prod.roles.api]
 hosts = ["api-1"]
 
-[deploy.targets.production.roles.db]
+[deploy.targets.prod.roles.db]
 hosts = ["db-1"]
 primary = "db-1"
 migration = "once"
@@ -106,14 +107,14 @@ migration = "once"
 Preview with:
 
 ```sh
-carbide deploy preview production
+carbide deploy preview prod
 ```
 
 The preview validates that each role references known hosts, that `web`, `api`,
 and `db` roles exist, that the `db` role has a primary host, and that migrations
 are declared as `once`.
 
-`carbide deploy apply production` is intentionally guarded for this target type
+`carbide deploy apply prod` is intentionally guarded for this target type
 until Carbide implements clustered orchestration, migration ordering, health
 gates, load-balancer changes, and rollback behavior.
 
