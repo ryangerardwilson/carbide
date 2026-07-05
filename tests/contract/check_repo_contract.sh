@@ -495,6 +495,9 @@ grep -q "intro=1" docs/site/assets/intro.js
 grep -q "prefers-reduced-motion" docs/site/assets/intro.js
 ! grep -q "sessionStorage" docs/site/assets/intro.js
 ! grep -q "storageKey" docs/site/assets/intro.js
+! grep -q "docs-intro-skip" docs/site/assets/intro.js
+! grep -q ">Skip<" docs/site/assets/intro.js
+! grep -q "skipIntro" docs/site/assets/intro.js
 grep -q "canonicalDocsPath" docs/app/web/src/server.jsx
 grep -q '"/initial-user-experience": "/create-your-first-app"' docs/app/web/src/server.jsx
 grep -q 'pathname === "/index.html"' docs/app/web/src/server.jsx
@@ -513,6 +516,10 @@ grep -q '@import "tailwindcss";' docs/app/web/src/styles.css
 grep -F -q '@source "./component/**/*.jsx";' docs/app/web/src/styles.css
 grep -q "margin-top: 44px" docs/app/web/src/styles.css
 grep -q "margin-top: 34px" docs/app/web/src/styles.css
+grep -F -q ".docs-content pre + p" docs/app/web/src/styles.css
+grep -F -q ".docs-content pre + ul" docs/app/web/src/styles.css
+grep -F -q ".docs-content pre + ol" docs/app/web/src/styles.css
+! grep -q "docs-intro-skip" docs/app/web/src/styles.css
 grep -q '"tailwind:build"' docs/app/web/package.json
 grep -q "tailwindcss" docs/app/web/src/build-styles.js
 grep -q '"@tailwindcss/cli": "4.3.2"' docs/app/web/package.json

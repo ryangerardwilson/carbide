@@ -73,7 +73,6 @@
       '  <pre class="docs-intro-logo" aria-label="Carbide ASCII logo">' + renderLogo() + "</pre>",
       '  <div class="docs-intro-footer">',
       '    <span>Carbide docs</span>',
-      '    <button class="docs-intro-skip" type="button">Skip</button>',
       "  </div>",
       "</div>"
     ].join("");
@@ -81,23 +80,9 @@
     document.body.prepend(intro);
     document.body.classList.add("intro-active");
 
-    var skipButton = intro.querySelector(".docs-intro-skip");
-    var timeout = window.setTimeout(function () {
+    window.setTimeout(function () {
       removeIntro(intro);
     }, 2450);
-
-    function skipIntro() {
-      window.clearTimeout(timeout);
-      removeIntro(intro);
-    }
-
-    skipButton.addEventListener("click", skipIntro);
-    document.addEventListener("keydown", function onKeydown(event) {
-      if (event.key === "Escape") {
-        document.removeEventListener("keydown", onKeydown);
-        skipIntro();
-      }
-    });
   }
 
   if (document.readyState === "loading") {

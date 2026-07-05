@@ -214,30 +214,13 @@ body.intro-active {
 .docs-intro-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
   margin-top: 24px;
   color: #a3a3a3;
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
-}
-
-.docs-intro-skip {
-  border: 1px solid rgb(245 245 245 / 0.2);
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.06);
-  color: #f5f5f5;
-  padding: 7px 12px;
-  font: inherit;
-  cursor: pointer;
-}
-
-.docs-intro-skip:hover,
-.docs-intro-skip:focus-visible {
-  border-color: rgb(250 204 21 / 0.72);
-  color: #facc15;
-  outline: none;
 }
 
 @keyframes introStageIn {
@@ -546,6 +529,12 @@ body.intro-active {
 .docs-content p {
   margin: 0 0 14px;
   color: var(--muted-strong);
+}
+
+.docs-content pre + p,
+.docs-content pre + ul,
+.docs-content pre + ol {
+  margin-top: 18px;
 }
 
 .docs-content ul,
