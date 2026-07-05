@@ -504,6 +504,8 @@ grep -q 'location: `${pathname}${target.search}`' docs/app/web/src/server.jsx
 grep -q 'docsResponseHeaders' docs/app/web/src/server.jsx
 grep -q '@import "tailwindcss";' docs/app/web/src/styles.css
 grep -F -q '@source "./component/**/*.jsx";' docs/app/web/src/styles.css
+grep -q "margin-top: 44px" docs/app/web/src/styles.css
+grep -q "margin-top: 34px" docs/app/web/src/styles.css
 grep -q '"tailwind:build"' docs/app/web/package.json
 grep -q "tailwindcss" docs/app/web/src/build-styles.js
 grep -q '"@tailwindcss/cli": "4.3.2"' docs/app/web/package.json
