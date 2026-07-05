@@ -1,23 +1,27 @@
 # Carbide
 
-Carbide is an experimental, Laravel-inspired full-stack framework with a React
-web container, a Go API container, and a mandatory Postgres database.
+Carbide is a Docker-first monorepo framework for full-stack apps with React,
+Go, Postgres, Bun, and Tailwind.
 
-The goal is not to copy Laravel line by line. The goal is to find the smallest
-set of conventions, tools, and runtime guarantees that make building web apps in
-containers feel coherent, productive, and safe enough to be practical.
+The bet is that most products should start as one coherent application, not a
+spray of premature microservices. Carbide keeps the Bun/React/Tailwind web app,
+Go API, Postgres data layer, infrastructure contract, env contract, deploy
+targets, logs, and agent instructions in one consistent repository while still
+running each runtime boundary in its own container.
 
 ## Product Bet
 
-The product bet is Docker-first convention over host setup: React owns the
-browser, Go owns the application API, and Postgres owns durable relational
-state. Carbide should make that full-stack default feel boring, inspectable, and
-fast to start:
+The product bet is monorepo-first full-stack convention over service sprawl and
+host setup: React owns the browser, Go owns the application API, and Postgres
+owns durable relational state. Carbide should make that full-stack default feel
+boring, inspectable, and fast to start:
 
+- one repository contract
 - one Bun/React/Tailwind `web` container
 - one Go API container
 - one mandatory Postgres `db` container
 - one project layout
+- one Docker Compose topology
 - one API request lifecycle
 - one checked-in schema and migration path
 - one checked-in infrastructure contract
@@ -29,6 +33,10 @@ Carbide should make the hard parts visible instead of hiding them behind magic.
 
 ## Core Principles
 
+- **Monorepo-first:** `web/`, `api/`, `db/`, deploy targets, env contracts,
+  logs, and agent instructions live together. Carbide uses containers for clear
+  runtime boundaries, not as an excuse to split normal apps into default
+  microservices.
 - **Container-first:** every app runs through generated containers, not host
   Bun, host API toolchains, or hidden local services.
 - **Go CLI:** `carbide` is a compiled Go CLI. It owns scaffolding, upgrades,
@@ -41,9 +49,9 @@ Carbide should make the hard parts visible instead of hiding them behind magic.
   in the API container.
 - **Postgres-only:** Carbide targets Postgres as the mandatory database, not as
   one interchangeable adapter among many.
-- **Separate runtime boundaries:** web, API, and db containers
-  are separate services with separate lifecycles, health checks, logs, and
-  storage.
+- **Separate runtime boundaries:** web, API, and db containers are separate
+  services with separate lifecycles, health checks, logs, and storage inside one
+  application repo.
 - **Infrastructure as code:** every supported runtime dependency, service
   boundary, volume, network, secret contract, environment variable, health
   check, and deploy target must be described in checked-in code.
@@ -62,6 +70,8 @@ Carbide should make the hard parts visible instead of hiding them behind magic.
 
 ## Non-Goals
 
+- Splitting starter apps across multiple repositories or default microservices
+  before the product has earned that distributed-system complexity.
 - Running generated apps directly on host Bun, Go, or Postgres before the
   container contract is stable.
 - Full Laravel API compatibility.
