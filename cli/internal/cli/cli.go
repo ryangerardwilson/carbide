@@ -28,7 +28,7 @@ import (
 	"unsafe"
 )
 
-var version = "0.1.0-dev"
+var version = "0.1.0"
 var commit = ""
 
 const devLogPath = ".carbide/log/dev.jsonl"

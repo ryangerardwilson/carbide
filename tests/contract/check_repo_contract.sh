@@ -6,6 +6,14 @@ domain="carbide.ryangerardwilson.com"
 required_files=(
   ".gitignore"
   "README.md"
+  "AGENTS.md"
+  "agents.d/PRODUCT_CONTRACT.md"
+  "agents.d/REPO_STRUCTURE.md"
+  "agents.d/CLI_AND_VERSIONING.md"
+  "agents.d/SCAFFOLD_CONTRACT.md"
+  "agents.d/DOCS_APP.md"
+  "agents.d/REGRESSION_CHECKS.md"
+  "agents.d/ROADMAP.md"
   "cli/install.sh"
   "cli/go.mod"
   "cli/bin/carbide"
@@ -106,6 +114,7 @@ required_files=(
 )
 
 required_dirs=(
+  "agents.d"
   "cli"
   "cli/bin"
   "cli/cmd"
@@ -143,12 +152,13 @@ for path in "${required_dirs[@]}"; do
   }
 done
 
-grep -Eq "Bun/React/Tailwind .*web.* container" README.md
+grep -q "Docker-first monorepo framework" README.md
+grep -q "Bun/React/Tailwind web" README.md
+grep -q "Go API container" README.md
 grep -q "Postgres-only" README.md
 grep -q "Separate runtime boundaries" README.md
 grep -q "Infrastructure as code" README.md
 grep -q "generated Docker Compose setup" README.md
-grep -q "Postgres-backed queues" README.md
 grep -q "carbide new" README.md
 grep -F -q 'carbide new "My Carbide App"' README.md
 grep -q 'name = "My Carbide App"' README.md
@@ -161,13 +171,20 @@ grep -q "carbide logs" README.md
 grep -q "carbide doctor" README.md
 grep -q "carbide doctor env" README.md
 grep -q "carbide doctor runtime" README.md
-grep -q "carbide doctor framework" README.md
 grep -q "carbide project migrate" README.md
 grep -q "carbide deploy preview" README.md
 grep -q "carbide deploy apply" README.md
-grep -q "VERSION_POLICY.md" README.md
 grep -q "explicit Carbide baselines" README.md
 grep -q "floating Docker images" README.md
+! grep -q "Postgres-backed queues" README.md
+! grep -q "## Roadmap" README.md
+! grep -q "### Phase" README.md
+grep -q "Keep README human-first" AGENTS.md
+grep -q "Roadmap and future work" AGENTS.md
+grep -q "0.1.0" agents.d/CLI_AND_VERSIONING.md
+grep -q "Postgres-backed queues" agents.d/ROADMAP.md
+grep -q "Do not reintroduce generated" agents.d/SCAFFOLD_CONTRACT.md
+grep -F -q -- "--carbide-*" agents.d/SCAFFOLD_CONTRACT.md
 ! grep -q "command_format" cli/bin/carbide
 ! grep -q "carbide format" cli/bin/carbide
 grep -q "module github.com/ryangerardwilson/carbide/cli" cli/go.mod
@@ -176,7 +193,7 @@ grep -q ".cli/" .gitignore
 ! test -d src
 ! test -d examples
 ! test -d infra
-test "$(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.github' ! -name '.cli' ! -name '.bin' -printf '%f\n' | sort | tr '\n' ' ')" = "cli docs scaffold tests "
+test "$(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.github' ! -name '.cli' ! -name '.bin' -printf '%f\n' | sort | tr '\n' ' ')" = "agents.d cli docs scaffold tests "
 ! test -d include
 ! test -d templates
 ! test -d scaffold/config
@@ -211,6 +228,7 @@ grep -q "Carbide dev" cli/internal/cli/cli.go
 grep -q "Go is required to build the Carbide CLI" cli/install.sh
 grep -q ".cli/bin/carbide" cli/install.sh
 grep -q "default_port = 8080" scaffold/carbide.toml
+grep -q 'carbide_version = "0.1.0"' scaffold/carbide.toml
 grep -q "contract_version = 1" scaffold/carbide.toml
 grep -q "\\[runtime\\]" scaffold/carbide.toml
 grep -q 'policy = "explicit-baseline"' scaffold/carbide.toml

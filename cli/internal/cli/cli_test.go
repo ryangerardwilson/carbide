@@ -194,7 +194,7 @@ func TestBareCommandPrintsCommandList(t *testing.T) {
 	for _, want := range []string{
 		"_____________________________________________________",
 		"________________________oo_______oo_______oo_________",
-		"Carbide 0.1.0-dev",
+		"Carbide 0.1.0",
 		"Usage:",
 		"carbide <command> [arguments]",
 		"Commands:",
