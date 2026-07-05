@@ -3,29 +3,89 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Frontend Starter Contract | Carbide</title>
+    <title>Frontend Starter Contract | Carbide Documentation</title>
     <meta name="description" content="Carbide's Bun/React/Tailwind frontend, Go API backend, and Postgres database contract.">
     <link rel="stylesheet" href="assets/styles.css">
   </head>
   <body>
-    <header class="hero">
-      <div class="shell">
-        <p class="eyebrow"><a href="index.html">Carbide docs</a></p>
-        <h1>Bun frontend, Go API backend, Postgres database.</h1>
-        <p class="lead">The default Carbide UI uses React, Bun, and Tailwind in a container while Carbide stays focused on the monorepo, runtime, and API contract.</p>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="docs-topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html" aria-label="Carbide documentation home">
+          <span class="brand-mark">C</span>
+          <span class="brand-copy">
+            <span class="brand-name">Carbide</span>
+            <span class="brand-label">Documentation</span>
+          </span>
+        </a>
+        <div class="search-box" role="search" aria-label="Search docs">
+          <span>Search docs</span>
+          <kbd>/</kbd>
+        </div>
+        <nav class="topbar-actions" aria-label="Documentation actions">
+          <span class="version-pill">Version v0.1</span>
+          <a class="github-link" href="https://github.com/ryangerardwilson/carbide">GitHub</a>
+        </nav>
       </div>
     </header>
 
-    <main class="shell">
-      <section>
-        <h2>Runtime Model</h2>
-        <pre><code>browser -> web container -> /api proxy -> api Go container -> db</code></pre>
-        <p>The web service is the public entrypoint. It proxies <code>/api</code> and <code>/health</code> to the API service so browser requests stay same-origin.</p>
-      </section>
+    <div class="docs-layout">
+      <aside class="docs-sidebar" aria-label="Documentation navigation">
+        <nav class="sidebar-nav">
+          <div class="nav-group">
+            <p class="nav-title">Prologue</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="index.html">Installation</a></li>
+              <li><a class="nav-link" href="version-policy.html">Version Policy</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Getting Started</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="initial-user-experience.html">Initial user experience</a></li>
+              <li><a class="nav-link" href="frontend-starter-contract.html" aria-current="page">Frontend Starter Contract</a></li>
+              <li><a class="nav-link" href="repo-structure.html">Directory Structure</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Architecture</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="#runtime-model">Runtime Model</a></li>
+              <li><a class="nav-link" href="ci-cd-regression-tests.html">CI/CD Regression Plan</a></li>
+              <li><a class="nav-link" href="initial-user-experience.html#commands">CLI Commands</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Reference</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="https://github.com/ryangerardwilson/carbide">Source Repository</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
 
-      <section>
-        <h2>Generated Frontend</h2>
-        <pre><code>web/
+      <main id="content" class="docs-content">
+        <div class="breadcrumb" aria-label="Breadcrumb">
+          <span>Docs</span>
+          <span>Getting Started</span>
+        </div>
+
+        <header class="article-header">
+          <h1>Frontend Starter Contract</h1>
+          <p class="lead">The default Carbide UI uses React, Bun, and Tailwind in a container while Carbide stays focused on the monorepo, runtime, and API contract.</p>
+        </header>
+
+        <section id="runtime-model">
+          <h2>Runtime Model</h2>
+          <pre><code>browser -> web container -> /api proxy -> api Go container -> db</code></pre>
+          <p>The web service is the public entrypoint. It proxies <code>/api</code> and <code>/health</code> to the API service so browser requests stay same-origin.</p>
+          <p>Bun frontend, Go API backend, Postgres database remains the generated app baseline.</p>
+        </section>
+
+        <section id="generated-frontend">
+          <h2>Generated Frontend</h2>
+          <pre><code>web/
 |-- Dockerfile
 |-- bun.lock
 |-- index.html
@@ -37,6 +97,7 @@
     |   |   |-- Field.jsx
     |   |   |-- Surface.jsx
     |   |   |-- Text.jsx
+    |   |   |-- ThemeToggle.jsx
     |   |   |-- index.js
     |   |   `-- tokens.js
     |   |-- l2/
@@ -53,33 +114,44 @@
     |-- main.jsx
     |-- server.jsx
     `-- styles.css</code></pre>
-        <p>The web app lives inside <code>web</code>. <code>main.jsx</code> owns browser route state and API calls, then renders the starter screens.</p>
-        <p><code>component/l1</code>, <code>component/l2</code>, and <code>component/l3</code> mirror the Tailwind organization model: primitives, composed patterns, and product screens.</p>
-        <p><code>DashboardLayout</code> is a conventional app shell with a left sidebar, section navigation, account footer, and main work area.</p>
-      </section>
+          <p>The web app lives inside <code>web</code>. <code>main.jsx</code> owns browser route state and API calls, then renders the starter screens.</p>
+          <p><code>component/l1</code>, <code>component/l2</code>, and <code>component/l3</code> mirror the Tailwind organization model: primitives, composed patterns, and product screens.</p>
+          <p><code>DashboardLayout</code> is a conventional app shell with a left sidebar, section navigation, account footer, and main work area.</p>
+        </section>
 
-      <section>
-        <h2>Styling</h2>
-        <p>The starter uses Tailwind as the required styling path. The web container installs with Bun and builds generated CSS from the checked-in Tailwind input.</p>
-        <p><code>styles.css</code> contains the Tailwind import and a small Tailwind v4 <code>@theme</code> block. <code>tokens.js</code> contains reusable Tailwind utility groups. The scaffold does not add a parallel <code>theme.css</code> file.</p>
-      </section>
+        <section id="styling">
+          <h2>Styling</h2>
+          <p>The starter uses Tailwind as the required styling path. The web container installs with Bun and builds generated CSS from the checked-in Tailwind input.</p>
+          <p><code>styles.css</code> contains the Tailwind import and a small Tailwind v4 <code>@theme</code> block. <code>tokens.js</code> contains reusable Tailwind utility groups. The scaffold does not add a parallel <code>theme.css</code> file.</p>
+        </section>
 
-      <section>
-        <h2>Regression Requirements</h2>
-        <ul>
-          <li>Generated apps include web, API, and db containers.</li>
-          <li>The Bun web service proxies <code>/api</code> and <code>/health</code> to the API service.</li>
-          <li>Auth uses same-origin cookies without CORS setup.</li>
-          <li>Frontend installs with <code>bun install --frozen-lockfile</code> and builds with <code>bun run build</code>.</li>
-          <li>Tailwind is required in the generated web app.</li>
-          <li>The generated web app includes <code>component/l1</code>, <code>component/l2</code>, and <code>component/l3</code> starter tiers.</li>
-          <li>The tiers stay small: primitives in L1, reusable patterns in L2, product screens in L3.</li>
-        </ul>
-      </section>
-    </main>
+        <section id="regression-requirements">
+          <h2>Regression Requirements</h2>
+          <ul>
+            <li>Generated apps include web, API, and db containers.</li>
+            <li>The Bun web service proxies <code>/api</code> and <code>/health</code> to the API service.</li>
+            <li>Auth uses same-origin cookies without CORS setup.</li>
+            <li>Frontend installs with <code>bun install --frozen-lockfile</code> and builds with <code>bun run build</code>.</li>
+            <li>Tailwind is required in the generated web app.</li>
+            <li>The generated web app includes <code>component/l1</code>, <code>component/l2</code>, and <code>component/l3</code> starter tiers.</li>
+            <li>The tiers stay small: primitives in L1, reusable patterns in L2, product screens in L3.</li>
+          </ul>
+        </section>
+      </main>
 
-    <footer class="footer">
-      <div class="shell"><a href="index.html">Back to docs home</a></div>
+      <aside class="docs-toc" aria-label="On this page">
+        <p class="toc-title">On this page</p>
+        <ol class="toc-list">
+          <li><a class="toc-link" href="#runtime-model">Runtime Model</a></li>
+          <li><a class="toc-link" href="#generated-frontend">Generated Frontend</a></li>
+          <li><a class="toc-link" href="#styling">Styling</a></li>
+          <li><a class="toc-link" href="#regression-requirements">Regression Requirements</a></li>
+        </ol>
+      </aside>
+    </div>
+
+    <footer class="docs-footer">
+      <div class="footer-inner"><a href="index.html">Back to installation</a></div>
     </footer>
   </body>
 </html>

@@ -3,71 +3,143 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CI/CD Regression Plan | Carbide</title>
+    <title>CI/CD Regression Plan | Carbide Documentation</title>
     <meta name="description" content="The CI/CD regression plan for Carbide.">
     <link rel="stylesheet" href="assets/styles.css">
   </head>
   <body>
-    <header class="hero">
-      <div class="shell">
-        <p class="eyebrow"><a href="index.html">Carbide docs</a></p>
-        <h1>CI/CD regression plan</h1>
-        <p class="lead">The test system starts with repository contracts and grows into Go API, Postgres, container, IaC, security, and documentation regression suites.</p>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="docs-topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html" aria-label="Carbide documentation home">
+          <span class="brand-mark">C</span>
+          <span class="brand-copy">
+            <span class="brand-name">Carbide</span>
+            <span class="brand-label">Documentation</span>
+          </span>
+        </a>
+        <div class="search-box" role="search" aria-label="Search docs">
+          <span>Search docs</span>
+          <kbd>/</kbd>
+        </div>
+        <nav class="topbar-actions" aria-label="Documentation actions">
+          <span class="version-pill">Version v0.1</span>
+          <a class="github-link" href="https://github.com/ryangerardwilson/carbide">GitHub</a>
+        </nav>
       </div>
     </header>
 
-    <main class="shell">
-      <section>
-        <h2>Required Gates</h2>
-        <h3>Pull Request Gate</h3>
-        <ul>
-          <li>Repository contract checks.</li>
-          <li>Go CLI unit tests.</li>
-          <li>Shell syntax checks for repo-owned test and launcher scripts.</li>
-          <li>Documentation site contract checks.</li>
-          <li>Generated Docker stack smoke test with registration-first, Postgres-backed auth.</li>
-          <li>Future API unit, integration, and compatibility checks.</li>
-        </ul>
-        <h3>Main Branch Gate</h3>
-        <ul>
-          <li>The pull request gate.</li>
-          <li>Documentation deployment to GitHub Pages.</li>
-          <li>Future release candidate smoke checks.</li>
-        </ul>
-      </section>
+    <div class="docs-layout">
+      <aside class="docs-sidebar" aria-label="Documentation navigation">
+        <nav class="sidebar-nav">
+          <div class="nav-group">
+            <p class="nav-title">Prologue</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="index.html">Installation</a></li>
+              <li><a class="nav-link" href="version-policy.html">Version Policy</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Getting Started</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="initial-user-experience.html">Initial user experience</a></li>
+              <li><a class="nav-link" href="frontend-starter-contract.html">Frontend Starter Contract</a></li>
+              <li><a class="nav-link" href="repo-structure.html">Directory Structure</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Architecture</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="frontend-starter-contract.html#runtime-model">Runtime Model</a></li>
+              <li><a class="nav-link" href="ci-cd-regression-tests.html" aria-current="page">CI/CD Regression Plan</a></li>
+              <li><a class="nav-link" href="initial-user-experience.html#commands">CLI Commands</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Reference</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="https://github.com/ryangerardwilson/carbide">Source Repository</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
 
-      <section>
-        <h2>Regression Suites</h2>
-        <ul>
-          <li><strong>Repository contract:</strong> protects required files, docs, workflows, and product constraints.</li>
-          <li><strong>CLI scaffold:</strong> tests the Go CLI, shared output renderer, <code>carbide new</code>, <code>carbide init</code>, compact <code>run dev</code> output, status table rendering, detach-without-teardown on <code>Ctrl+C</code>, explicit <code>stop dev</code> teardown, full-width TTY-only per-container progress behavior including no-color terminals, timestamped service-log streaming, live log follow, structured log querying, placeholder replacement, and empty-directory enforcement.</li>
-          <li><strong>API build and behavior:</strong> protects generated API builds, public API behavior, and release compatibility.</li>
-          <li><strong>Unit tests:</strong> protects router, request, response, middleware, config, and logging behavior.</li>
-          <li><strong>Compatibility and race tests:</strong> exposes concurrency and generated app compatibility failures.</li>
-          <li><strong>Postgres integration:</strong> tests readiness, pooling, migrations, transactions, and parameterized queries.</li>
-          <li><strong>Container and IaC:</strong> validates Compose generation, web/API/db separation, health checks, file-watch rebuilds for <code>web</code>, <code>api/</code>, <code>db/</code>, and <code>api/Dockerfile</code> changes, external URL logs, registration-first JSON auth, environment contracts, <code>AGENTS.md</code>, generated <code>agents.d</code> operating notes, and Tailwind class-layer guidance.</li>
-          <li><strong>Env and deploy:</strong> protects <code>carbide doctor env</code>, non-mutating <code>carbide deploy preview &lt;target&gt;</code>, and guarded <code>carbide deploy apply &lt;target&gt;</code>.</li>
-          <li><strong>Frontend:</strong> protects the Bun/React/Tailwind container, same-origin API proxy, lockfile install path, and dashboard app shell.</li>
-          <li><strong>API:</strong> protects JSON auth responses, session cookies, <code>/api/me</code>, and Postgres-backed dashboard data.</li>
-          <li><strong>CLI golden tests:</strong> protects scaffolding, deterministic generated files, and actionable command errors.</li>
-          <li><strong>Security regression:</strong> protects cookies, CSRF, upload limits, SQL parameterization, and secret handling.</li>
-          <li><strong>Documentation regression:</strong> keeps examples, links, and published docs aligned with framework behavior.</li>
-        </ul>
-      </section>
+      <main id="content" class="docs-content">
+        <div class="breadcrumb" aria-label="Breadcrumb">
+          <span>Docs</span>
+          <span>Architecture</span>
+        </div>
 
-      <section>
-        <h2>Implemented Now</h2>
-        <pre><code>bash -n tests/contract/check_repo_contract.sh tests/scaffold/cli_scaffold.sh tests/smoke/starter_docker_flow.sh cli/bin/carbide cli/install.sh
+        <header class="article-header">
+          <h1>CI/CD Regression Plan</h1>
+          <p class="lead">The test system starts with repository contracts and grows into Go API, Postgres, container, IaC, security, and documentation regression suites.</p>
+          <p class="lead">The CI/CD regression plan protects the framework contract before feature work expands.</p>
+        </header>
+
+        <section id="required-gates">
+          <h2>Required Gates</h2>
+          <h3>Pull Request Gate</h3>
+          <ul>
+            <li>Repository contract checks.</li>
+            <li>Go CLI unit tests.</li>
+            <li>Shell syntax checks for repo-owned test and launcher scripts.</li>
+            <li>Documentation site contract checks.</li>
+            <li>Generated Docker stack smoke test with registration-first, Postgres-backed auth.</li>
+            <li><code>carbide doctor</code> fast project contract checks.</li>
+            <li>Future API unit, integration, and compatibility checks.</li>
+          </ul>
+          <h3>Main Branch Gate</h3>
+          <ul>
+            <li>The pull request gate.</li>
+            <li>Documentation deployment to GitHub Pages.</li>
+            <li>Future release candidate smoke checks.</li>
+          </ul>
+        </section>
+
+        <section id="regression-suites">
+          <h2>Regression Suites</h2>
+          <ul>
+            <li><strong>Repository contract:</strong> protects required files, docs, workflows, and product constraints.</li>
+            <li><strong>CLI scaffold:</strong> tests the Go CLI, shared output renderer, <code>carbide new</code>, <code>carbide init</code>, compact <code>run dev</code> output, status table rendering, detach-without-teardown on <code>Ctrl+C</code>, explicit <code>stop dev</code> teardown, per-container progress behavior, timestamped service-log streaming, live log follow, structured log querying, placeholder replacement, and empty-directory enforcement.</li>
+            <li><strong>API build and behavior:</strong> protects generated API builds, public API behavior, and release compatibility.</li>
+            <li><strong>Unit tests:</strong> protects router, request, response, middleware, config, and logging behavior.</li>
+            <li><strong>Compatibility and race tests:</strong> exposes concurrency and generated app compatibility failures.</li>
+            <li><strong>Postgres integration:</strong> tests readiness, pooling, migrations, transactions, and parameterized queries.</li>
+            <li><strong>Container and IaC:</strong> validates Compose generation, web/API/db separation, health checks, file-watch rebuilds, external URL logs, registration-first JSON auth, environment contracts, <code>AGENTS.md</code>, generated <code>agents.d</code> operating notes, and Tailwind class-layer guidance.</li>
+            <li><strong>Env and deploy:</strong> protects <code>carbide doctor</code>, <code>carbide doctor env</code>, <code>carbide doctor runtime</code>, non-mutating <code>carbide deploy preview &lt;target&gt;</code>, and guarded <code>carbide deploy apply &lt;target&gt;</code>.</li>
+            <li><strong>Frontend:</strong> protects the Bun/React/Tailwind container, same-origin API proxy, lockfile install path, and dashboard app shell.</li>
+            <li><strong>API:</strong> protects JSON auth responses, session cookies, <code>/api/me</code>, and Postgres-backed dashboard data.</li>
+            <li><strong>CLI golden tests:</strong> protects scaffolding, deterministic generated files, and actionable command errors.</li>
+            <li><strong>Security regression:</strong> protects cookies, CSRF, upload limits, SQL parameterization, and secret handling.</li>
+            <li><strong>Documentation regression:</strong> keeps examples, links, and published docs aligned with framework behavior.</li>
+          </ul>
+        </section>
+
+        <section id="implemented-now">
+          <h2>Implemented Now</h2>
+          <pre><code>bash -n tests/contract/check_repo_contract.sh tests/scaffold/cli_scaffold.sh tests/smoke/starter_docker_flow.sh cli/bin/carbide cli/install.sh
 (cd cli &amp;&amp; go test ./...)
 bash tests/contract/check_repo_contract.sh
 bash tests/scaffold/cli_scaffold.sh
-bash tests/smoke/starter_docker_flow.sh</code></pre>
-        <p>The source plan is maintained in <code>docs/engineering/CI_CD_REGRESSION_TESTS.md</code>.</p>
-      </section>
-    </main>
+bash tests/smoke/starter_docker_flow.sh
+carbide doctor framework</code></pre>
+          <p>The source plan is maintained in <code>docs/engineering/CI_CD_REGRESSION_TESTS.md</code>.</p>
+        </section>
+      </main>
 
-    <footer class="footer">
-      <div class="shell"><a href="index.html">Back to docs home</a></div>
+      <aside class="docs-toc" aria-label="On this page">
+        <p class="toc-title">On this page</p>
+        <ol class="toc-list">
+          <li><a class="toc-link" href="#required-gates">Required Gates</a></li>
+          <li><a class="toc-link" href="#regression-suites">Regression Suites</a></li>
+          <li><a class="toc-link" href="#implemented-now">Implemented Now</a></li>
+        </ol>
+      </aside>
+    </div>
+
+    <footer class="docs-footer">
+      <div class="footer-inner"><a href="index.html">Back to installation</a></div>
     </footer>
   </body>
 </html>

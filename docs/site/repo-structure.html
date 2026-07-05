@@ -3,23 +3,83 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Directory Structure | Carbide</title>
-    <meta name="description" content="The initial repository structure for Carbide.">
+    <title>Directory Structure | Carbide Documentation</title>
+    <meta name="description" content="The repository and scaffold directory structure for Carbide.">
     <link rel="stylesheet" href="assets/styles.css">
   </head>
   <body>
-    <header class="hero">
-      <div class="shell">
-        <p class="eyebrow"><a href="index.html">Carbide docs</a></p>
-        <h1>Directory structure</h1>
-        <p class="lead">The repo separates CLI code, generated app scaffolding, tests, automation, and published documentation from the start.</p>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="docs-topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html" aria-label="Carbide documentation home">
+          <span class="brand-mark">C</span>
+          <span class="brand-copy">
+            <span class="brand-name">Carbide</span>
+            <span class="brand-label">Documentation</span>
+          </span>
+        </a>
+        <div class="search-box" role="search" aria-label="Search docs">
+          <span>Search docs</span>
+          <kbd>/</kbd>
+        </div>
+        <nav class="topbar-actions" aria-label="Documentation actions">
+          <span class="version-pill">Version v0.1</span>
+          <a class="github-link" href="https://github.com/ryangerardwilson/carbide">GitHub</a>
+        </nav>
       </div>
     </header>
 
-    <main class="shell">
-      <section>
-        <h2>Layout</h2>
-        <pre><code>.
+    <div class="docs-layout">
+      <aside class="docs-sidebar" aria-label="Documentation navigation">
+        <nav class="sidebar-nav">
+          <div class="nav-group">
+            <p class="nav-title">Prologue</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="index.html">Installation</a></li>
+              <li><a class="nav-link" href="version-policy.html">Version Policy</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Getting Started</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="initial-user-experience.html">Initial user experience</a></li>
+              <li><a class="nav-link" href="frontend-starter-contract.html">Frontend Starter Contract</a></li>
+              <li><a class="nav-link" href="repo-structure.html" aria-current="page">Directory Structure</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Architecture</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="frontend-starter-contract.html#runtime-model">Runtime Model</a></li>
+              <li><a class="nav-link" href="ci-cd-regression-tests.html">CI/CD Regression Plan</a></li>
+              <li><a class="nav-link" href="initial-user-experience.html#commands">CLI Commands</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Reference</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="https://github.com/ryangerardwilson/carbide">Source Repository</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+
+      <main id="content" class="docs-content">
+        <div class="breadcrumb" aria-label="Breadcrumb">
+          <span>Docs</span>
+          <span>Getting Started</span>
+        </div>
+
+        <header class="article-header">
+          <h1>Directory Structure</h1>
+          <p class="lead">The repo separates CLI code, generated app scaffolding, tests, automation, and published documentation from the start.</p>
+          <p class="lead">Directory structure is part of the Carbide product contract.</p>
+        </header>
+
+        <section id="repository-layout">
+          <h2>Repository Layout</h2>
+          <pre><code>.
 |-- .github/workflows/
 |-- cli/
 |   |-- bin/carbide
@@ -52,47 +112,58 @@
 |-- tests/scaffold/
 |-- tests/smoke/
 `-- README.md</code></pre>
-      </section>
+        </section>
 
-      <section>
-        <h2>Ownership</h2>
-        <ul>
-          <li><strong>.github/workflows:</strong> CI and documentation deployment.</li>
-          <li><strong>cli/bin/carbide:</strong> source checkout launcher for the Go CLI.</li>
-          <li><strong>cli/cmd/carbide:</strong> installable CLI entrypoint.</li>
-          <li><strong>cli/go.mod:</strong> Go module definition for the CLI.</li>
-          <li><strong>cli/internal/cli:</strong> Go implementation of the CLI and its unit tests.</li>
-          <li><strong>docs/engineering:</strong> source-of-truth engineering plans.</li>
-          <li><strong>docs/site:</strong> static GitHub Pages artifact.</li>
-          <li><strong>scaffold:</strong> generated app source exactly as <code>carbide new</code> and <code>carbide init</code> write it to disk.</li>
-          <li><strong>scaffold root rule:</strong> every generated root directory except <code>agents.d</code> maps to a standalone Docker service: <code>web</code>, <code>api</code>, and <code>db</code>.</li>
-          <li><strong>scaffold/AGENTS.md:</strong> generated agent-facing entrypoint for runtime shape, operating context, and safe default commands.</li>
-          <li><strong>scaffold/api:</strong> generated Go HTTP/API server, auth, routing, session, JSON response code, API module, and API Dockerfile.</li>
-          <li><strong>scaffold/carbide.toml:</strong> generated project metadata, default dev port, environment contract, and deploy guardrails.</li>
-          <li><strong>scaffold/db:</strong> generated Postgres-backed data access code and database module.</li>
-          <li><strong>scaffold/db/migration:</strong> checked-in generated schema state.</li>
-          <li><strong>scaffold/agents.d:</strong> generated operating notes for env, deploy, backup, restore, and Tailwind component organization.</li>
-          <li><strong>scaffold/web:</strong> generated Bun/React/Tailwind web app, browser UI, web container source, and API proxy.</li>
-          <li><strong>scaffold/docker-compose.yml:</strong> generated local Docker Compose infrastructure.</li>
-          <li><strong>scaffold/web/src/component/l1:</strong> generated primitive UI elements and Tailwind utility tokens.</li>
-          <li><strong>scaffold/web/src/component/l2:</strong> generated composed UI patterns such as forms and app layouts.</li>
-          <li><strong>scaffold/web/src/component/l3:</strong> generated auth, dashboard, and loading screens.</li>
-          <li><strong>scaffold/web/src/lib:</strong> generated non-component browser helpers such as the <code>cx()</code> class-name helper.</li>
-          <li><strong>tests/contract:</strong> repository contract checks.</li>
-          <li><strong>tests/scaffold:</strong> generated-project and CLI scaffold checks.</li>
-          <li><strong>tests/smoke:</strong> end-to-end smoke checks that boot generated apps.</li>
-          <li><strong>cli/install.sh:</strong> GitHub URL installer that builds the Go CLI.</li>
-        </ul>
-      </section>
+        <section id="ownership">
+          <h2>Ownership</h2>
+          <ul>
+            <li><strong>.github/workflows:</strong> CI and documentation deployment.</li>
+            <li><strong>cli/bin/carbide:</strong> source checkout launcher for the Go CLI.</li>
+            <li><strong>cli/cmd/carbide:</strong> installable CLI entrypoint.</li>
+            <li><strong>cli/go.mod:</strong> Go module definition for the CLI.</li>
+            <li><strong>cli/internal/cli:</strong> Go implementation of the CLI and its unit tests.</li>
+            <li><strong>docs/engineering:</strong> source-of-truth engineering plans.</li>
+            <li><strong>docs/site:</strong> static GitHub Pages artifact.</li>
+            <li><strong>scaffold:</strong> generated app source exactly as <code>carbide new</code> and <code>carbide init</code> write it to disk.</li>
+            <li><strong>scaffold root rule:</strong> every generated root directory except <code>agents.d</code> maps to a standalone Docker service: <code>web</code>, <code>api</code>, and <code>db</code>.</li>
+            <li><strong>scaffold/AGENTS.md:</strong> generated agent-facing entrypoint for runtime shape, operating context, and safe default commands.</li>
+            <li><strong>scaffold/api:</strong> generated Go HTTP/API server, auth, routing, session, JSON response code, API module, and API Dockerfile.</li>
+            <li><strong>scaffold/carbide.toml:</strong> generated project metadata, default dev port, environment contract, and deploy guardrails.</li>
+            <li><strong>scaffold/db:</strong> generated Postgres-backed data access code and database module.</li>
+            <li><strong>scaffold/db/migration:</strong> checked-in generated schema state.</li>
+            <li><strong>scaffold/agents.d:</strong> generated operating notes for env, deploy, backup, restore, and Tailwind component organization.</li>
+            <li><strong>scaffold/web:</strong> generated Bun/React/Tailwind web app, browser UI, web container source, and API proxy.</li>
+            <li><strong>scaffold/docker-compose.yml:</strong> generated local Docker Compose infrastructure.</li>
+            <li><strong>scaffold/web/src/component/l1:</strong> generated primitive UI elements and Tailwind utility tokens.</li>
+            <li><strong>scaffold/web/src/component/l2:</strong> generated composed UI patterns such as forms and app layouts.</li>
+            <li><strong>scaffold/web/src/component/l3:</strong> generated auth, dashboard, and loading screens.</li>
+            <li><strong>scaffold/web/src/lib:</strong> generated non-component browser helpers such as the <code>cx()</code> class-name helper.</li>
+            <li><strong>tests/contract:</strong> repository contract checks.</li>
+            <li><strong>tests/scaffold:</strong> generated-project and CLI scaffold checks.</li>
+            <li><strong>tests/smoke:</strong> end-to-end smoke checks that boot generated apps.</li>
+            <li><strong>cli/install.sh:</strong> GitHub URL installer that builds the Go CLI.</li>
+          </ul>
+        </section>
 
-      <section>
-        <h2>Rule</h2>
-        <p>Empty directories are not kept as placeholders. When a directory gains behavior, its first file should make that behavior testable. The framework root intentionally has no placeholder <code>src</code>, <code>infra</code>, or <code>examples</code> directory. Generated apps avoid non-container root directories beside <code>agents.d</code>; shared runtime coordination belongs in <code>docker-compose.yml</code>.</p>
-      </section>
-    </main>
+        <section id="rules">
+          <h2>Rules</h2>
+          <p>Empty directories are not kept as placeholders. When a directory gains behavior, its first file should make that behavior testable.</p>
+          <p>The framework root intentionally has no placeholder <code>src</code>, <code>infra</code>, or <code>examples</code> directory. Generated apps avoid non-container root directories beside <code>agents.d</code>; shared runtime coordination belongs in <code>docker-compose.yml</code>.</p>
+        </section>
+      </main>
 
-    <footer class="footer">
-      <div class="shell"><a href="index.html">Back to docs home</a></div>
+      <aside class="docs-toc" aria-label="On this page">
+        <p class="toc-title">On this page</p>
+        <ol class="toc-list">
+          <li><a class="toc-link" href="#repository-layout">Repository Layout</a></li>
+          <li><a class="toc-link" href="#ownership">Ownership</a></li>
+          <li><a class="toc-link" href="#rules">Rules</a></li>
+        </ol>
+      </aside>
+    </div>
+
+    <footer class="docs-footer">
+      <div class="footer-inner"><a href="index.html">Back to installation</a></div>
     </footer>
   </body>
 </html>

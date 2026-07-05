@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Version Policy | Carbide Documentation</title>
+    <meta name="description" content="Carbide runtime baseline and upgrade policy.">
+    <link rel="stylesheet" href="assets/styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="docs-topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="index.html" aria-label="Carbide documentation home">
+          <span class="brand-mark">C</span>
+          <span class="brand-copy">
+            <span class="brand-name">Carbide</span>
+            <span class="brand-label">Documentation</span>
+          </span>
+        </a>
+        <div class="search-box" role="search" aria-label="Search docs">
+          <span>Search docs</span>
+          <kbd>/</kbd>
+        </div>
+        <nav class="topbar-actions" aria-label="Documentation actions">
+          <span class="version-pill">Version v0.1</span>
+          <a class="github-link" href="https://github.com/ryangerardwilson/carbide">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="docs-layout">
+      <aside class="docs-sidebar" aria-label="Documentation navigation">
+        <nav class="sidebar-nav">
+          <div class="nav-group">
+            <p class="nav-title">Prologue</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="index.html">Installation</a></li>
+              <li><a class="nav-link" href="version-policy.html" aria-current="page">Version Policy</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Getting Started</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="initial-user-experience.html">Initial user experience</a></li>
+              <li><a class="nav-link" href="frontend-starter-contract.html">Frontend Starter Contract</a></li>
+              <li><a class="nav-link" href="repo-structure.html">Directory Structure</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Architecture</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="frontend-starter-contract.html#runtime-model">Runtime Model</a></li>
+              <li><a class="nav-link" href="ci-cd-regression-tests.html">CI/CD Regression Plan</a></li>
+              <li><a class="nav-link" href="initial-user-experience.html#commands">CLI Commands</a></li>
+            </ul>
+          </div>
+          <div class="nav-group">
+            <p class="nav-title">Reference</p>
+            <ul class="nav-list">
+              <li><a class="nav-link" href="https://github.com/ryangerardwilson/carbide">Source Repository</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+
+      <main id="content" class="docs-content">
+        <div class="breadcrumb" aria-label="Breadcrumb">
+          <span>Docs</span>
+          <span>Prologue</span>
+        </div>
+
+        <header class="article-header">
+          <h1>Version Policy</h1>
+          <p class="lead">Carbide treats versions as explicit baselines. The durable product is the generated app contract, not a moving dependency list.</p>
+        </header>
+
+        <section id="current-baseline">
+          <h2>Current Baseline</h2>
+          <ul>
+            <li>Go modules: <code>go 1.25.0</code></li>
+            <li>Go builder: <code>golang:1.26-bookworm@sha256:b305420a68d0f229d91eb3b3ed9e519fcf2cf5461da4bef997bf927e8c0bfd2b</code></li>
+            <li>API runtime: <code>debian:trixie-slim@sha256:28de0877c2189802884ccd20f15ee41c203573bd87bb6b883f5f46362d24c5c2</code></li>
+            <li>Bun: <code>oven/bun:1.3.14-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f</code></li>
+            <li>React: <code>19.2.7</code></li>
+            <li>Tailwind CSS: <code>4.3.2</code></li>
+            <li>Postgres: <code>postgres:17-alpine@sha256:dc17045ccfd343b49600570ea734b9c4991cf1c3f3302e67df51e3b402dd55c4</code></li>
+          </ul>
+        </section>
+
+        <section id="rules">
+          <h2>Rules</h2>
+          <ul>
+            <li>No <code>latest</code>, semver ranges, or floating Docker image tags for framework-owned runtimes.</li>
+            <li>Docker references include <code>@sha256:</code> digests.</li>
+            <li><code>carbide doctor</code> checks the local project baseline.</li>
+            <li>The scheduled dependency audit reports drift but never edits files.</li>
+            <li>Postgres major-version changes require migration notes and explicit operator action.</li>
+          </ul>
+        </section>
+
+        <section id="upgrade-stance">
+          <h2>Upgrade Stance</h2>
+          <p>Framework-owned upgrades should be explicit product decisions. A dependency bump must preserve the generated app contract, update the baseline, and pass doctor, scaffold, smoke, and docs regression checks.</p>
+        </section>
+      </main>
+
+      <aside class="docs-toc" aria-label="On this page">
+        <p class="toc-title">On this page</p>
+        <ol class="toc-list">
+          <li><a class="toc-link" href="#current-baseline">Current Baseline</a></li>
+          <li><a class="toc-link" href="#rules">Rules</a></li>
+          <li><a class="toc-link" href="#upgrade-stance">Upgrade Stance</a></li>
+        </ol>
+      </aside>
+    </div>
+
+    <footer class="docs-footer">
+      <div class="footer-inner"><a href="index.html">Back to installation</a></div>
+    </footer>
+  </body>
+</html>
