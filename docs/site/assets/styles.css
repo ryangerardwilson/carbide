@@ -497,9 +497,18 @@ body.intro-active {
 
 .lead {
   max-width: 720px;
-  margin: 20px 0 0;
+  margin: 0;
   color: var(--muted);
   font-size: 1rem;
+  line-height: 1.7;
+}
+
+.article-header h1 + .lead {
+  margin-top: 30px;
+}
+
+.article-header .lead + .lead {
+  margin-top: 10px;
 }
 
 .docs-content section {
@@ -676,6 +685,10 @@ body.intro-active {
 
   .article-header h1 {
     font-size: clamp(2.1rem, 12vw, 3.5rem);
+  }
+
+  .article-header h1 + .lead {
+    margin-top: 24px;
   }
 
   .runtime-map {
