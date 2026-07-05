@@ -1,0 +1,118 @@
+# Frontend Starter Contract
+
+Carbide's default app uses a Bun/React/Tailwind web service, Go API backend,
+and Postgres database. The web service is a mandatory Bun container in the
+default local topology, not a host-installed JavaScript tooling requirement.
+
+## Product Decision
+
+The default Carbide UI should be React served by Bun, not a custom template
+language and not an opinionated design-system framework.
+
+This keeps frontend authoring inside a mature ecosystem while preserving the
+core Carbide bet: elegant monorepo structure, Docker-first local development,
+Go API logic, Postgres state, and explicit environment/deploy
+contracts.
+
+## Runtime Model
+
+```text
+browser -> web container -> /api proxy -> api Go container -> db
+```
+
+- `web` owns Bun, React, Tailwind, browser routes, forms, dashboard UI,
+  and the same-origin proxy.
+- `api` owns Go API routes, auth, session cookies, validation, and JSON.
+- `db` owns durable Postgres state.
+
+The web service is the public entrypoint. It proxies `/api` and `/health` to the
+API service so browser requests stay same-origin.
+
+## Authoring Model
+
+Generated apps start with:
+
+```text
+web/
+|-- Dockerfile
+|-- bun.lock
+|-- index.html
+|-- package.json
+`-- src/
+    |-- component/
+    |   |-- l1/
+    |   |   |-- Button.jsx
+    |   |   |-- Field.jsx
+    |   |   |-- Surface.jsx
+    |   |   |-- Text.jsx
+    |   |   |-- index.js
+    |   |   `-- tokens.js
+    |   |-- l2/
+    |   |   |-- AuthForm.jsx
+    |   |   |-- Layouts.jsx
+    |   |   `-- index.js
+    |   |-- l3/
+    |   |   |-- AuthView.jsx
+    |   |   |-- DashboardView.jsx
+    |   |   |-- LoadingView.jsx
+    |   |   `-- index.js
+    |-- lib/
+    |   `-- cx.js
+    |-- main.jsx
+    |-- server.jsx
+    `-- styles.css
+```
+
+Generated apps place the web app under `web/` so the project mirrors
+runtime boundaries. HTTP code and its Go module live under `api/`; Postgres
+access, its Go module, and migrations live under `db/`.
+
+The default UI includes register, login, logout, dashboard, and a conventional
+left-sidebar app shell. React components call same-origin `/api` endpoints
+with `credentials: "include"` so the API can own HttpOnly cookies.
+
+## Component Stance
+
+Carbide scaffolds a visible L1/L2/L3 component hierarchy so the Tailwind class
+organization is mirrored in the project tree:
+
+- `component/l1`: primitives and Tailwind utility tokens.
+- `component/l2`: reusable composed UI patterns and layouts.
+- `component/l3`: product screens and domain-specific sections.
+
+That hierarchy is part of the generated starter contract. App teams may evolve
+it later, but `carbide new` should teach the intended organization from the
+first generated project.
+
+## Styling
+
+Generated apps use Tailwind as the mandatory styling path. `styles.css` is the
+Tailwind input file, and the container builds generated CSS with the checked-in
+Bun lockfile.
+
+`styles.css` contains the Tailwind import and a small Tailwind v4 `@theme`
+block. `tokens.js` contains reusable Tailwind utility groups for the generated
+auth and dashboard UI. The scaffold does not add a parallel `theme.css` file.
+
+## Regression Tests
+
+The frontend contract needs dedicated regression coverage:
+
+- generated apps include a Bun/React/Tailwind web container;
+- generated apps include a Go API container;
+- generated apps include a Postgres db container;
+- Bun web service proxies `/api` and `/health` to the API service;
+- auth uses same-origin cookies without CORS setup;
+- login returns JSON and sets a session cookie;
+- `/api/me` reports authenticated and anonymous states correctly;
+- `/dashboard` is served by the React app shell;
+- web, API, and db watch paths are present in Compose;
+- generated web service installs with `bun install --frozen-lockfile` and builds
+  with `bun run build`;
+- Tailwind is present and required in the generated web service;
+- generated web app includes `component/l1`, `component/l2`, and `component/l3`
+  starter tiers;
+- generated `main.jsx` imports starter screens and does not reimplement
+  dashboard or auth screen markup inline;
+- generated apps keep primitive UI in L1, reusable patterns in L2, and product
+  screens in L3.

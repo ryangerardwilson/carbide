@@ -1,0 +1,23 @@
+import { Eyebrow, Heading, ui } from '../l1/index.js';
+import { cx } from '../../lib/cx.js';
+
+const loadingClassLayers = {
+  shell: {
+    l1: 'grid place-items-center',
+    l2: 'min-h-svh px-8 text-center',
+    l3: ui.page
+  }
+};
+
+export function LoadingView() {
+  return (
+    <main className={cx(loadingClassLayers.shell.l1, loadingClassLayers.shell.l2, loadingClassLayers.shell.l3)}>
+      <div>
+        <Eyebrow>Carbide</Eyebrow>
+        <Heading className="mt-2" level={1}>
+          Loading app state
+        </Heading>
+      </div>
+    </main>
+  );
+}

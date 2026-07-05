@@ -11,11 +11,11 @@
     <header class="hero">
       <div class="shell">
         <p class="eyebrow">Carbide docs</p>
-        <h1>Bun frontend. Go API backend. Postgres database.</h1>
+        <h1>Bun frontend. Go API. Postgres database.</h1>
         <p class="lead">Carbide starts with three mandatory containers, checked-in infrastructure, and regression tests that protect the framework before it grows.</p>
         <nav class="nav" aria-label="Documentation">
           <a href="initial-user-experience.html">Initial user experience</a>
-          <a href="component-style-system.html">Frontend contract</a>
+          <a href="frontend-starter-contract.html">Frontend starter contract</a>
           <a href="ci-cd-regression-tests.html">CI/CD regression plan</a>
           <a href="repo-structure.html">Directory structure</a>
           <a href="https://github.com/ryangerardwilson/carbide">GitHub</a>
@@ -27,20 +27,20 @@
       <div>
         <section>
           <h2>Install And Start</h2>
-          <pre><code>curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/install.sh | bash
+          <pre><code>curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash
 carbide new demo
 cd demo
 carbide run dev
 carbide status</code></pre>
-          <p>The installer builds the Go CLI. <code>carbide help</code> prints the command reference. <code>carbide upgrade</code> updates the installed CLI when a newer GitHub commit is available. <code>Ctrl+C</code> detaches from live dev logs; <code>carbide follow logs</code> attaches again; <code>carbide status</code> prints the container table; <code>carbide stop dev</code> stops the stack.</p>
+          <p>The installer builds the Go CLI. Human app names are accepted: <code>carbide new My Carbide App</code> creates <code>my-carbide-app</code> while storing the display name as <code>My Carbide App</code>. <code>carbide help</code> prints the command reference. <code>carbide upgrade</code> updates the installed CLI when a newer GitHub commit is available. <code>Ctrl+C</code> detaches from live dev logs; <code>carbide follow logs</code> attaches again; <code>carbide status</code> prints the container table; <code>carbide stop dev</code> stops the stack.</p>
         </section>
 
         <section>
           <h2>Product Contract</h2>
           <ul>
-            <li>Apps run through a Bun/React/Tailwind frontend container, Go backend container, and Postgres container.</li>
+            <li>Apps run through a Bun/React/Tailwind web container, Go API container, and Postgres db container.</li>
             <li>Postgres is mandatory, not one adapter among many.</li>
-            <li>The Bun frontend is the public entrypoint and proxies <code>/api</code> to the backend.</li>
+            <li>The Bun web service is the public entrypoint and proxies <code>/api</code> to the API service.</li>
             <li>Infrastructure belongs in version-controlled code.</li>
             <li>Environment and secret contracts are checked in and validated without printing values.</li>
             <li>Deploys follow preview before apply; apply is guarded until a real deploy target exists.</li>
@@ -55,7 +55,7 @@ carbide status</code></pre>
           <ol>
             <li>Boot with one command.</li>
             <li>Serve the React app through Bun.</li>
-            <li>Proxy <code>/api</code> to the Go backend.</li>
+            <li>Proxy <code>/api</code> to the Go API service.</li>
             <li>Create the first user with a Postgres-backed session.</li>
             <li>Open the dashboard.</li>
             <li>Validate the environment contract with <code>carbide doctor env</code>.</li>
@@ -71,12 +71,12 @@ carbide status</code></pre>
       <aside class="system-map" aria-label="Carbide runtime map">
         <div class="node">
           <strong>Repository</strong>
-          <p class="meta">README, docs, workflows, scripts, source, tests, UI contracts, and infrastructure contracts.</p>
+          <p class="meta">README, docs, workflows, CLI code, scaffold contract, and tests.</p>
         </div>
         <div class="arrow">down</div>
         <div class="node">
           <strong>CI</strong>
-          <p class="meta">Contract checks now; Go backend, Postgres, container, and CLI suites next.</p>
+          <p class="meta">Contract checks now; Go API, Postgres, container, and CLI suites next.</p>
         </div>
         <div class="arrow">down</div>
         <div class="node">

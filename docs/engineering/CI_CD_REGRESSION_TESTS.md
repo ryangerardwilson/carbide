@@ -1,7 +1,7 @@
 # CI/CD Regression Test Plan
 
 Carbide's test strategy starts with repository contracts and grows toward full
-Go backend, Postgres, container, and infrastructure regression coverage.
+Go API, Postgres, container, and infrastructure regression coverage.
 
 ## Required Gates
 
@@ -11,11 +11,11 @@ Runs on every pull request:
 
 - repository contract checks;
 - Go CLI unit tests;
-- shell syntax checks for repo-owned scripts;
+- shell syntax checks for repo-owned test and launcher scripts;
 - documentation site contract checks;
 - generated Docker stack smoke test with registration-first, Postgres-backed
   JSON auth;
-- future backend unit, integration, and compatibility checks.
+- future API unit, integration, and compatibility checks.
 
 ### Main Branch Gate
 
@@ -46,31 +46,31 @@ Purpose: make the repo shape itself hard to accidentally break.
 Initial checks:
 
 - required directories exist;
-- README keeps the core product contracts: Bun/React/Tailwind frontend
-  container, Go backend container, Postgres-only database, infrastructure as
+- README keeps the core product contracts: Bun/React/Tailwind web
+  container, Go API container, Postgres-only database, infrastructure as
   code, local Compose first, and Postgres-backed queues;
-- install script, CLI, and default template files exist;
+- install script, CLI, and default scaffold files exist;
 - the Go CLI builds and its deterministic helpers and output renderer pass unit
   tests;
 - documentation site files exist;
 - custom Pages domain is present in `docs/site/CNAME`;
 - workflow files exist.
 
-### Backend Build And API
+### API Build And Behavior
 
-Purpose: catch broken backend builds, incompatible API behavior, and build
+Purpose: catch broken API builds, incompatible API behavior, and build
 drift.
 
 Future checks:
 
-- build generated backend code with the pinned Go version;
-- run backend unit tests with strict failure behavior;
+- build generated API code with the pinned Go version;
+- run API unit tests with strict failure behavior;
 - verify public API routes, cookies, and JSON response shapes;
 - fail on accidental generated API contract changes outside release workflows.
 
 ### Unit Tests
 
-Purpose: keep core backend behavior deterministic.
+Purpose: keep core API behavior deterministic.
 
 Future checks:
 
@@ -88,7 +88,7 @@ early.
 
 Future checks:
 
-- Go race detector for backend packages that can run without containers;
+- Go race detector for API packages that can run without containers;
 - generated app compatibility tests across supported Go versions;
 - request lifecycle tests under concurrent auth and session traffic;
 - failure artifacts for reproducible debugging.
@@ -99,7 +99,7 @@ Purpose: enforce the mandatory database contract.
 
 Future checks:
 
-- backend connects only after Postgres readiness;
+- API connects only after Postgres readiness;
 - connection pool opens and closes cleanly;
 - migrations run up and down;
 - query builder always parameterizes inputs;
@@ -113,31 +113,34 @@ Purpose: keep local development close to production failure shapes.
 Future checks:
 
 - generated Compose file validates;
-- frontend and backend containers build from a clean checkout;
-- frontend installs with Bun from `bun.lock`;
-- Tailwind is a required generated frontend dependency and build step;
-- frontend, backend, and Postgres run as separate services;
+- web and API containers build from a clean checkout;
+- web installs with Bun from `bun.lock`;
+- Tailwind is a required generated web dependency and build step;
+- web, API, and Postgres run as separate services;
 - health checks converge;
-- generated backend logs the external frontend URL used for API proxying;
+- generated API logs the external web URL used for API proxying;
 - login fails before the first user is registered;
 - registration through `/api/register` creates the first user, sets a cookie,
   and returns JSON;
 - login through `/api/login` works after registration;
-- generated Compose config declares file-watch rebuilds for `view/web` source,
-  view web package/config files, backend source, model, controller, and
-  Dockerfile changes;
-- generated apps include `config/env.schema.json`, `.env.example`, and
-  runbooks for env, deploy, backup, and restore behavior;
-- generated apps include a Bun/React/Tailwind frontend container, Go
-  backend/API container, and Postgres database container;
-- Bun frontend proxies `/api` and `/health` to the backend;
+- generated Compose config declares file-watch rebuilds for `web`
+  source, web package/config files, `api/`, `db/`, and
+  `api/Dockerfile` changes;
+- generated apps include an env contract in `carbide.toml`, `.env.example`,
+  `AGENTS.md`, and `agents.d/` operating notes for env, deploy, backup, and
+  restore behavior;
+- generated agent context includes Tailwind component organization rules that
+  keep L1/L2/L3 as class layers, not component directories;
+- generated apps include a Bun/React/Tailwind web container, Go API
+  container, and Postgres db container;
+- Bun web service proxies `/api` and `/health` to the API service;
 - `/api/me` reports anonymous and authenticated state correctly;
 - `/dashboard` is served by the React app shell;
 - restart behavior preserves Postgres data;
-- environment schema rejects missing required values;
+- environment contract rejects missing required values;
 - secret values are never printed by `carbide doctor env`;
 - browser-exposed variables cannot be marked secret;
-- framework-owned keys are visible in the schema and protected from casual app
+- framework-owned keys are visible in the contract and protected from casual app
   override;
 - `carbide deploy preview <target>` is non-mutating and reports that no deploy
   target exists yet;
@@ -165,7 +168,7 @@ Future checks:
   and shows full-width TTY-only per-container shutdown animation;
 - CLI success, error, version, upgrade, and dev-stack output use the shared
   aligned renderer instead of scattered raw prints;
-- `carbide run dev` streams frontend, backend, database, and watch output
+- `carbide run dev` streams web, API, db, and watch output
   through timestamped service-tagged rows after the stack is ready;
 - `carbide status` prints a stable table of services, container names,
   published host ports, internal container ports, and status;
@@ -217,11 +220,11 @@ Future checks:
 The first implemented CI job is intentionally small:
 
 ```sh
-bash -n scripts/*.sh bin/carbide install.sh
-go test ./...
-bash scripts/check_repo_contract.sh
-bash scripts/test_cli_scaffold.sh
-bash scripts/test_starter_docker_flow.sh
+bash -n tests/contract/check_repo_contract.sh tests/scaffold/cli_scaffold.sh tests/smoke/starter_docker_flow.sh cli/bin/carbide cli/install.sh
+(cd cli && go test ./...)
+bash tests/contract/check_repo_contract.sh
+bash tests/scaffold/cli_scaffold.sh
+bash tests/smoke/starter_docker_flow.sh
 ```
 
 This protects the repo, generated starter, Docker dev topology, and

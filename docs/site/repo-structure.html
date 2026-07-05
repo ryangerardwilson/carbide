@@ -12,7 +12,7 @@
       <div class="shell">
         <p class="eyebrow"><a href="index.html">Carbide docs</a></p>
         <h1>Directory structure</h1>
-        <p class="lead">The repo separates framework source, generated Bun/React/Tailwind frontend code, Go backend code, tests, infrastructure, automation, and published documentation from the start.</p>
+        <p class="lead">The repo separates CLI code, generated app scaffolding, tests, automation, and published documentation from the start.</p>
       </div>
     </header>
 
@@ -21,69 +21,73 @@
         <h2>Layout</h2>
         <pre><code>.
 |-- .github/workflows/
-|-- bin/carbide
-|-- cmd/carbide/
-|-- internal/carbide/
+|-- cli/
+|   |-- bin/carbide
+|   |-- cmd/carbide/
+|   |-- go.mod
+|   |-- install.sh
+|   `-- internal/cli/
 |-- docs/engineering/
 |-- docs/site/
-|-- examples/hello/
-|-- include/carbide/
-|-- include/carbide/ui/
-|-- infra/compose/
-|-- infra/schemas/
-|-- scripts/
-|-- src/
-|-- src/ui/
-|-- templates/default/
-|   |-- config/
-|   |-- doc/runbook/
-|   |-- controller/
-|   |-- model/
-|   |-- src/
-|   `-- view/web/
-|-- tests/fixtures/
-|-- tests/integration/
-|-- tests/regression/
-|-- tests/unit/
-|-- go.mod
-`-- install.sh</code></pre>
+|-- scaffold/
+|   |-- AGENTS.md
+|   |-- README.md
+|   |-- agents.d/
+|   |   |-- BACKUP_RESTORE.md
+|   |   |-- DEPLOY.md
+|   |   |-- ENVIRONMENT.md
+|   |   `-- TAILWIND_COMPONENTS.md
+|   |-- api/
+|   |   |-- Dockerfile
+|   |   |-- go.mod
+|   |   `-- go.sum
+|   |-- carbide.toml
+|   |-- db/
+|   |   |-- go.mod
+|   |   |-- go.sum
+|   |   `-- migration/
+|   |-- docker-compose.yml
+|   `-- web/
+|-- tests/contract/
+|-- tests/scaffold/
+|-- tests/smoke/
+`-- README.md</code></pre>
       </section>
 
       <section>
         <h2>Ownership</h2>
         <ul>
           <li><strong>.github/workflows:</strong> CI and documentation deployment.</li>
-          <li><strong>bin/carbide:</strong> source checkout launcher for the Go CLI.</li>
-          <li><strong>cmd/carbide:</strong> installable CLI entrypoint.</li>
-          <li><strong>internal/carbide:</strong> Go implementation of the CLI and its unit tests.</li>
+          <li><strong>cli/bin/carbide:</strong> source checkout launcher for the Go CLI.</li>
+          <li><strong>cli/cmd/carbide:</strong> installable CLI entrypoint.</li>
+          <li><strong>cli/go.mod:</strong> Go module definition for the CLI.</li>
+          <li><strong>cli/internal/cli:</strong> Go implementation of the CLI and its unit tests.</li>
           <li><strong>docs/engineering:</strong> source-of-truth engineering plans.</li>
           <li><strong>docs/site:</strong> static GitHub Pages artifact.</li>
-          <li><strong>examples:</strong> generated or hand-written sample apps.</li>
-          <li><strong>include/carbide:</strong> reserved public framework API surface.</li>
-          <li><strong>include/carbide/ui:</strong> reserved public frontend helper API surface.</li>
-          <li><strong>infra:</strong> Compose templates and infrastructure schemas.</li>
-          <li><strong>scripts:</strong> repo-owned checks and maintenance commands.</li>
-          <li><strong>src:</strong> framework implementation.</li>
-          <li><strong>src/ui:</strong> future framework frontend helper APIs.</li>
-          <li><strong>templates/default:</strong> starter app used by <code>carbide new</code> and <code>carbide init</code>.</li>
-          <li><strong>templates/default/config:</strong> generated environment and secrets contract.</li>
-          <li><strong>templates/default/doc/runbook:</strong> generated operating notes for env, deploy, backup, and restore behavior.</li>
-          <li><strong>templates/default/model:</strong> generated Postgres-backed model code.</li>
-          <li><strong>templates/default/controller:</strong> generated request-flow handlers.</li>
-          <li><strong>templates/default/src:</strong> generated Go HTTP/API server.</li>
-          <li><strong>templates/default/view/web:</strong> generated Bun/React/Tailwind web app, browser UI, frontend container source, and API proxy.</li>
-          <li><strong>templates/default/view/web/src/component/l1:</strong> generated design tokens, font/color scheme variables, semantic UI classes, and React primitives.</li>
-          <li><strong>templates/default/view/web/src/component/l2:</strong> generated reusable UI/UX patterns, layouts, and integration adapters.</li>
-          <li><strong>templates/default/view/web/src/component/l3:</strong> generated auth, dashboard, loading, and component-library views.</li>
-          <li><strong>tests:</strong> fixtures, unit, integration, and regression coverage.</li>
-          <li><strong>go.mod:</strong> Go module definition for the CLI.</li>
-          <li><strong>install.sh:</strong> GitHub URL installer that builds the Go CLI.</li>
+          <li><strong>scaffold:</strong> generated app source exactly as <code>carbide new</code> and <code>carbide init</code> write it to disk.</li>
+          <li><strong>scaffold root rule:</strong> every generated root directory except <code>agents.d</code> maps to a standalone Docker service: <code>web</code>, <code>api</code>, and <code>db</code>.</li>
+          <li><strong>scaffold/AGENTS.md:</strong> generated agent-facing entrypoint for runtime shape, operating context, and safe default commands.</li>
+          <li><strong>scaffold/api:</strong> generated Go HTTP/API server, auth, routing, session, JSON response code, API module, and API Dockerfile.</li>
+          <li><strong>scaffold/carbide.toml:</strong> generated project metadata, default dev port, environment contract, and deploy guardrails.</li>
+          <li><strong>scaffold/db:</strong> generated Postgres-backed data access code and database module.</li>
+          <li><strong>scaffold/db/migration:</strong> checked-in generated schema state.</li>
+          <li><strong>scaffold/agents.d:</strong> generated operating notes for env, deploy, backup, restore, and Tailwind component organization.</li>
+          <li><strong>scaffold/web:</strong> generated Bun/React/Tailwind web app, browser UI, web container source, and API proxy.</li>
+          <li><strong>scaffold/docker-compose.yml:</strong> generated local Docker Compose infrastructure.</li>
+          <li><strong>scaffold/web/src/component/l1:</strong> generated primitive UI elements and Tailwind utility tokens.</li>
+          <li><strong>scaffold/web/src/component/l2:</strong> generated composed UI patterns such as forms and app layouts.</li>
+          <li><strong>scaffold/web/src/component/l3:</strong> generated auth, dashboard, and loading screens.</li>
+          <li><strong>scaffold/web/src/lib:</strong> generated non-component browser helpers such as the <code>cx()</code> class-name helper.</li>
+          <li><strong>tests/contract:</strong> repository contract checks.</li>
+          <li><strong>tests/scaffold:</strong> generated-project and CLI scaffold checks.</li>
+          <li><strong>tests/smoke:</strong> end-to-end smoke checks that boot generated apps.</li>
+          <li><strong>cli/install.sh:</strong> GitHub URL installer that builds the Go CLI.</li>
         </ul>
       </section>
 
       <section>
         <h2>Rule</h2>
-        <p>Empty directories are placeholders until a real file belongs there. When a directory gains behavior, its first file should make that behavior testable.</p>
+        <p>Empty directories are not kept as placeholders. When a directory gains behavior, its first file should make that behavior testable. The framework root intentionally has no placeholder <code>src</code>, <code>infra</code>, or <code>examples</code> directory. Generated apps avoid non-container root directories beside <code>agents.d</code>; shared runtime coordination belongs in <code>docker-compose.yml</code>.</p>
       </section>
     </main>
 

@@ -1,0 +1,53 @@
+import { cx } from '../../lib/cx.js';
+import { ui } from './tokens.js';
+
+const eyebrowClassLayers = {
+  l1: '',
+  l2: 'm-0 text-xs font-extrabold uppercase tracking-normal',
+  l3: ui.accent
+};
+
+const headingClassLayers = {
+  l1: '',
+  l2: 'm-0',
+  l3: ui.text
+};
+
+const mutedClassLayers = {
+  l1: '',
+  l2: 'm-0',
+  l3: ui.muted
+};
+
+const codeClassLayers = {
+  l1: '',
+  l2: 'rounded px-1.5 py-0.5',
+  l3: ui.code
+};
+
+export function Eyebrow({ children, className = '' }) {
+  return (
+    <p className={cx(eyebrowClassLayers.l1, eyebrowClassLayers.l2, eyebrowClassLayers.l3, className)}>
+      {children}
+    </p>
+  );
+}
+
+export function Heading({ children, className = '', level = 1 }) {
+  const Tag = `h${level}`;
+  const sizes = {
+    1: 'text-4xl leading-tight sm:text-5xl',
+    2: 'text-3xl leading-tight',
+    3: 'text-xl leading-snug'
+  };
+
+  return <Tag className={cx(headingClassLayers.l1, headingClassLayers.l2, sizes[level] || sizes[3], headingClassLayers.l3, className)}>{children}</Tag>;
+}
+
+export function Muted({ children, className = '', as: Tag = 'p' }) {
+  return <Tag className={cx(mutedClassLayers.l1, mutedClassLayers.l2, mutedClassLayers.l3, className)}>{children}</Tag>;
+}
+
+export function CodeText({ children }) {
+  return <code className={cx(codeClassLayers.l1, codeClassLayers.l2, codeClassLayers.l3)}>{children}</code>;
+}

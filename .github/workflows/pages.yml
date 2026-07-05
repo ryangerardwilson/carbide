@@ -6,8 +6,9 @@ on:
       - main
     paths:
       - README.md
+      - cli/**
       - docs/**
-      - scripts/**
+      - tests/**
       - .github/workflows/pages.yml
       - .github/workflows/ci.yml
   workflow_dispatch:
@@ -32,19 +33,20 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: cli/go.mod
 
       - name: Check shell syntax
-        run: bash -n scripts/*.sh bin/carbide install.sh
+        run: bash -n tests/contract/check_repo_contract.sh tests/scaffold/cli_scaffold.sh tests/smoke/starter_docker_flow.sh cli/bin/carbide cli/install.sh
 
       - name: Test Go CLI
+        working-directory: cli
         run: go test ./...
 
       - name: Check repository contract
-        run: bash scripts/check_repo_contract.sh
+        run: bash tests/contract/check_repo_contract.sh
 
       - name: Test CLI scaffold
-        run: bash scripts/test_cli_scaffold.sh
+        run: bash tests/scaffold/cli_scaffold.sh
 
   deploy:
     name: Deploy GitHub Pages

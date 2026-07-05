@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Frontend Starter Contract | Carbide</title>
+    <meta name="description" content="Carbide's Bun/React/Tailwind frontend, Go API backend, and Postgres database contract.">
+    <link rel="stylesheet" href="assets/styles.css">
+  </head>
+  <body>
+    <header class="hero">
+      <div class="shell">
+        <p class="eyebrow"><a href="index.html">Carbide docs</a></p>
+        <h1>Bun frontend, Go API backend, Postgres database.</h1>
+        <p class="lead">The default Carbide UI uses React, Bun, and Tailwind in a container while Carbide stays focused on the monorepo, runtime, and API contract.</p>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section>
+        <h2>Runtime Model</h2>
+        <pre><code>browser -> web container -> /api proxy -> api Go container -> db</code></pre>
+        <p>The web service is the public entrypoint. It proxies <code>/api</code> and <code>/health</code> to the API service so browser requests stay same-origin.</p>
+      </section>
+
+      <section>
+        <h2>Generated Frontend</h2>
+        <pre><code>web/
+|-- Dockerfile
+|-- bun.lock
+|-- index.html
+|-- package.json
+`-- src/
+    |-- component/
+    |   |-- l1/
+    |   |   |-- Button.jsx
+    |   |   |-- Field.jsx
+    |   |   |-- Surface.jsx
+    |   |   |-- Text.jsx
+    |   |   |-- index.js
+    |   |   `-- tokens.js
+    |   |-- l2/
+    |   |   |-- AuthForm.jsx
+    |   |   |-- Layouts.jsx
+    |   |   `-- index.js
+    |   |-- l3/
+    |   |   |-- AuthView.jsx
+    |   |   |-- DashboardView.jsx
+    |   |   |-- LoadingView.jsx
+    |   |   `-- index.js
+    |-- lib/
+    |   `-- cx.js
+    |-- main.jsx
+    |-- server.jsx
+    `-- styles.css</code></pre>
+        <p>The web app lives inside <code>web</code>. <code>main.jsx</code> owns browser route state and API calls, then renders the starter screens.</p>
+        <p><code>component/l1</code>, <code>component/l2</code>, and <code>component/l3</code> mirror the Tailwind organization model: primitives, composed patterns, and product screens.</p>
+        <p><code>DashboardLayout</code> is a conventional app shell with a left sidebar, section navigation, account footer, and main work area.</p>
+      </section>
+
+      <section>
+        <h2>Styling</h2>
+        <p>The starter uses Tailwind as the required styling path. The web container installs with Bun and builds generated CSS from the checked-in Tailwind input.</p>
+        <p><code>styles.css</code> contains the Tailwind import and a small Tailwind v4 <code>@theme</code> block. <code>tokens.js</code> contains reusable Tailwind utility groups. The scaffold does not add a parallel <code>theme.css</code> file.</p>
+      </section>
+
+      <section>
+        <h2>Regression Requirements</h2>
+        <ul>
+          <li>Generated apps include web, API, and db containers.</li>
+          <li>The Bun web service proxies <code>/api</code> and <code>/health</code> to the API service.</li>
+          <li>Auth uses same-origin cookies without CORS setup.</li>
+          <li>Frontend installs with <code>bun install --frozen-lockfile</code> and builds with <code>bun run build</code>.</li>
+          <li>Tailwind is required in the generated web app.</li>
+          <li>The generated web app includes <code>component/l1</code>, <code>component/l2</code>, and <code>component/l3</code> starter tiers.</li>
+          <li>The tiers stay small: primitives in L1, reusable patterns in L2, product screens in L3.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="shell"><a href="index.html">Back to docs home</a></div>
+    </footer>
+  </body>
+</html>

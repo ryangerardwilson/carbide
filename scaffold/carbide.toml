@@ -1,0 +1,105 @@
+name = "__PROJECT_NAME__"
+slug = "__PROJECT_SLUG__"
+carbide_version = "0.1.0-dev"
+
+[dev]
+host = "localhost"
+default_port = 8080
+database = "postgres"
+
+[env]
+contract_version = 1
+
+[env.variables.CARBIDE_HTTP_PORT]
+service = "web"
+required = false
+secret = false
+browser_exposed = false
+framework_owned = true
+local_default = "8080"
+description = "Host port published by the web container."
+
+[env.variables.PUBLIC_URL]
+service = "web"
+required = true
+secret = false
+browser_exposed = false
+framework_owned = true
+local_default = "http://localhost:8080"
+description = "External app URL generated from the selected local port."
+
+[env.variables.PUBLIC_APP_NAME]
+service = "web"
+required = false
+secret = false
+browser_exposed = true
+framework_owned = false
+local_default = "__PROJECT_NAME__"
+description = "Browser-safe display name for the generated web app."
+
+[env.variables.API_URL]
+service = "web"
+required = true
+secret = false
+browser_exposed = false
+framework_owned = true
+local_default = "http://api:8080"
+description = "Private Compose URL used by the web proxy."
+
+[env.variables.APP_ENV]
+service = "api"
+required = true
+secret = false
+browser_exposed = false
+framework_owned = false
+local_default = "development"
+description = "Application environment name."
+
+[env.variables.APP_PORT]
+service = "api"
+required = true
+secret = false
+browser_exposed = false
+framework_owned = true
+local_default = "8080"
+description = "Internal API container port."
+
+[env.variables.DATABASE_URL]
+service = "api"
+required = true
+secret = true
+browser_exposed = false
+framework_owned = true
+local_default = "postgres://carbide:carbide@db:5432/carbide"
+description = "API Postgres connection string."
+
+[env.variables.POSTGRES_DB]
+service = "db"
+required = true
+secret = false
+browser_exposed = false
+framework_owned = true
+local_default = "carbide"
+description = "Local Postgres database name."
+
+[env.variables.POSTGRES_USER]
+service = "db"
+required = true
+secret = false
+browser_exposed = false
+framework_owned = true
+local_default = "carbide"
+description = "Local Postgres user."
+
+[env.variables.POSTGRES_PASSWORD]
+service = "db"
+required = true
+secret = true
+browser_exposed = false
+framework_owned = true
+local_default = "carbide"
+description = "Local Postgres password. Replace in real deploy targets."
+
+[deploy]
+preview_before_apply = true
+targets = []
