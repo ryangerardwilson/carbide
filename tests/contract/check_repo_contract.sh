@@ -14,7 +14,6 @@ required_files=(
   "cli/internal/cli/cli_test.go"
   ".github/workflows/ci.yml"
   ".github/workflows/dependency-audit.yml"
-  ".github/workflows/pages.yml"
   "docs/engineering/CI_CD_REGRESSION_TESTS.md"
   "docs/engineering/DEPLOYMENT.md"
   "docs/engineering/FRONTEND_STARTER_CONTRACT.md"
@@ -24,7 +23,6 @@ required_files=(
   "docs/app/carbide.toml"
   "docs/app/docker-compose.yml"
   "docs/app/web/server.jsx"
-  "docs/site/CNAME"
   "docs/site/index.html"
   "docs/site/deployment.html"
   "docs/site/frontend-starter-contract.html"
@@ -120,11 +118,6 @@ for path in "${required_dirs[@]}"; do
     exit 1
   }
 done
-
-grep -qx "$domain" docs/site/CNAME || {
-  printf 'docs/site/CNAME must contain only %s\n' "$domain" >&2
-  exit 1
-}
 
 grep -Eq "Bun/React/Tailwind .*web.* container" README.md
 grep -q "Postgres-only" README.md

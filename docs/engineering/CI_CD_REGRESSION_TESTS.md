@@ -57,7 +57,7 @@ Initial checks:
 - the Go CLI builds and its deterministic helpers and output renderer pass unit
   tests;
 - documentation site files exist;
-- custom Pages domain is present in `docs/site/CNAME`;
+- documentation deployment is owned by the Carbide docs app, not GitHub Pages;
 - docs-site internal links use extensionless routes, not `.html` hrefs;
 - workflow files exist.
 

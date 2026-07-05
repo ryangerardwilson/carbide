@@ -8,7 +8,7 @@ documentation have clear ownership.
 |-- .github/
 |   `-- workflows/
 |       |-- ci.yml
-|       `-- pages.yml
+|       `-- dependency-audit.yml
 |-- cli/
 |   |-- bin/
 |   |   `-- carbide
@@ -30,7 +30,6 @@ documentation have clear ownership.
 |   |   |-- FRONTEND_STARTER_CONTRACT.md
 |   |   `-- VERSION_POLICY.md
 |   `-- site/
-|       |-- CNAME
 |       |-- assets/
 |       |   `-- styles.css
 |       |-- ci-cd-regression-tests.html
@@ -88,7 +87,7 @@ documentation have clear ownership.
 
 ## Ownership
 
-- `.github/workflows/`: CI and documentation deployment.
+- `.github/workflows/`: CI and dependency drift checks.
 - `cli/bin/carbide`: source checkout launcher for the Go CLI.
 - `cli/cmd/carbide/`: installable CLI entrypoint.
 - `cli/go.mod`: Go module definition for the CLI.
