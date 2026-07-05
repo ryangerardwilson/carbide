@@ -1,33 +1,39 @@
 import { Button } from '../l1/Button.jsx';
 import { Divider } from '../l1/Surface.jsx';
+import { ThemeToggle } from '../l1/ThemeToggle.jsx';
 import { Eyebrow, Heading, Muted } from '../l1/Text.jsx';
 import { ui } from '../l1/tokens.js';
 import { cx } from '../../lib/cx.js';
 
 const landingClassLayers = {
   shell: {
-    l1: 'grid',
+    l1: 'relative grid',
     l2: 'min-h-svh lg:grid-cols-2',
     l3: ui.page
   },
   hero: {
-    l1: 'grid content-end',
-    l2: 'min-h-96 px-8 py-10 sm:px-12 lg:min-h-svh lg:px-16 lg:py-24 xl:px-24',
+    l1: 'grid content-between',
+    l2: 'min-h-64 px-4 py-5 sm:px-6 lg:min-h-svh lg:px-8 lg:py-10 xl:px-10',
     l3: ui.hero
+  },
+  heroBody: {
+    l1: '',
+    l2: '',
+    l3: ''
   },
   eyebrow: {
     l1: '',
-    l2: 'mb-3 text-xs font-extrabold uppercase tracking-normal',
+    l2: 'mb-2 text-xs font-bold uppercase tracking-normal',
     l3: ui.heroMuted
   },
   title: {
     l1: '',
-    l2: 'm-0 max-w-4xl text-5xl leading-none sm:text-6xl lg:text-7xl',
+    l2: 'm-0 max-w-2xl text-2xl/8 sm:text-3xl/9 lg:text-4xl/10',
     l3: ''
   },
   copy: {
     l1: '',
-    l2: 'mt-5 max-w-2xl text-lg',
+    l2: 'mt-2 max-w-lg text-xs/5 sm:text-sm/6',
     l3: ui.heroMuted
   }
 };
@@ -40,59 +46,65 @@ const dashboardClassLayers = {
   },
   grid: {
     l1: 'grid',
-    l2: 'min-h-svh lg:grid-cols-[280px_minmax(0,1fr)]',
+    l2: 'min-h-svh lg:grid-cols-[216px_minmax(0,1fr)]',
     l3: ''
   },
   sidebar: {
     l1: 'flex min-w-0 flex-col lg:sticky',
-    l2: 'border-b px-5 py-5 lg:top-0 lg:h-svh lg:border-b-0 lg:border-r',
+    l2: 'border-b px-3 py-3 lg:top-0 lg:h-svh lg:border-b-0 lg:border-r',
     l3: cx(ui.border, ui.surface)
   },
   nav: {
     l1: 'flex overflow-x-auto lg:grid lg:overflow-visible',
-    l2: 'mt-6 gap-2 pb-1 lg:pb-0',
+    l2: 'mt-3 gap-1 pb-1 lg:pb-0',
     l3: ''
   },
   navButton: {
     l1: 'shrink-0',
-    l2: 'min-h-11 rounded-md border px-3 text-left text-sm font-bold lg:w-full',
+    l2: 'min-h-8 rounded-md border px-2 text-left text-xs font-semibold lg:w-full',
     l3: cx(ui.focus, 'transition')
   },
   dividerWrap: {
     l1: 'hidden lg:block',
-    l2: 'mt-6',
+    l2: 'mt-3',
     l3: ''
   },
   footer: {
     l1: '',
-    l2: 'mt-5 lg:mt-auto',
+    l2: 'mt-3 lg:mt-auto',
     l3: ''
   },
   content: {
     l1: 'min-w-0',
-    l2: 'px-6 py-8 sm:px-10 lg:py-12',
+    l2: 'px-3 py-4 sm:px-5 lg:py-5',
     l3: ''
   },
   header: {
     l1: '',
-    l2: 'mb-8 border-b pb-7',
+    l2: 'mb-4 border-b pb-3',
     l3: ui.border
   }
 };
 
-export function LandingPageLayout({ appName, children, mode }) {
-  const isRegister = mode === 'register';
-
+export function LandingPageLayout({ appName, children, onThemeMode, resolvedTheme, themeMode }) {
   return (
     <main className={cx(landingClassLayers.shell.l1, landingClassLayers.shell.l2, landingClassLayers.shell.l3)}>
+      <ThemeToggle
+        className="absolute right-4 top-4 z-10 sm:right-6 lg:right-8 lg:top-6"
+        mode={themeMode}
+        onMode={onThemeMode}
+        resolved={resolvedTheme}
+      />
       <section className={cx(landingClassLayers.hero.l1, landingClassLayers.hero.l2, landingClassLayers.hero.l3)}>
-        <p className={cx(landingClassLayers.eyebrow.l1, landingClassLayers.eyebrow.l2, landingClassLayers.eyebrow.l3)}>{appName}</p>
-        <h1 className={cx(landingClassLayers.title.l1, landingClassLayers.title.l2, landingClassLayers.title.l3)}>
-          {isRegister ? 'Create the first account.' : 'Log in to the workspace.'}
-        </h1>
-        <p className={cx(landingClassLayers.copy.l1, landingClassLayers.copy.l2, landingClassLayers.copy.l3)}>
-          React and Tailwind own the browser. Go owns the API. Postgres owns durable state.
-        </p>
+        <div className={cx(landingClassLayers.heroBody.l1, landingClassLayers.heroBody.l2, landingClassLayers.heroBody.l3)}>
+          <p className={cx(landingClassLayers.eyebrow.l1, landingClassLayers.eyebrow.l2, landingClassLayers.eyebrow.l3)}>{appName}</p>
+          <h1 className={cx(landingClassLayers.title.l1, landingClassLayers.title.l2, landingClassLayers.title.l3)}>
+            Lorem ipsum dolor sit amet.
+          </h1>
+          <p className={cx(landingClassLayers.copy.l1, landingClassLayers.copy.l2, landingClassLayers.copy.l3)}>
+            Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.
+          </p>
+        </div>
       </section>
       {children}
     </main>
@@ -107,6 +119,9 @@ export function DashboardLayout({
   navItems = [],
   onLogout,
   onNavItem,
+  onThemeMode,
+  resolvedTheme,
+  themeMode,
   userEmail
 }) {
   const activeNavItem = navItems.find((item) => item.value === activeItem) || navItems[0];
@@ -122,11 +137,12 @@ export function DashboardLayout({
           )}
         >
           <div>
-            <Eyebrow>Bun + Go + Postgres</Eyebrow>
-            <Heading className="mt-2" level={2}>
+            <Eyebrow>Workspace</Eyebrow>
+            <Heading className="mt-1.5" level={2}>
               {appName}
             </Heading>
-            <Muted className="mt-2 text-sm">Signed in as {userEmail}</Muted>
+            <Muted className="mt-1 text-xs/5">Signed in as {userEmail}</Muted>
+            <ThemeToggle className="mt-3" mode={themeMode} onMode={onThemeMode} resolved={resolvedTheme} />
           </div>
 
           {navItems.length ? (
@@ -168,8 +184,8 @@ export function DashboardLayout({
         <section className={cx(dashboardClassLayers.content.l1, dashboardClassLayers.content.l2, dashboardClassLayers.content.l3)}>
           <header className={cx(dashboardClassLayers.header.l1, dashboardClassLayers.header.l2, dashboardClassLayers.header.l3)}>
             <Eyebrow>{activeNavItem?.eyebrow || 'Dashboard'}</Eyebrow>
-            <Heading className="mt-2">{activeNavItem?.label || 'Workspace'}</Heading>
-            {activeNavItem?.description ? <Muted className="mt-3 max-w-3xl">{activeNavItem.description}</Muted> : null}
+            <Heading className="mt-1.5">{activeNavItem?.label || 'Workspace'}</Heading>
+            {activeNavItem?.description ? <Muted className="mt-1.5 max-w-xl text-xs/5">{activeNavItem.description}</Muted> : null}
           </header>
           {children}
         </section>

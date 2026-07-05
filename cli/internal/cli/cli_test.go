@@ -76,6 +76,79 @@ func TestValidatePort(t *testing.T) {
 	}
 }
 
+func TestComposeEnvUsesProjectSlug(t *testing.T) {
+	withWorkingDir(t, t.TempDir(), func() {
+		if err := os.WriteFile("carbide.toml", []byte(`name = "Demo App"
+slug = "demo-app"
+`), 0644); err != nil {
+			t.Fatalf("WriteFile carbide.toml returned %v", err)
+		}
+		if err := os.WriteFile("docker-compose.yml", []byte("services: {}\n"), 0644); err != nil {
+			t.Fatalf("WriteFile docker-compose.yml returned %v", err)
+		}
+
+		env := composeEnv(nil)
+		if got := envSliceValue(env, "COMPOSE_PROJECT_NAME"); got != "demo-app" {
+			t.Fatalf("COMPOSE_PROJECT_NAME = %q, want demo-app", got)
+		}
+		if got := envSliceValue(env, "COMPOSE_FILE"); got != "docker-compose.yml" {
+			t.Fatalf("COMPOSE_FILE = %q, want docker-compose.yml", got)
+		}
+	})
+}
+
+func TestComposeEnvFallsBackForTemplateSlug(t *testing.T) {
+	root := t.TempDir()
+	project := filepath.Join(root, "Raw Scaffold")
+	if err := os.Mkdir(project, 0755); err != nil {
+		t.Fatalf("Mkdir returned %v", err)
+	}
+
+	withWorkingDir(t, project, func() {
+		if err := os.WriteFile("carbide.toml", []byte(`name = "__PROJECT_NAME__"
+slug = "__PROJECT_SLUG__"
+`), 0644); err != nil {
+			t.Fatalf("WriteFile carbide.toml returned %v", err)
+		}
+		if err := os.WriteFile("docker-compose.yml", []byte("services: {}\n"), 0644); err != nil {
+			t.Fatalf("WriteFile docker-compose.yml returned %v", err)
+		}
+
+		env := composeEnv(nil)
+		if got := envSliceValue(env, "COMPOSE_PROJECT_NAME"); got != "raw-scaffold" {
+			t.Fatalf("COMPOSE_PROJECT_NAME = %q, want raw-scaffold", got)
+		}
+	})
+}
+
+func TestCopyScaffoldSkipsRuntimeDirectory(t *testing.T) {
+	source := filepath.Join(t.TempDir(), "source")
+	target := filepath.Join(t.TempDir(), "target")
+	if err := os.MkdirAll(filepath.Join(source, ".carbide", "log"), 0755); err != nil {
+		t.Fatalf("MkdirAll .carbide returned %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(source, ".carbide", "log", "dev.jsonl"), []byte("{}\n"), 0644); err != nil {
+		t.Fatalf("WriteFile dev log returned %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(source, "README.md"), []byte("__PROJECT_NAME__\n"), 0644); err != nil {
+		t.Fatalf("WriteFile README returned %v", err)
+	}
+
+	if err := copyScaffoldPart(source, target, "Demo", "demo"); err != nil {
+		t.Fatalf("copyScaffoldPart returned %v", err)
+	}
+	if isDir(filepath.Join(target, ".carbide")) {
+		t.Fatalf("copyScaffoldPart copied runtime .carbide directory")
+	}
+	content, err := os.ReadFile(filepath.Join(target, "README.md"))
+	if err != nil {
+		t.Fatalf("ReadFile README returned %v", err)
+	}
+	if got := strings.TrimSpace(string(content)); got != "Demo" {
+		t.Fatalf("README content = %q, want Demo", got)
+	}
+}
+
 func TestBareCommandPrintsCommandList(t *testing.T) {
 	var out bytes.Buffer
 	a := app{stdout: &out}
@@ -141,7 +214,10 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"Available commands:",
 		"  deploy apply <target>",
 		"  deploy preview <target>",
+		"  doctor",
 		"  doctor env",
+		"  doctor framework",
+		"  doctor runtime",
 		"  help",
 		"  init",
 		"  logs",
@@ -165,7 +241,10 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"new <project-name>",
 		"deploy preview <target>",
 		"deploy apply <target>",
+		"doctor",
 		"doctor env",
+		"doctor runtime",
+		"doctor framework",
 		"run dev",
 		"stop dev",
 		"follow logs",
@@ -198,6 +277,57 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 			t.Fatalf("help output = %q, should not contain %q", got, unwanted)
 		}
 	}
+}
+
+func TestDoctorPrintsProjectContract(t *testing.T) {
+	withGeneratedScaffold(t, func(dir string) {
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		if err := a.run([]string{"doctor"}); err != nil {
+			t.Fatalf("doctor returned %v\n%s", err, out.String())
+		}
+
+		got := out.String()
+		for _, want := range []string{
+			"Carbide doctor",
+			"project contract",
+			"project shape     ok",
+			"runtime baseline  ok",
+			"env contract      ok      0 missing, 2 secrets",
+			"compose           ok      web api db",
+			"frontend          ok      Bun React Tailwind",
+			"api               ok      Go HTTP API",
+			"database          ok      Postgres users sessions",
+			"agents            ok      AGENTS.md agents.d",
+			"regressions       ok      no legacy markers",
+			"runtime           skip    run carbide doctor runtime",
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("doctor output = %q, missing %q", got, want)
+			}
+		}
+		if strings.Contains(got, "postgres://") {
+			t.Fatalf("doctor output printed secret value: %q", got)
+		}
+	})
+}
+
+func TestDoctorRejectsLegacyRootDirectory(t *testing.T) {
+	withGeneratedScaffold(t, func(dir string) {
+		if err := os.Mkdir("model", 0755); err != nil {
+			t.Fatalf("Mkdir model returned %v", err)
+		}
+
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		err := a.run([]string{"doctor"})
+		if err == nil {
+			t.Fatalf("doctor should reject legacy root directory")
+		}
+		if !strings.Contains(out.String(), "legacy root dirs: model") {
+			t.Fatalf("doctor output = %q", out.String())
+		}
+	})
 }
 
 func TestDoctorEnvPrintsContractSummary(t *testing.T) {
@@ -333,6 +463,272 @@ local_default = "development"
 	})
 }
 
+func TestDeployPreviewReadsSSHComposeTarget(t *testing.T) {
+	withWorkingDir(t, t.TempDir(), func() {
+		config := `name = "Carbide Docs"
+slug = "carbide-docs"
+
+[env]
+contract_version = 1
+
+[env.variables.APP_ENV]
+required = false
+local_default = "production"
+
+[deploy.targets.de-sci]
+type = "ssh-compose"
+host = "de-sci"
+domain = "carbide.ryangerardwilson.com"
+remote_path = "/opt/carbide/docs"
+source_path = ".."
+compose_file = "app/docker-compose.yml"
+project_directory = "app"
+public_port = 18081
+health_path = "/health"
+nginx = true
+nginx_site = "carbide"
+`
+		if err := os.WriteFile("carbide.toml", []byte(config), 0644); err != nil {
+			t.Fatalf("WriteFile carbide.toml returned %v", err)
+		}
+
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		if err := a.run([]string{"deploy", "preview", "de-sci"}); err != nil {
+			t.Fatalf("preview returned %v", err)
+		}
+		got := out.String()
+		for _, want := range []string{
+			"Carbide deploy",
+			"preview de-sci",
+			"target   de-sci",
+			"type     ssh-compose",
+			"host     de-sci",
+			"domain   carbide.ryangerardwilson.com",
+			"remote   /opt/carbide/docs",
+			"compose  app/docker-compose.yml",
+			"port     18081",
+			"mutates  no",
+			"apply    carbide deploy apply de-sci",
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("deploy preview output = %q, missing %q", got, want)
+			}
+		}
+		if strings.Contains(got, "refuse apply until target is implemented") {
+			t.Fatalf("deploy preview output still shows disabled stub: %q", got)
+		}
+	})
+}
+
+func TestDeployEnvContentUsesProjectMetadata(t *testing.T) {
+	withWorkingDir(t, t.TempDir(), func() {
+		config := `name = "My Carbide App"
+slug = "my-carbide-app"
+`
+		if err := os.WriteFile("carbide.toml", []byte(config), 0644); err != nil {
+			t.Fatalf("WriteFile carbide.toml returned %v", err)
+		}
+
+		got, err := deployEnvContent(deployTarget{
+			Name:       "prod",
+			Domain:     "app.example.com",
+			PublicPort: 18080,
+			Nginx:      true,
+		})
+		if err != nil {
+			t.Fatalf("deployEnvContent returned %v", err)
+		}
+		for _, want := range []string{
+			"COMPOSE_PROJECT_NAME=my-carbide-app",
+			"PUBLIC_APP_NAME=My Carbide App",
+			"PUBLIC_URL=https://app.example.com",
+			"CARBIDE_HTTP_PORT=18080",
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("deploy env = %q, missing %q", got, want)
+			}
+		}
+		if strings.Contains(got, "carbide-docs") || strings.Contains(got, "Carbide Docs") {
+			t.Fatalf("deploy env still contains docs app defaults: %q", got)
+		}
+	})
+}
+
+func TestDeployPreviewReadsSSHComposeEnvironmentTarget(t *testing.T) {
+	withWorkingDir(t, t.TempDir(), func() {
+		config := `name = "Carbide Docs"
+slug = "carbide-docs"
+
+[env]
+contract_version = 1
+
+[env.variables.APP_ENV]
+required = false
+local_default = "production"
+
+[deploy.hosts.web-1]
+ssh = "web-1"
+
+[deploy.hosts.api-1]
+ssh = "api-1"
+
+[deploy.hosts.db-1]
+ssh = "db-1"
+
+[deploy.targets.prod]
+type = "ssh-compose-environment"
+domain = "carbide.example.com"
+remote_path = "/opt/carbide/app"
+source_path = "."
+compose_file = "docker-compose.yml"
+project_directory = "."
+health_path = "/health"
+strategy = "preview-only"
+
+[deploy.targets.prod.roles.web]
+hosts = ["web-1"]
+public_port = 8080
+nginx = true
+
+[deploy.targets.prod.roles.api]
+hosts = ["api-1"]
+
+[deploy.targets.prod.roles.db]
+hosts = ["db-1"]
+primary = "db-1"
+migration = "once"
+`
+		if err := os.WriteFile("carbide.toml", []byte(config), 0644); err != nil {
+			t.Fatalf("WriteFile carbide.toml returned %v", err)
+		}
+
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		if err := a.run([]string{"deploy", "preview", "prod"}); err != nil {
+			t.Fatalf("preview returned %v", err)
+		}
+		got := out.String()
+		for _, want := range []string{
+			"Carbide deploy",
+			"preview prod",
+			"target   prod",
+			"type     ssh-compose-environment",
+			"domain   carbide.example.com",
+			"mutates  no",
+			"hosts    api-1 -> api-1",
+			"         db-1 -> db-1",
+			"         web-1 -> web-1",
+			"roles    api: api-1",
+			"         db: db-1 primary db-1 migrate once",
+			"         web: web-1 port 8080 nginx",
+			"apply    disabled until clustered orchestration is implemented",
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("deploy preview output = %q, missing %q", got, want)
+			}
+		}
+	})
+}
+
+func TestDeployApplyGuardsSSHComposeEnvironmentTarget(t *testing.T) {
+	withWorkingDir(t, t.TempDir(), func() {
+		config := `name = "Carbide Docs"
+slug = "carbide-docs"
+
+[env]
+contract_version = 1
+
+[env.variables.APP_ENV]
+required = false
+local_default = "production"
+
+[deploy.hosts.de-sci]
+ssh = "de-sci"
+
+[deploy.targets.prod]
+type = "ssh-compose-environment"
+domain = "carbide.example.com"
+
+[deploy.targets.prod.roles.web]
+hosts = ["de-sci"]
+public_port = 8080
+nginx = true
+
+[deploy.targets.prod.roles.api]
+hosts = ["de-sci"]
+
+[deploy.targets.prod.roles.db]
+hosts = ["de-sci"]
+primary = "de-sci"
+migration = "once"
+`
+		if err := os.WriteFile("carbide.toml", []byte(config), 0644); err != nil {
+			t.Fatalf("WriteFile carbide.toml returned %v", err)
+		}
+
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		err := a.run([]string{"deploy", "apply", "prod"})
+		if err == nil {
+			t.Fatalf("deploy apply should guard environment targets")
+		}
+		if !strings.Contains(err.Error(), "clustered orchestration is implemented") {
+			t.Fatalf("deploy apply error = %v", err)
+		}
+		got := out.String()
+		for _, want := range []string{
+			"target   prod",
+			"type     ssh-compose-environment",
+			"status   guarded",
+			"reason   clustered apply needs explicit orchestration",
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("deploy apply output = %q, missing %q", got, want)
+			}
+		}
+	})
+}
+
+func TestDoctorPrintsDocsProjectContract(t *testing.T) {
+	source, err := filepath.Abs(filepath.Join("..", "..", "..", "docs", "app"))
+	if err != nil {
+		t.Fatalf("Abs docs app returned %v", err)
+	}
+	target := filepath.Join(t.TempDir(), "docs-app")
+	if err := copyScaffoldPart(source, target, "Carbide Docs", "carbide-docs"); err != nil {
+		t.Fatalf("copyScaffoldPart returned %v", err)
+	}
+
+	withWorkingDir(t, target, func() {
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		if err := a.run([]string{"doctor"}); err != nil {
+			t.Fatalf("doctor returned %v\n%s", err, out.String())
+		}
+
+		got := out.String()
+		for _, want := range []string{
+			"Carbide doctor",
+			"project contract",
+			"project shape     ok",
+			"config            ok",
+			"runtime baseline  ok",
+			"env contract      ok",
+			"compose           ok      docs web api db",
+			"web               ok      Bun static docs",
+			"api               ok      docs health API",
+			"database          ok      Postgres deploy checks",
+			"agents            ok      docs agents.d",
+			"runtime           skip    run carbide doctor runtime",
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("doctor output = %q, missing %q", got, want)
+			}
+		}
+	})
+}
+
 func withWorkingDir(t *testing.T, dir string, work func()) {
 	t.Helper()
 	previous, err := os.Getwd()
@@ -348,6 +744,34 @@ func withWorkingDir(t *testing.T, dir string, work func()) {
 		}
 	}()
 	work()
+}
+
+func withGeneratedScaffold(t *testing.T, work func(string)) {
+	t.Helper()
+	source, err := filepath.Abs(filepath.Join("..", "..", "..", "scaffold"))
+	if err != nil {
+		t.Fatalf("Abs scaffold returned %v", err)
+	}
+	if !isDir(source) {
+		t.Fatalf("missing scaffold source at %s", source)
+	}
+	target := filepath.Join(t.TempDir(), "demo")
+	if err := copyScaffoldPart(source, target, "Demo", "demo"); err != nil {
+		t.Fatalf("copyScaffoldPart returned %v", err)
+	}
+	withWorkingDir(t, target, func() {
+		work(target)
+	})
+}
+
+func envSliceValue(env []string, key string) string {
+	prefix := key + "="
+	for _, item := range env {
+		if strings.HasPrefix(item, prefix) {
+			return strings.TrimPrefix(item, prefix)
+		}
+	}
+	return ""
 }
 
 func assertOutputOrder(t *testing.T, output string, values []string) {

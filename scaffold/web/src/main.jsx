@@ -3,7 +3,66 @@ import { createRoot } from 'react-dom/client';
 import { AuthView, DashboardView, LoadingView } from './component/l3/index.js';
 import './tailwind.css';
 
-const APP_NAME = '__PROJECT_NAME__';
+const TEMPLATE_APP_NAME = '__' + 'PROJECT_NAME' + '__';
+const PROJECT_APP_NAME = '__PROJECT_NAME__';
+const APP_NAME = PROJECT_APP_NAME === TEMPLATE_APP_NAME ? 'Lorem Ipsum' : PROJECT_APP_NAME;
+const THEME_STORAGE_KEY = 'carbide.theme';
+const THEME_MODES = ['light', 'dark', 'system'];
+
+function systemTheme() {
+  if (!window.matchMedia) {
+    return 'light';
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function storedThemeMode() {
+  try {
+    const value = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return THEME_MODES.includes(value) ? value : 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+function applyThemeMode(mode, resolved) {
+  document.documentElement.dataset.theme = resolved;
+  document.documentElement.dataset.themeMode = mode;
+  document.documentElement.style.colorScheme = resolved;
+}
+
+function useThemeMode() {
+  const [mode, setModeState] = useState(storedThemeMode);
+  const [system, setSystem] = useState(systemTheme);
+  const resolved = mode === 'system' ? system : mode;
+
+  useEffect(() => {
+    if (!window.matchMedia) {
+      return undefined;
+    }
+    const query = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => setSystem(query.matches ? 'dark' : 'light');
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+
+  useEffect(() => {
+    applyThemeMode(mode, resolved);
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, mode);
+    } catch {
+      // Ignore storage failures; theme state still works for the current tab.
+    }
+  }, [mode, resolved]);
+
+  const setMode = (nextMode) => {
+    if (THEME_MODES.includes(nextMode)) {
+      setModeState(nextMode);
+    }
+  };
+
+  return { mode, resolved, setMode };
+}
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -48,6 +107,7 @@ function useRoute() {
 
 function App() {
   const [route, setRoute] = useRoute();
+  const theme = useThemeMode();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -103,7 +163,17 @@ function App() {
   }
 
   if (route === '/dashboard' && user) {
-    return <DashboardView appName={APP_NAME} user={user} onLogout={logout} busy={busy} />;
+    return (
+      <DashboardView
+        appName={APP_NAME}
+        user={user}
+        onLogout={logout}
+        busy={busy}
+        onThemeMode={theme.setMode}
+        resolvedTheme={theme.resolved}
+        themeMode={theme.mode}
+      />
+    );
   }
 
   return (
@@ -113,6 +183,9 @@ function App() {
       onSubmit={submitAuth}
       busy={busy}
       error={error}
+      onThemeMode={theme.setMode}
+      resolvedTheme={theme.resolved}
+      themeMode={theme.mode}
       onMode={(nextMode) => {
         setError('');
         setRoute(nextMode === 'register' ? '/register' : '/login');

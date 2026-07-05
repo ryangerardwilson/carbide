@@ -3,17 +3,23 @@ package cli
 import (
 	"bufio"
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"net"
+	"net/http"
+	"net/http/cookiejar"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -32,6 +38,15 @@ const legacyComposeFilePath = "compose.yml"
 const defaultTerminalWidth = 80
 const progressStateColumnWidth = 8
 const minimumProgressFrameWidth = 4
+
+const runtimeContractVersion = 1
+const baselineGoModuleVersion = "1.25.0"
+const baselineGoBuilderImage = "golang:1.26-bookworm@sha256:b305420a68d0f229d91eb3b3ed9e519fcf2cf5461da4bef997bf927e8c0bfd2b"
+const baselineAPIRuntimeImage = "debian:trixie-slim@sha256:28de0877c2189802884ccd20f15ee41c203573bd87bb6b883f5f46362d24c5c2"
+const baselineBunImage = "oven/bun:1.3.14-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f"
+const baselinePostgresImage = "postgres:17-alpine@sha256:dc17045ccfd343b49600570ea734b9c4991cf1c3f3302e67df51e3b402dd55c4"
+const baselineReactVersion = "19.2.7"
+const baselineTailwindVersion = "4.3.2"
 
 const defaultLogoText = `_____________________________________________________
 ________________________oo_______oo_______oo_________
@@ -166,6 +181,44 @@ type envContractReport struct {
 	frameworkCount  int
 }
 
+type deployTarget struct {
+	Name             string
+	Type             string
+	Host             string
+	Hosts            map[string]deployHost
+	Roles            []deployRole
+	Domain           string
+	RemotePath       string
+	SourcePath       string
+	ComposeFile      string
+	ProjectDirectory string
+	PublicPort       int
+	HealthPath       string
+	Nginx            bool
+	NginxSite        string
+	Strategy         string
+}
+
+type deployHost struct {
+	Name        string
+	SSH         string
+	Address     string
+	Description string
+}
+
+type deployRole struct {
+	Name             string
+	Hosts            []string
+	RemotePath       string
+	ComposeFile      string
+	ProjectDirectory string
+	PublicPort       int
+	HealthPath       string
+	Nginx            bool
+	Primary          string
+	Migration        string
+}
+
 func SetCommit(value string) {
 	if value != "" {
 		commit = value
@@ -225,10 +278,19 @@ func (a app) run(args []string) error {
 		}
 		return a.commandInit()
 	case "doctor":
+		if len(args) == 1 {
+			return a.commandDoctor()
+		}
 		if len(args) == 2 && args[1] == "env" {
 			return a.commandDoctorEnv()
 		}
-		return errors.New("usage: carbide doctor env")
+		if len(args) == 2 && args[1] == "runtime" {
+			return a.commandDoctorRuntime()
+		}
+		if len(args) == 2 && args[1] == "framework" {
+			return a.commandDoctorFramework()
+		}
+		return errors.New("usage: carbide doctor [env|runtime|framework]")
 	case "deploy":
 		if len(args) == 3 && args[1] == "preview" {
 			return a.commandDeployPreview(args[2])
@@ -287,7 +349,10 @@ func (a app) printHelp() {
 			rows: []outputRow{
 				{"deploy apply <target>", "apply deploy changes"},
 				{"deploy preview <target>", "show deploy changes"},
+				{"doctor", "check project contract"},
 				{"doctor env", "validate env contract"},
+				{"doctor framework", "run framework regressions"},
+				{"doctor runtime", "run Docker runtime checks"},
 				{"help", "show this help"},
 				{"init", "init current directory"},
 				{"logs", "query saved logs"},
@@ -418,6 +483,18 @@ func (a app) commandInit() error {
 	return nil
 }
 
+type doctorResult struct {
+	check  string
+	status string
+	detail string
+}
+
+func (a app) commandDoctor() error {
+	results := a.projectDoctorResults()
+	results = append(results, doctorResult{"runtime", "skip", "run carbide doctor runtime"})
+	return a.renderDoctorResults("project contract", results)
+}
+
 func (a app) commandDoctorEnv() error {
 	if !isFile("carbide.toml") {
 		return errors.New("run this inside a Carbide project")
@@ -460,11 +537,1367 @@ func (a app) commandDoctorEnv() error {
 	return nil
 }
 
+func (a app) commandDoctorRuntime() error {
+	results := a.projectDoctorResults()
+	if doctorFailures(results) > 0 {
+		results = append(results, doctorResult{"runtime", "skip", "fix project contract first"})
+		return a.renderDoctorResults("runtime contract", results)
+	}
+
+	runtimeResults := a.runtimeDoctorResults()
+	results = append(results, runtimeResults...)
+	return a.renderDoctorResults("runtime contract", results)
+}
+
+func (a app) commandDoctorFramework() error {
+	results := a.frameworkDoctorResults()
+	return a.renderDoctorResults("framework regressions", results)
+}
+
+func (a app) renderDoctorResults(subtitle string, results []doctorResult) error {
+	rows := make([]tableRow, 0, len(results))
+	for _, result := range results {
+		rows = append(rows, tableRow{result.check, result.status, result.detail})
+	}
+
+	r := newRenderer(a.stdout)
+	r.Title("Carbide doctor", subtitle)
+	r.Table([]string{"check", "status", "detail"}, rows)
+
+	failures := doctorFailures(results)
+	if failures > 0 {
+		return fmt.Errorf("doctor found %d failing check(s)", failures)
+	}
+	return nil
+}
+
+func doctorFailures(results []doctorResult) int {
+	count := 0
+	for _, result := range results {
+		if result.status == "fail" {
+			count++
+		}
+	}
+	return count
+}
+
+func doctorOK(check string, detail string) doctorResult {
+	return doctorResult{check: check, status: "ok", detail: detail}
+}
+
+func doctorFail(check string, detail string) doctorResult {
+	return doctorResult{check: check, status: "fail", detail: detail}
+}
+
+func doctorWarn(check string, detail string) doctorResult {
+	return doctorResult{check: check, status: "warn", detail: detail}
+}
+
+func doctorSkip(check string, detail string) doctorResult {
+	return doctorResult{check: check, status: "skip", detail: detail}
+}
+
+func (a app) projectDoctorResults() []doctorResult {
+	if !isFile(projectConfigPath) {
+		return []doctorResult{doctorFail("project", "missing carbide.toml")}
+	}
+
+	if projectProfile() == "docs" {
+		return []doctorResult{
+			doctorDocsProjectShape(),
+			doctorDocsConfigContract(),
+			doctorDocsRuntimeBaselineContract(),
+			doctorEnvContract(),
+			doctorDocsComposeContract(),
+			doctorDocsWebContract(),
+			doctorDocsAPIContract(),
+			doctorDocsDatabaseContract(),
+			doctorDocsAgentsContract(),
+			doctorForbiddenRegressions("."),
+		}
+	}
+
+	return []doctorResult{
+		doctorProjectShape(),
+		doctorConfigContract(),
+		doctorRuntimeBaselineContract(),
+		doctorEnvContract(),
+		doctorComposeContract(),
+		doctorFrontendContract(),
+		doctorAPIContract(),
+		doctorDatabaseContract(),
+		doctorAgentsContract(),
+		doctorForbiddenRegressions("."),
+	}
+}
+
+func doctorProjectShape() doctorResult {
+	requiredDirs := []string{"web", "api", "db", "agents.d"}
+	if missing := missingDirs(requiredDirs); len(missing) > 0 {
+		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
+	}
+
+	requiredFiles := []string{projectConfigPath, composeFilePath, "AGENTS.md"}
+	if missing := missingFiles(requiredFiles); len(missing) > 0 {
+		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
+	}
+
+	forbidden := []string{"src", "model", "controller", "view", "views", "frontend", "templates", "include", "infra", "doc"}
+	if found := existingDirs(forbidden); len(found) > 0 {
+		return doctorFail("project shape", "legacy root dirs: "+strings.Join(found, ", "))
+	}
+	if isFile("go.mod") || isFile("go.sum") || isFile("Dockerfile") {
+		return doctorFail("project shape", "root Go/Docker files are not allowed")
+	}
+
+	services := composeServiceNamesFromFile(composeFilePath)
+	allowed := map[string]bool{"agents.d": true}
+	for _, service := range services {
+		allowed[service] = true
+	}
+	if len(services) == 0 {
+		for _, service := range defaultComposeServices() {
+			allowed[service] = true
+		}
+	}
+	extras := rootDirsOutsideContract(allowed)
+	if len(extras) > 0 {
+		return doctorFail("project shape", "non-service root dirs: "+strings.Join(extras, ", "))
+	}
+	return doctorOK("project shape", "web api db agents.d")
+}
+
+func doctorConfigContract() doctorResult {
+	content, err := os.ReadFile(projectConfigPath)
+	if err != nil {
+		return doctorFail("config", err.Error())
+	}
+	text := string(content)
+	required := []string{
+		"name = ",
+		"slug = ",
+		"carbide_version = ",
+		"[dev]",
+		"default_port = 8080",
+		`database = "postgres"`,
+		"[runtime]",
+		fmt.Sprintf("contract_version = %d", runtimeContractVersion),
+		`policy = "explicit-baseline"`,
+		fmt.Sprintf(`go_module = "%s"`, baselineGoModuleVersion),
+		fmt.Sprintf(`go_builder_image = "%s"`, baselineGoBuilderImage),
+		fmt.Sprintf(`api_runtime_image = "%s"`, baselineAPIRuntimeImage),
+		fmt.Sprintf(`bun_image = "%s"`, baselineBunImage),
+		fmt.Sprintf(`postgres_image = "%s"`, baselinePostgresImage),
+		fmt.Sprintf(`react = "%s"`, baselineReactVersion),
+		fmt.Sprintf(`react_dom = "%s"`, baselineReactVersion),
+		fmt.Sprintf(`tailwindcss = "%s"`, baselineTailwindVersion),
+		fmt.Sprintf(`tailwind_cli = "%s"`, baselineTailwindVersion),
+		"[env]",
+		"contract_version = 1",
+		"[deploy]",
+		"preview_before_apply = true",
+	}
+	if missing := missingNeedles(text, required); len(missing) > 0 {
+		return doctorFail("config", "missing "+strings.Join(missing, ", "))
+	}
+	return doctorOK("config", "carbide.toml")
+}
+
+func doctorRuntimeBaselineContract() doctorResult {
+	required := map[string][]string{
+		projectConfigPath: {
+			fmt.Sprintf("contract_version = %d", runtimeContractVersion),
+			`policy = "explicit-baseline"`,
+			fmt.Sprintf(`go_module = "%s"`, baselineGoModuleVersion),
+			fmt.Sprintf(`go_builder_image = "%s"`, baselineGoBuilderImage),
+			fmt.Sprintf(`api_runtime_image = "%s"`, baselineAPIRuntimeImage),
+			fmt.Sprintf(`bun_image = "%s"`, baselineBunImage),
+			fmt.Sprintf(`postgres_image = "%s"`, baselinePostgresImage),
+			fmt.Sprintf(`react = "%s"`, baselineReactVersion),
+			fmt.Sprintf(`react_dom = "%s"`, baselineReactVersion),
+			fmt.Sprintf(`tailwindcss = "%s"`, baselineTailwindVersion),
+			fmt.Sprintf(`tailwind_cli = "%s"`, baselineTailwindVersion),
+		},
+		"api/Dockerfile": {
+			"FROM " + baselineGoBuilderImage,
+			"FROM " + baselineAPIRuntimeImage,
+		},
+		"web/Dockerfile": {
+			"FROM " + baselineBunImage,
+		},
+		composeFilePath: {
+			"image: " + baselinePostgresImage,
+		},
+		"api/go.mod": {
+			"go " + baselineGoModuleVersion,
+		},
+		"db/go.mod": {
+			"go " + baselineGoModuleVersion,
+		},
+		"web/package.json": {
+			fmt.Sprintf(`"react": "%s"`, baselineReactVersion),
+			fmt.Sprintf(`"react-dom": "%s"`, baselineReactVersion),
+			fmt.Sprintf(`"tailwindcss": "%s"`, baselineTailwindVersion),
+			fmt.Sprintf(`"@tailwindcss/cli": "%s"`, baselineTailwindVersion),
+		},
+	}
+	for path, needles := range required {
+		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
+			return doctorFail("runtime baseline", path+" missing "+strings.Join(missing, ", "))
+		}
+	}
+	if findings := floatingDockerReferences([]string{"api/Dockerfile", "web/Dockerfile", composeFilePath}); len(findings) > 0 {
+		return doctorFail("runtime baseline", "floating Docker refs: "+strings.Join(findings, ", "))
+	}
+	if findings := packageVersionRangeFindings("web/package.json"); len(findings) > 0 {
+		return doctorFail("runtime baseline", "package ranges: "+strings.Join(findings, ", "))
+	}
+	if findings := unsupportedGoDirectiveFindings([]string{"api/go.mod", "db/go.mod"}); len(findings) > 0 {
+		return doctorFail("runtime baseline", "Go directive drift: "+strings.Join(findings, ", "))
+	}
+	return doctorOK("runtime baseline", "Go 1.25 React 19.2 Tailwind 4.3 Bun 1.3 Postgres 17")
+}
+
+func doctorEnvContract() doctorResult {
+	report, err := inspectEnvContract()
+	if err != nil {
+		return doctorFail("env contract", err.Error())
+	}
+	detail := fmt.Sprintf("%d missing, %d secrets", len(report.missingRequired), report.secretCount)
+	if len(report.missingRequired) > 0 {
+		return doctorFail("env contract", detail)
+	}
+	if len(report.warnings) > 0 {
+		return doctorFail("env contract", strings.Join(report.warnings, "; "))
+	}
+	return doctorOK("env contract", detail)
+}
+
+func doctorComposeContract() doctorResult {
+	content, err := os.ReadFile(composeFilePath)
+	if err != nil {
+		return doctorFail("compose", "missing docker-compose.yml")
+	}
+	text := string(content)
+	services := composeServiceNamesFromFile(composeFilePath)
+	for _, service := range []string{"web", "api", "db"} {
+		if !containsString(services, service) {
+			return doctorFail("compose", "missing "+service+" service")
+		}
+	}
+	if containsString(services, "backend") || containsString(services, "database") {
+		return doctorFail("compose", "legacy service names present")
+	}
+	required := []string{
+		"API_URL: http://api:8080",
+		"@db:5432/carbide",
+		`PUBLIC_URL: "http://localhost:${CARBIDE_HTTP_PORT:-8080}"`,
+		"develop:",
+		"watch:",
+		"action: rebuild",
+		"path: ./web/src",
+		"path: ./api",
+		"path: ./db",
+	}
+	if missing := missingNeedles(text, required); len(missing) > 0 {
+		return doctorFail("compose", "missing "+strings.Join(missing, ", "))
+	}
+	return doctorOK("compose", "web api db")
+}
+
+func doctorFrontendContract() doctorResult {
+	requiredFiles := []string{
+		"web/Dockerfile",
+		"web/package.json",
+		"web/bun.lock",
+		"web/index.html",
+		"web/src/main.jsx",
+		"web/src/server.jsx",
+		"web/src/write-index.mjs",
+		"web/src/styles.css",
+		"web/src/lib/cx.js",
+		"web/src/component/l1/Button.jsx",
+		"web/src/component/l1/Field.jsx",
+		"web/src/component/l1/Surface.jsx",
+		"web/src/component/l1/Text.jsx",
+		"web/src/component/l1/ThemeToggle.jsx",
+		"web/src/component/l1/tokens.js",
+		"web/src/component/l2/AuthForm.jsx",
+		"web/src/component/l2/Layouts.jsx",
+		"web/src/component/l3/AuthView.jsx",
+		"web/src/component/l3/DashboardView.jsx",
+		"web/src/component/l3/LoadingView.jsx",
+	}
+	if missing := missingFiles(requiredFiles); len(missing) > 0 {
+		return doctorFail("frontend", "missing "+strings.Join(missing, ", "))
+	}
+	requiredDirs := []string{"web/src/component/l1", "web/src/component/l2", "web/src/component/l3"}
+	if missing := missingDirs(requiredDirs); len(missing) > 0 {
+		return doctorFail("frontend", "missing "+strings.Join(missing, ", "))
+	}
+	forbiddenFiles := []string{"web/package-lock.json", "web/vite.config.js", "web/src/component/l1/theme.css"}
+	if found := existingFiles(forbiddenFiles); len(found) > 0 {
+		return doctorFail("frontend", "forbidden "+strings.Join(found, ", "))
+	}
+	if fileContains("web/src/styles.css", "theme.css") || treeContains("web/src", "cb-") || treeContains("web/src", "--cb-") {
+		return doctorFail("frontend", "parallel CSS theme detected")
+	}
+	if fileContains("web/src/styles.css", "#0f766e") ||
+		fileContains("web/src/styles.css", "#115e59") ||
+		fileContains("web/src/styles.css", "#2dd4bf") ||
+		fileContains("web/src/styles.css", "#5eead4") ||
+		fileContains("web/src/styles.css", "#16433c") ||
+		fileContains("web/src/styles.css", "#0f302c") ||
+		fileContains("web/src/component/l1/tokens.js", "from-carbide-action via-carbide-hero-via") {
+		return doctorFail("frontend", "green scaffold palette detected")
+	}
+	if fileContains("web/src/component/l2/Layouts.jsx", "text-7xl") ||
+		fileContains("web/src/component/l2/Layouts.jsx", "text-5xl") ||
+		fileContains("web/src/component/l2/Layouts.jsx", "py-24") ||
+		fileContains("web/src/component/l2/Layouts.jsx", "lg:py-12") ||
+		fileContains("web/src/component/l2/Layouts.jsx", "lg:grid-cols-[280px") ||
+		fileContains("web/src/component/l2/Layouts.jsx", "lg:grid-cols-[240px") ||
+		fileContains("web/src/component/l3/DashboardView.jsx", "gap-6") ||
+		fileContains("web/src/component/l3/DashboardView.jsx", "p-6") ||
+		fileContains("web/src/component/l1/Field.jsx", "min-h-12 rounded-md border") ||
+		fileContains("web/src/component/l1/Field.jsx", "min-h-10 rounded-md border") ||
+		treeContains("web/src/component", "font-extrabold") {
+		return doctorFail("frontend", "oversized scaffold density detected")
+	}
+	if fileContains("web/src/component/l1/ThemeToggle.jsx", "aria-pressed") ||
+		fileContains("web/src/component/l1/ThemeToggle.jsx", `role="group"`) ||
+		fileContains("web/src/component/l1/ThemeToggle.jsx", `<select`) ||
+		fileContains("web/src/component/l1/ThemeToggle.jsx", `appearance-none`) {
+		return doctorFail("frontend", "non-icon theme toggle detected")
+	}
+	if !fileContains("web/package.json", `"react":`) ||
+		!fileContains("web/package.json", `"tailwindcss":`) ||
+		!fileContains("web/package.json", `"@tailwindcss/cli":`) ||
+		!fileContains("web/package.json", `"assets:build":`) ||
+		!fileContains("web/package.json", `--entry-naming='assets/[name]-[hash].[ext]'`) ||
+		!fileContains("web/Dockerfile", `bun run assets:build`) ||
+		!fileContains("web/src/server.jsx", `publicRoot`) ||
+		!fileContains("web/src/server.jsx", `Cache-Control`) ||
+		!fileContains("web/src/server.jsx", `public, max-age=31536000, immutable`) ||
+		!fileContains("web/src/server.jsx", `return 'no-store'`) ||
+		!fileContains("web/src/write-index.mjs", `asset-manifest.json`) ||
+		!fileContains("web/src/write-index.mjs", `/assets/${scripts[0]}`) ||
+		!fileContains("web/src/styles.css", `@import "tailwindcss";`) ||
+		!fileContains("web/src/styles.css", `[data-theme="dark"]`) ||
+		!fileContains("web/src/styles.css", `font-size: 14px`) ||
+		!fileContains("web/src/styles.css", `line-height: 1.4`) ||
+		!fileContains("web/src/styles.css", `--carbide-page: #ffffff`) ||
+		!fileContains("web/src/styles.css", `--carbide-page: #000000`) ||
+		!fileContains("web/index.html", `prefers-color-scheme: dark`) ||
+		!fileContains("web/src/main.jsx", `carbide.theme`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.jsx", `SunIcon`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.jsx", `MoonIcon`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.jsx", `Switch to light theme`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.jsx", `Switch to dark theme`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.jsx", `size-8 rounded-full border`) ||
+		!fileContains("web/src/component/l1/ThemeToggle.jsx", `data-theme-mode`) ||
+		!fileContains("web/src/component/l1/tokens.js", `bg-carbide-hero text-carbide-hero-text`) ||
+		!fileContains("web/src/component/l1/Text.jsx", `text-2xl/8 sm:text-3xl/9`) ||
+		!fileContains("web/src/component/l1/Field.jsx", `min-h-8 rounded-md border px-2 py-1 text-sm/6`) ||
+		!fileContains("web/src/component/l1/Button.jsx", `md: 'min-h-8 px-3 text-xs'`) ||
+		!fileContains("web/src/component/l2/AuthForm.jsx", `gap-3 border-l px-4 py-5`) ||
+		!fileContains("web/src/component/l2/AuthForm.jsx", `w-full max-w-sm justify-self-center gap-3`) ||
+		!fileContains("web/src/component/l2/Layouts.jsx", `lg:grid-cols-[216px_minmax(0,1fr)]`) ||
+		!fileContains("web/src/component/l2/Layouts.jsx", `px-3 py-4 sm:px-5 lg:py-5`) ||
+		!fileContains("web/src/main.jsx", "./component/l3/index.js") {
+		return doctorFail("frontend", "React/Bun/Tailwind contract drifted")
+	}
+	return doctorOK("frontend", "Bun React Tailwind")
+}
+
+func doctorAPIContract() doctorResult {
+	requiredFiles := []string{
+		"api/Dockerfile",
+		"api/go.mod",
+		"api/go.sum",
+		"api/main.go",
+		"api/auth.go",
+		"api/routes.go",
+	}
+	if missing := missingFiles(requiredFiles); len(missing) > 0 {
+		return doctorFail("api", "missing "+strings.Join(missing, ", "))
+	}
+	if fileContains("api/Dockerfile", "gcc") || fileContains("api/Dockerfile", "libpq-dev") || anyPathWithExtension("api", ".c", ".h") {
+		return doctorFail("api", "legacy C backend artifacts present")
+	}
+	required := map[string][]string{
+		"api/go.mod":     {"module carbideapp/api", "carbideapp/db", "replace carbideapp/db => ../db"},
+		"api/Dockerfile": {"FROM golang:", "go mod download", "COPY api ./api", "COPY db ./db"},
+		"api/routes.go":  {"/api/register", "/api/login", "/api/me", "handleDashboard"},
+		"api/main.go":    {"api listening on container port", "public API URL is"},
+	}
+	for path, needles := range required {
+		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
+			return doctorFail("api", path+" missing "+strings.Join(missing, ", "))
+		}
+	}
+	return doctorOK("api", "Go HTTP API")
+}
+
+func doctorDatabaseContract() doctorResult {
+	requiredFiles := []string{
+		"db/go.mod",
+		"db/go.sum",
+		"db/user.go",
+		"db/session.go",
+		"db/migration/001_auth.sql",
+	}
+	if missing := missingFiles(requiredFiles); len(missing) > 0 {
+		return doctorFail("database", "missing "+strings.Join(missing, ", "))
+	}
+	required := map[string][]string{
+		"db/go.mod":                 {"module carbideapp/db", "github.com/jackc/pgx/v5"},
+		"db/user.go":                {"CreateUser", "VerifyUser", "pgxpool"},
+		"db/session.go":             {"CreateSession", "CurrentUser", "DestroySession"},
+		"db/migration/001_auth.sql": {"CREATE TABLE IF NOT EXISTS users", "CREATE TABLE IF NOT EXISTS sessions"},
+	}
+	for path, needles := range required {
+		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
+			return doctorFail("database", path+" missing "+strings.Join(missing, ", "))
+		}
+	}
+	return doctorOK("database", "Postgres users sessions")
+}
+
+func doctorAgentsContract() doctorResult {
+	requiredFiles := []string{
+		"AGENTS.md",
+		"agents.d/ENVIRONMENT.md",
+		"agents.d/DEPLOY.md",
+		"agents.d/BACKUP_RESTORE.md",
+		"agents.d/TAILWIND_COMPONENTS.md",
+	}
+	if missing := missingFiles(requiredFiles); len(missing) > 0 {
+		return doctorFail("agents", "missing "+strings.Join(missing, ", "))
+	}
+	required := map[string][]string{
+		"AGENTS.md":                       {"carbide run dev", "carbide status", "carbide doctor"},
+		"agents.d/ENVIRONMENT.md":         {"separate secrets container", "carbide doctor"},
+		"agents.d/DEPLOY.md":              {"preview-before-apply", "carbide deploy preview"},
+		"agents.d/BACKUP_RESTORE.md":      {"Postgres owns durable application state"},
+		"agents.d/TAILWIND_COMPONENTS.md": {"Tailwind Component Organization", "component/l1/", "component/l2/", "component/l3/"},
+	}
+	for path, needles := range required {
+		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
+			return doctorFail("agents", path+" missing "+strings.Join(missing, ", "))
+		}
+	}
+	return doctorOK("agents", "AGENTS.md agents.d")
+}
+
+func doctorDocsProjectShape() doctorResult {
+	requiredDirs := []string{"web", "api", "db", "agents.d"}
+	if missing := missingDirs(requiredDirs); len(missing) > 0 {
+		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
+	}
+
+	requiredFiles := []string{projectConfigPath, composeFilePath, "AGENTS.md"}
+	if missing := missingFiles(requiredFiles); len(missing) > 0 {
+		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
+	}
+	if isFile("go.mod") || isFile("go.sum") || isFile("Dockerfile") {
+		return doctorFail("project shape", "root Go/Docker files are not allowed")
+	}
+
+	services := composeServiceNamesFromFile(composeFilePath)
+	allowed := map[string]bool{"agents.d": true}
+	for _, service := range services {
+		allowed[service] = true
+	}
+	extras := rootDirsOutsideContract(allowed)
+	if len(extras) > 0 {
+		return doctorFail("project shape", "non-service root dirs: "+strings.Join(extras, ", "))
+	}
+	return doctorOK("project shape", "docs web api db")
+}
+
+func doctorDocsConfigContract() doctorResult {
+	content := readFileString(projectConfigPath)
+	required := []string{
+		`name = "Carbide Docs"`,
+		`slug = "carbide-docs"`,
+		`profile = "docs"`,
+		"carbide_version = ",
+		"[dev]",
+		"default_port = 8080",
+		`database = "postgres"`,
+		"[runtime]",
+		fmt.Sprintf("contract_version = %d", runtimeContractVersion),
+		`policy = "explicit-baseline"`,
+		fmt.Sprintf(`go_module = "%s"`, baselineGoModuleVersion),
+		fmt.Sprintf(`go_builder_image = "%s"`, baselineGoBuilderImage),
+		fmt.Sprintf(`api_runtime_image = "%s"`, baselineAPIRuntimeImage),
+		fmt.Sprintf(`bun_image = "%s"`, baselineBunImage),
+		fmt.Sprintf(`postgres_image = "%s"`, baselinePostgresImage),
+		"[env]",
+		"contract_version = 1",
+		"[deploy]",
+		"preview_before_apply = true",
+		"[deploy.hosts.de-sci]",
+		`ssh = "de-sci"`,
+		"[deploy.targets.de-sci]",
+		`type = "ssh-compose"`,
+		`host = "de-sci"`,
+		`remote_path = "/opt/carbide/docs"`,
+		"[deploy.targets.de-sci-environment]",
+		`type = "ssh-compose-environment"`,
+		"[deploy.targets.de-sci-environment.roles.web]",
+		"[deploy.targets.de-sci-environment.roles.api]",
+		"[deploy.targets.de-sci-environment.roles.db]",
+		`migration = "once"`,
+	}
+	if missing := missingNeedles(content, required); len(missing) > 0 {
+		return doctorFail("config", "missing "+strings.Join(missing, ", "))
+	}
+	return doctorOK("config", "docs deploy target")
+}
+
+func doctorDocsRuntimeBaselineContract() doctorResult {
+	required := map[string][]string{
+		projectConfigPath: {
+			fmt.Sprintf("contract_version = %d", runtimeContractVersion),
+			`policy = "explicit-baseline"`,
+			fmt.Sprintf(`go_builder_image = "%s"`, baselineGoBuilderImage),
+			fmt.Sprintf(`api_runtime_image = "%s"`, baselineAPIRuntimeImage),
+			fmt.Sprintf(`bun_image = "%s"`, baselineBunImage),
+			fmt.Sprintf(`postgres_image = "%s"`, baselinePostgresImage),
+		},
+		"api/Dockerfile": {
+			"FROM " + baselineGoBuilderImage,
+			"FROM " + baselineAPIRuntimeImage,
+		},
+		"web/Dockerfile": {
+			"FROM " + baselineBunImage,
+		},
+		composeFilePath: {
+			"image: " + baselinePostgresImage,
+		},
+		"api/go.mod": {
+			"go " + baselineGoModuleVersion,
+			"github.com/jackc/pgx/v5",
+		},
+		"db/go.mod": {
+			"go " + baselineGoModuleVersion,
+		},
+	}
+	for path, needles := range required {
+		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
+			return doctorFail("runtime baseline", path+" missing "+strings.Join(missing, ", "))
+		}
+	}
+	if findings := floatingDockerReferences([]string{"api/Dockerfile", "web/Dockerfile", composeFilePath}); len(findings) > 0 {
+		return doctorFail("runtime baseline", "floating Docker refs: "+strings.Join(findings, ", "))
+	}
+	if findings := unsupportedGoDirectiveFindings([]string{"api/go.mod", "db/go.mod"}); len(findings) > 0 {
+		return doctorFail("runtime baseline", "Go directive drift: "+strings.Join(findings, ", "))
+	}
+	return doctorOK("runtime baseline", "docs pinned images")
+}
+
+func doctorDocsComposeContract() doctorResult {
+	content := readFileString(composeFilePath)
+	services := composeServiceNamesFromFile(composeFilePath)
+	for _, service := range []string{"web", "api", "db"} {
+		if !containsString(services, service) {
+			return doctorFail("compose", "missing "+service+" service")
+		}
+	}
+	required := []string{
+		"context: ..",
+		"dockerfile: app/web/Dockerfile",
+		"API_URL: http://api:8080",
+		"CARBIDE_HTTP_PORT",
+		"service_healthy",
+		"./db/migration:/docker-entrypoint-initdb.d:ro",
+	}
+	if missing := missingNeedles(content, required); len(missing) > 0 {
+		return doctorFail("compose", "missing "+strings.Join(missing, ", "))
+	}
+	return doctorOK("compose", "docs web api db")
+}
+
+func doctorDocsWebContract() doctorResult {
+	requiredFiles := []string{
+		"web/Dockerfile",
+		"web/package.json",
+		"web/server.jsx",
+	}
+	if missing := missingFiles(requiredFiles); len(missing) > 0 {
+		return doctorFail("web", "missing "+strings.Join(missing, ", "))
+	}
+	required := map[string][]string{
+		"web/Dockerfile": {"COPY site ./site", `CMD ["bun", "server.jsx"]`},
+		"web/server.jsx": {"serveStatic", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`},
+	}
+	for path, needles := range required {
+		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
+			return doctorFail("web", path+" missing "+strings.Join(missing, ", "))
+		}
+	}
+	return doctorOK("web", "Bun static docs")
+}
+
+func doctorDocsAPIContract() doctorResult {
+	requiredFiles := []string{
+		"api/Dockerfile",
+		"api/go.mod",
+		"api/go.sum",
+		"api/main.go",
+	}
+	if missing := missingFiles(requiredFiles); len(missing) > 0 {
+		return doctorFail("api", "missing "+strings.Join(missing, ", "))
+	}
+	required := map[string][]string{
+		"api/go.mod":  {"module carbidedocs/api", "github.com/jackc/pgx/v5"},
+		"api/main.go": {"/health", "/api/version", "pgxpool", "database unavailable"},
+	}
+	for path, needles := range required {
+		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
+			return doctorFail("api", path+" missing "+strings.Join(missing, ", "))
+		}
+	}
+	return doctorOK("api", "docs health API")
+}
+
+func doctorDocsDatabaseContract() doctorResult {
+	requiredFiles := []string{
+		"db/go.mod",
+		"db/migration/001_docs.sql",
+	}
+	if missing := missingFiles(requiredFiles); len(missing) > 0 {
+		return doctorFail("database", "missing "+strings.Join(missing, ", "))
+	}
+	if !fileContains("db/migration/001_docs.sql", "CREATE TABLE IF NOT EXISTS deploy_checks") {
+		return doctorFail("database", "missing deploy check migration")
+	}
+	return doctorOK("database", "Postgres deploy checks")
+}
+
+func doctorDocsAgentsContract() doctorResult {
+	requiredFiles := []string{
+		"AGENTS.md",
+		"agents.d/ENVIRONMENT.md",
+		"agents.d/DEPLOY.md",
+		"agents.d/BACKUP_RESTORE.md",
+	}
+	if missing := missingFiles(requiredFiles); len(missing) > 0 {
+		return doctorFail("agents", "missing "+strings.Join(missing, ", "))
+	}
+	required := map[string][]string{
+		"AGENTS.md":                  {"carbide doctor", "carbide deploy preview de-sci"},
+		"agents.d/ENVIRONMENT.md":    {"remote `.env`", "POSTGRES_PASSWORD"},
+		"agents.d/DEPLOY.md":         {"preview-before-apply", "ssh-compose"},
+		"agents.d/BACKUP_RESTORE.md": {"Postgres", "carbide_docs_pgdata"},
+	}
+	for path, needles := range required {
+		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
+			return doctorFail("agents", path+" missing "+strings.Join(missing, ", "))
+		}
+	}
+	return doctorOK("agents", "docs agents.d")
+}
+
+func doctorForbiddenRegressions(root string) doctorResult {
+	forbidden := []string{
+		"Sea" + "lion",
+		"sea" + "lion",
+		"admin@carbide.local",
+		"Demo login",
+		"seed_admin",
+		"render_template_text",
+		"respond_view",
+	}
+	if hits := treeContainsAny(root, forbidden); len(hits) > 0 {
+		return doctorFail("regressions", strings.Join(hits, ", "))
+	}
+	return doctorOK("regressions", "no legacy markers")
+}
+
+func (a app) runtimeDoctorResults() []doctorResult {
+	if !isFile(projectConfigPath) {
+		return []doctorResult{doctorFail("runtime", "run this inside a Carbide project")}
+	}
+	profile := projectProfile()
+
+	compose, err := findCompose()
+	if err != nil {
+		return []doctorResult{doctorFail("runtime", err.Error())}
+	}
+
+	env := setEnv(os.Environ(), "COMPOSE_MENU", "false")
+	env = composeEnv(env)
+	alreadyRunning := composeHasRunningServices(compose, env)
+	port := 0
+	if alreadyRunning {
+		port = publishedWebPort(compose, env)
+		if port == 0 {
+			port = runtimePortFromEnv()
+		}
+	} else {
+		selected, err := chooseDevPort(os.Getenv("CARBIDE_HTTP_PORT"))
+		if err != nil {
+			return []doctorResult{doctorFail("runtime", err.Error())}
+		}
+		port = selected
+		env = setEnv(env, "CARBIDE_HTTP_PORT", strconv.Itoa(port))
+	}
+
+	results := []doctorResult{}
+	if _, err := runComposeCaptured(compose, env, "config"); err != nil {
+		return append(results, doctorFail("compose config", err.Error()))
+	}
+	results = append(results, doctorOK("compose config", "valid"))
+
+	startedByDoctor := !alreadyRunning
+	if startedByDoctor {
+		if err := composeUpDetached(compose, env); err != nil {
+			results = append(results, doctorFail("stack start", err.Error()))
+			return results
+		}
+		results = append(results, doctorOK("stack start", fmt.Sprintf("localhost:%d", port)))
+	} else {
+		results = append(results, doctorOK("stack start", "already running"))
+	}
+
+	cleanupNeeded := startedByDoctor
+	if cleanupNeeded {
+		defer func() {
+			if cleanupNeeded {
+				_ = composeDown(compose, env)
+			}
+		}()
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	if err := waitForHTTP(client, fmt.Sprintf("http://localhost:%d/health", port), 60*time.Second); err != nil {
+		results = append(results, doctorFail("health", err.Error()))
+		return results
+	}
+	results = append(results, doctorOK("health", "/health"))
+
+	baseURL := fmt.Sprintf("http://localhost:%d", port)
+	if profile == "docs" {
+		if err := httpGetContains(client, baseURL+"/api/version", `"name":"Carbide Docs"`); err != nil {
+			results = append(results, doctorFail("version api", err.Error()))
+			return results
+		}
+		results = append(results, doctorOK("version api", "/api/version"))
+
+		if startedByDoctor {
+			if err := composeDown(compose, env); err != nil {
+				results = append(results, doctorWarn("cleanup", err.Error()))
+			} else {
+				results = append(results, doctorOK("cleanup", "stopped doctor stack"))
+			}
+			cleanupNeeded = false
+		}
+		return results
+	}
+
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		results = append(results, doctorFail("auth flow", err.Error()))
+		return results
+	}
+	client.Jar = jar
+	if err := httpGetContains(client, baseURL+"/api/me", `"authenticated":false`); err != nil {
+		results = append(results, doctorFail("anonymous", err.Error()))
+		return results
+	}
+	results = append(results, doctorOK("anonymous", "/api/me"))
+
+	email := fmt.Sprintf("doctor-%d@carbide.local", time.Now().UnixNano())
+	if err := httpPostFormContains(client, baseURL+"/api/register", url.Values{"email": {email}, "password": {"password"}}, `"ok":true`); err != nil {
+		results = append(results, doctorFail("register", err.Error()))
+		return results
+	}
+	results = append(results, doctorOK("register", "first-user flow"))
+
+	if err := httpGetContains(client, baseURL+"/api/dashboard", email); err != nil {
+		results = append(results, doctorFail("dashboard api", err.Error()))
+		return results
+	}
+	if err := httpGetContains(client, baseURL+"/dashboard", `<div id="root"></div>`); err != nil {
+		results = append(results, doctorFail("dashboard web", err.Error()))
+		return results
+	}
+	results = append(results, doctorOK("dashboard", "api and web shell"))
+
+	if err := httpPostFormContains(client, baseURL+"/api/logout", nil, `"ok":true`); err != nil {
+		results = append(results, doctorFail("logout", err.Error()))
+		return results
+	}
+	if err := httpGetContains(client, baseURL+"/api/me", `"authenticated":false`); err != nil {
+		results = append(results, doctorFail("logout", err.Error()))
+		return results
+	}
+	results = append(results, doctorOK("logout", "session cleared"))
+
+	if startedByDoctor {
+		if err := composeDown(compose, env); err != nil {
+			results = append(results, doctorWarn("cleanup", err.Error()))
+		} else {
+			results = append(results, doctorOK("cleanup", "stopped doctor stack"))
+		}
+		cleanupNeeded = false
+	}
+	return results
+}
+
+func (a app) frameworkDoctorResults() []doctorResult {
+	if !isFile(filepath.Join(a.home, "cli", "go.mod")) || !isDir(filepath.Join(a.home, "tests")) {
+		return []doctorResult{doctorFail("framework", "run from a Carbide source checkout")}
+	}
+	env, cleanup, err := frameworkDoctorCommandEnv(a.home)
+	if err != nil {
+		return []doctorResult{doctorFail("framework", err.Error())}
+	}
+	defer cleanup()
+
+	type frameworkCheck struct {
+		name string
+		run  func() error
+	}
+	checks := []frameworkCheck{
+		{
+			name: "shell syntax",
+			run: func() error {
+				_, err := commandOutputEnv(
+					a.home,
+					env,
+					"bash",
+					"-n",
+					"tests/contract/audit_versions.sh",
+					"tests/contract/check_repo_contract.sh",
+					"tests/scaffold/cli_scaffold.sh",
+					"tests/smoke/starter_docker_flow.sh",
+					"cli/bin/carbide",
+					"cli/install.sh",
+				)
+				return err
+			},
+		},
+		{name: "Go CLI tests", run: func() error { return runFrameworkGoTests(a.home) }},
+		{name: "repo contract", run: func() error {
+			_, err := commandOutputEnv(a.home, env, "bash", "tests/contract/check_repo_contract.sh")
+			return err
+		}},
+		{name: "CLI scaffold", run: func() error {
+			_, err := commandOutputEnv(a.home, env, "bash", "tests/scaffold/cli_scaffold.sh")
+			return err
+		}},
+		{name: "Docker smoke", run: func() error {
+			_, err := commandOutputEnv(a.home, env, "bash", "tests/smoke/starter_docker_flow.sh")
+			return err
+		}},
+	}
+
+	results := make([]doctorResult, 0, len(checks))
+	for _, check := range checks {
+		if err := check.run(); err != nil {
+			results = append(results, doctorFail(check.name, firstLine(err.Error())))
+			continue
+		}
+		results = append(results, doctorOK(check.name, "passed"))
+	}
+	return results
+}
+
+func missingFiles(paths []string) []string {
+	var missing []string
+	for _, path := range paths {
+		if !isFile(path) {
+			missing = append(missing, path)
+		}
+	}
+	return missing
+}
+
+func missingDirs(paths []string) []string {
+	var missing []string
+	for _, path := range paths {
+		if !isDir(path) {
+			missing = append(missing, path)
+		}
+	}
+	return missing
+}
+
+func existingFiles(paths []string) []string {
+	var found []string
+	for _, path := range paths {
+		if isFile(path) {
+			found = append(found, path)
+		}
+	}
+	return found
+}
+
+func existingDirs(paths []string) []string {
+	var found []string
+	for _, path := range paths {
+		if isDir(path) {
+			found = append(found, path)
+		}
+	}
+	return found
+}
+
+func missingNeedles(content string, needles []string) []string {
+	var missing []string
+	for _, needle := range needles {
+		if !strings.Contains(content, needle) {
+			missing = append(missing, needle)
+		}
+	}
+	return missing
+}
+
+func readFileString(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return string(data)
+}
+
+func fileContains(path string, needle string) bool {
+	return strings.Contains(readFileString(path), needle)
+}
+
+func floatingDockerReferences(paths []string) []string {
+	var findings []string
+	for _, path := range paths {
+		content := readFileString(path)
+		for _, ref := range dockerImageRefs(path, content) {
+			if isFloatingImageRef(ref) {
+				findings = append(findings, path+" "+ref)
+			}
+		}
+	}
+	return findings
+}
+
+func dockerImageRefs(path string, content string) []string {
+	var refs []string
+	if strings.HasSuffix(path, "Dockerfile") {
+		scanner := bufio.NewScanner(strings.NewReader(content))
+		for scanner.Scan() {
+			fields := strings.Fields(scanner.Text())
+			if len(fields) >= 2 && strings.EqualFold(fields[0], "FROM") {
+				refs = append(refs, strings.Trim(fields[1], `"'`))
+			}
+		}
+		return refs
+	}
+
+	imageLine := regexp.MustCompile(`(?m)^\s*image:\s*["']?([^"'\s]+)`)
+	for _, match := range imageLine.FindAllStringSubmatch(content, -1) {
+		if len(match) > 1 {
+			refs = append(refs, strings.Trim(match[1], `"'`))
+		}
+	}
+	return refs
+}
+
+func isFloatingImageRef(ref string) bool {
+	if ref == "" || strings.Contains(ref, "${") {
+		return false
+	}
+	return !strings.Contains(ref, "@sha256:") || strings.Contains(ref, ":latest")
+}
+
+func packageVersionRangeFindings(path string) []string {
+	content := readFileString(path)
+	var findings []string
+	for _, name := range []string{"react", "react-dom", "tailwindcss", "@tailwindcss/cli"} {
+		version := packageVersion(content, name)
+		if version == "" {
+			findings = append(findings, name+" missing")
+			continue
+		}
+		if isSemverRange(version) {
+			findings = append(findings, name+" "+version)
+		}
+	}
+	return findings
+}
+
+func packageVersion(content string, name string) string {
+	pattern := regexp.MustCompile(`"` + regexp.QuoteMeta(name) + `"\s*:\s*"([^"]+)"`)
+	match := pattern.FindStringSubmatch(content)
+	if len(match) < 2 {
+		return ""
+	}
+	return match[1]
+}
+
+func isSemverRange(version string) bool {
+	trimmed := strings.TrimSpace(version)
+	if trimmed == "" {
+		return true
+	}
+	rangeMarkers := []string{"^", "~", ">", "<", "*", "x", "X", "latest", "||", " - "}
+	for _, marker := range rangeMarkers {
+		if strings.Contains(trimmed, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+func unsupportedGoDirectiveFindings(paths []string) []string {
+	var findings []string
+	for _, path := range paths {
+		version := goDirectiveVersion(path)
+		if version != baselineGoModuleVersion {
+			if version == "" {
+				version = "missing"
+			}
+			findings = append(findings, path+" "+version)
+		}
+	}
+	return findings
+}
+
+func goDirectiveVersion(path string) string {
+	scanner := bufio.NewScanner(strings.NewReader(readFileString(path)))
+	for scanner.Scan() {
+		fields := strings.Fields(scanner.Text())
+		if len(fields) == 2 && fields[0] == "go" {
+			return fields[1]
+		}
+	}
+	return ""
+}
+
+func containsString(values []string, value string) bool {
+	for _, item := range values {
+		if item == value {
+			return true
+		}
+	}
+	return false
+}
+
+func composeServiceNamesFromFile(path string) []string {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil
+	}
+	defer file.Close()
+
+	var services []string
+	seen := map[string]bool{}
+	inServices := false
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		raw := scanner.Text()
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		if !strings.HasPrefix(raw, " ") && strings.HasSuffix(trimmed, ":") {
+			inServices = trimmed == "services:"
+			continue
+		}
+		if !inServices {
+			continue
+		}
+		if strings.HasPrefix(raw, "  ") && !strings.HasPrefix(raw, "    ") && strings.HasSuffix(trimmed, ":") {
+			service := strings.TrimSuffix(trimmed, ":")
+			if service != "" && !seen[service] {
+				seen[service] = true
+				services = append(services, service)
+			}
+		}
+	}
+	return services
+}
+
+func rootDirsOutsideContract(allowed map[string]bool) []string {
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		return []string{err.Error()}
+	}
+	var extras []string
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if strings.HasPrefix(name, ".") {
+			continue
+		}
+		if !allowed[name] {
+			extras = append(extras, name)
+		}
+	}
+	return extras
+}
+
+func treeContains(root string, needle string) bool {
+	return len(treeContainsAny(root, []string{needle})) > 0
+}
+
+func treeContainsAny(root string, needles []string) []string {
+	found := map[string]bool{}
+	_ = filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return nil
+		}
+		name := entry.Name()
+		if entry.IsDir() {
+			switch name {
+			case ".git", ".carbide", ".cli", ".bin", "node_modules", "vendor":
+				return filepath.SkipDir
+			default:
+				return nil
+			}
+		}
+		if !entry.Type().IsRegular() {
+			return nil
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil
+		}
+		text := string(data)
+		for _, needle := range needles {
+			if strings.Contains(text, needle) {
+				found[needle] = true
+			}
+		}
+		return nil
+	})
+
+	var hits []string
+	for _, needle := range needles {
+		if found[needle] {
+			hits = append(hits, needle)
+		}
+	}
+	return hits
+}
+
+func anyPathWithExtension(root string, extensions ...string) bool {
+	found := false
+	_ = filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil || found {
+			return nil
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		for _, extension := range extensions {
+			if strings.HasSuffix(path, extension) {
+				found = true
+				return nil
+			}
+		}
+		return nil
+	})
+	return found
+}
+
+func composeHasRunningServices(compose composeCommand, env []string) bool {
+	snapshots, err := composeServiceSnapshots(compose, env)
+	if err != nil {
+		return false
+	}
+	for _, snapshot := range snapshots {
+		if strings.EqualFold(strings.TrimSpace(snapshot.State), "running") {
+			return true
+		}
+	}
+	return false
+}
+
+func publishedWebPort(compose composeCommand, env []string) int {
+	snapshots, err := composeServiceSnapshots(compose, env)
+	if err != nil {
+		return 0
+	}
+	web, ok := snapshots["web"]
+	if !ok {
+		return 0
+	}
+	for _, publisher := range web.Publishers {
+		if publisher.PublishedPort > 0 && publisher.TargetPort == 8080 {
+			return publisher.PublishedPort
+		}
+	}
+	for _, publisher := range web.Publishers {
+		if publisher.PublishedPort > 0 {
+			return publisher.PublishedPort
+		}
+	}
+	return 0
+}
+
+func runtimePortFromEnv() int {
+	if value := os.Getenv("CARBIDE_HTTP_PORT"); value != "" {
+		if port, err := validatePort(value); err == nil {
+			return port
+		}
+	}
+	return 8080
+}
+
+func waitForHTTP(client *http.Client, endpoint string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	var lastErr error
+	for time.Now().Before(deadline) {
+		resp, err := client.Get(endpoint)
+		if err == nil {
+			_, _ = io.Copy(io.Discard, resp.Body)
+			_ = resp.Body.Close()
+			if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+				return nil
+			}
+			lastErr = fmt.Errorf("%s returned %s", endpoint, resp.Status)
+		} else {
+			lastErr = err
+		}
+		time.Sleep(time.Second)
+	}
+	if lastErr == nil {
+		lastErr = fmt.Errorf("%s did not become ready", endpoint)
+	}
+	return lastErr
+}
+
+func httpGetContains(client *http.Client, endpoint string, needle string) error {
+	resp, err := client.Get(endpoint)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("%s returned %s", endpoint, resp.Status)
+	}
+	if !strings.Contains(string(body), needle) {
+		return fmt.Errorf("%s did not contain %q", endpoint, needle)
+	}
+	return nil
+}
+
+func httpPostFormContains(client *http.Client, endpoint string, values url.Values, needle string) error {
+	if values == nil {
+		values = url.Values{}
+	}
+	resp, err := client.PostForm(endpoint, values)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("%s returned %s", endpoint, resp.Status)
+	}
+	if !strings.Contains(string(body), needle) {
+		return fmt.Errorf("%s did not contain %q", endpoint, needle)
+	}
+	return nil
+}
+
+func runFrameworkGoTests(home string) error {
+	if _, err := exec.LookPath("go"); err == nil {
+		_, err := commandOutput(filepath.Join(home, "cli"), "go", "test", "./...")
+		return err
+	}
+	if _, err := exec.LookPath("docker"); err != nil {
+		return errors.New("Go is not installed and Docker is unavailable for Go test fallback")
+	}
+	args := []string{
+		"run",
+		"--rm",
+		"--user", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()),
+		"-e", "HOME=/tmp",
+		"-e", "GOCACHE=/tmp/gocache",
+		"-e", "GOMODCACHE=/tmp/gomodcache",
+		"-v", home + ":" + home,
+		"-w", filepath.Join(home, "cli"),
+		"golang:1.25-bookworm",
+		"bash",
+		"-lc",
+		"export PATH=/usr/local/go/bin:$PATH; go test ./...",
+	}
+	_, err := commandOutput("", "docker", args...)
+	return err
+}
+
+func frameworkDoctorCommandEnv(home string) ([]string, func(), error) {
+	env := setEnv(os.Environ(), "CARBIDE_HOME", home)
+	if _, err := exec.LookPath("go"); err == nil {
+		return env, func() {}, nil
+	}
+	dockerPath, err := exec.LookPath("docker")
+	if err != nil {
+		return nil, func() {}, errors.New("Go is not installed and Docker is unavailable for framework checks")
+	}
+
+	dir, err := os.MkdirTemp("", "carbide-doctor-go-")
+	if err != nil {
+		return nil, func() {}, err
+	}
+	cleanup := func() {
+		_ = os.RemoveAll(dir)
+	}
+	wrapper := fmt.Sprintf(`#!/usr/bin/env bash
+set -euo pipefail
+root="${CARBIDE_HOME:-$(pwd -P)}"
+workdir="$(pwd -P)"
+exec %q run --rm \
+  --user "$(id -u):$(id -g)" \
+  -e HOME=/tmp \
+  -e GOCACHE=/tmp/gocache \
+  -e GOMODCACHE=/tmp/gomodcache \
+  -v "$root:$root" \
+  -w "$workdir" \
+  golang:1.25-bookworm \
+  /usr/local/go/bin/go "$@"
+`, dockerPath)
+	if err := os.WriteFile(filepath.Join(dir, "go"), []byte(wrapper), 0755); err != nil {
+		cleanup()
+		return nil, func() {}, err
+	}
+	env = setEnv(env, "PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	return env, cleanup, nil
+}
+
+func firstLine(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "failed"
+	}
+	if before, _, ok := strings.Cut(value, "\n"); ok {
+		return before
+	}
+	return value
+}
+
 func (a app) commandDeployPreview(target string) error {
 	if !isFile("carbide.toml") {
 		return errors.New("run this inside a Carbide project")
 	}
 	if err := ensureDeployTarget(target); err != nil {
+		return err
+	}
+	deploy, found, err := loadDeployTarget(target)
+	if err != nil {
 		return err
 	}
 
@@ -480,6 +1913,44 @@ func (a app) commandDeployPreview(target string) error {
 
 	r := newRenderer(a.stdout)
 	r.Title("Carbide deploy", fmt.Sprintf("preview %s", target))
+	if found {
+		if err := validateDeployTarget(deploy); err != nil {
+			return err
+		}
+		source, err := filepath.Abs(deploy.SourcePath)
+		if err != nil {
+			return err
+		}
+		if deploy.Type == "ssh-compose-environment" {
+			r.Rows(
+				outputRow{"target", deploy.Name},
+				outputRow{"type", deploy.Type},
+				outputRow{"domain", deploy.Domain},
+				outputRow{"source", source},
+				outputRow{"mutates", "no"},
+				outputRow{"env", envStatus},
+				outputRow{"hosts", strings.Join(deployHostRows(deploy), "\n")},
+				outputRow{"roles", strings.Join(deployRoleRows(deploy), "\n")},
+				outputRow{"apply", "disabled until clustered orchestration is implemented"},
+			)
+			return nil
+		}
+		r.Rows(
+			outputRow{"target", deploy.Name},
+			outputRow{"type", deploy.Type},
+			outputRow{"host", deploy.Host},
+			outputRow{"domain", deploy.Domain},
+			outputRow{"source", source},
+			outputRow{"remote", deploy.RemotePath},
+			outputRow{"compose", deploy.ComposeFile},
+			outputRow{"port", strconv.Itoa(deploy.PublicPort)},
+			outputRow{"mutates", "no"},
+			outputRow{"env", envStatus},
+			outputRow{"apply", fmt.Sprintf("carbide deploy apply %s", deploy.Name)},
+		)
+		return nil
+	}
+
 	r.Rows(
 		outputRow{"target", target},
 		outputRow{"mutates", "no"},
@@ -496,9 +1967,47 @@ func (a app) commandDeployApply(target string) error {
 	if err := ensureDeployTarget(target); err != nil {
 		return err
 	}
+	deploy, found, err := loadDeployTarget(target)
+	if err != nil {
+		return err
+	}
 
 	r := newRenderer(a.stdout)
 	r.Title("Carbide deploy", fmt.Sprintf("apply %s", target))
+	if found {
+		if err := validateDeployTarget(deploy); err != nil {
+			return err
+		}
+		if deploy.Type == "ssh-compose-environment" {
+			r.Rows(
+				outputRow{"target", deploy.Name},
+				outputRow{"type", deploy.Type},
+				outputRow{"status", "guarded"},
+				outputRow{"reason", "clustered apply needs explicit orchestration"},
+				outputRow{"preview", fmt.Sprintf("carbide deploy preview %s", deploy.Name)},
+			)
+			return fmt.Errorf("deploy apply %s is guarded until clustered orchestration is implemented", target)
+		}
+		report, err := inspectEnvContract()
+		if err != nil {
+			return err
+		}
+		if len(report.missingRequired) > 0 {
+			return fmt.Errorf("environment contract has %d missing required value(s)", len(report.missingRequired))
+		}
+		r.Rows(
+			outputRow{"target", deploy.Name},
+			outputRow{"type", deploy.Type},
+			outputRow{"host", deploy.Host},
+			outputRow{"remote", deploy.RemotePath},
+		)
+		if err := a.applySSHComposeDeploy(deploy, r); err != nil {
+			return err
+		}
+		r.Row(outputRow{"status", "deployed"})
+		return nil
+	}
+
 	r.Rows(
 		outputRow{"target", target},
 		outputRow{"status", "disabled"},
@@ -1914,6 +3423,31 @@ func parseTomlString(value string) string {
 	return unquoteEnvValue(strings.TrimSpace(value))
 }
 
+func parseTomlStringArray(value string) ([]string, error) {
+	value = strings.TrimSpace(value)
+	if !strings.HasPrefix(value, "[") || !strings.HasSuffix(value, "]") {
+		return nil, errors.New("expected TOML string array")
+	}
+	body := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(value, "["), "]"))
+	if body == "" {
+		return []string{}, nil
+	}
+
+	var values []string
+	for _, item := range strings.Split(body, ",") {
+		item = strings.TrimSpace(item)
+		if item == "" {
+			return nil, errors.New("empty array item")
+		}
+		if !(strings.HasPrefix(item, `"`) && strings.HasSuffix(item, `"`)) &&
+			!(strings.HasPrefix(item, `'`) && strings.HasSuffix(item, `'`)) {
+			return nil, fmt.Errorf("%s is not quoted", item)
+		}
+		values = append(values, parseTomlString(item))
+	}
+	return values, nil
+}
+
 func stripTomlComment(line string) string {
 	inString := false
 	escaped := false
@@ -1996,6 +3530,554 @@ func ensureDeployTarget(target string) error {
 		return errors.New("deploy target must use lowercase letters, numbers, and dashes")
 	}
 	return nil
+}
+
+func loadDeployTarget(name string) (deployTarget, bool, error) {
+	content, err := os.ReadFile(projectConfigPath)
+	if err != nil {
+		return deployTarget{}, false, err
+	}
+
+	target := deployTarget{
+		Name:             name,
+		Hosts:            map[string]deployHost{},
+		SourcePath:       ".",
+		ComposeFile:      composeFilePath,
+		ProjectDirectory: ".",
+		HealthPath:       "/health",
+	}
+	section := ""
+	found := false
+	roleIndexes := map[string]int{}
+	scanner := bufio.NewScanner(strings.NewReader(string(content)))
+	lineNumber := 0
+	for scanner.Scan() {
+		lineNumber++
+		line := strings.TrimSpace(stripTomlComment(scanner.Text()))
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			section = strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, "["), "]"))
+			continue
+		}
+
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+
+		if strings.HasPrefix(section, "deploy.hosts.") {
+			hostName := strings.TrimSpace(strings.TrimPrefix(section, "deploy.hosts."))
+			if hostName == "" || strings.Contains(hostName, ".") {
+				return deployTarget{}, false, fmt.Errorf("line %d has invalid deploy host section", lineNumber)
+			}
+			host := target.Hosts[hostName]
+			host.Name = hostName
+			if err := assignDeployHostField(&host, key, value, lineNumber); err != nil {
+				return deployTarget{}, false, err
+			}
+			target.Hosts[hostName] = host
+			continue
+		}
+
+		targetSection := "deploy.targets." + name
+		if section == targetSection {
+			found = true
+			if err := assignDeployTargetField(&target, key, value, lineNumber); err != nil {
+				return deployTarget{}, false, err
+			}
+			continue
+		}
+
+		rolePrefix := targetSection + ".roles."
+		if strings.HasPrefix(section, rolePrefix) {
+			found = true
+			roleName := strings.TrimSpace(strings.TrimPrefix(section, rolePrefix))
+			if roleName == "" || strings.Contains(roleName, ".") {
+				return deployTarget{}, false, fmt.Errorf("line %d has invalid deploy role section", lineNumber)
+			}
+			index, ok := roleIndexes[roleName]
+			if !ok {
+				index = len(target.Roles)
+				roleIndexes[roleName] = index
+				target.Roles = append(target.Roles, deployRole{Name: roleName})
+			}
+			if err := assignDeployRoleField(&target.Roles[index], key, value, lineNumber); err != nil {
+				return deployTarget{}, false, err
+			}
+			continue
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return deployTarget{}, false, err
+	}
+	return target, found, nil
+}
+
+func assignDeployTargetField(target *deployTarget, key string, value string, lineNumber int) error {
+	switch key {
+	case "type":
+		target.Type = parseTomlString(value)
+	case "host":
+		target.Host = parseTomlString(value)
+	case "domain":
+		target.Domain = parseTomlString(value)
+	case "remote_path":
+		target.RemotePath = parseTomlString(value)
+	case "source_path":
+		target.SourcePath = parseTomlString(value)
+	case "compose_file":
+		target.ComposeFile = parseTomlString(value)
+	case "project_directory":
+		target.ProjectDirectory = parseTomlString(value)
+	case "public_port":
+		port, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("line %d has invalid public_port", lineNumber)
+		}
+		target.PublicPort = port
+	case "health_path":
+		target.HealthPath = parseTomlString(value)
+	case "nginx":
+		target.Nginx = parseTomlBool(value)
+	case "nginx_site":
+		target.NginxSite = parseTomlString(value)
+	case "strategy":
+		target.Strategy = parseTomlString(value)
+	default:
+		return fmt.Errorf("line %d has unknown deploy target field %q", lineNumber, key)
+	}
+	return nil
+}
+
+func assignDeployHostField(host *deployHost, key string, value string, lineNumber int) error {
+	switch key {
+	case "ssh":
+		host.SSH = parseTomlString(value)
+	case "address":
+		host.Address = parseTomlString(value)
+	case "description":
+		host.Description = parseTomlString(value)
+	default:
+		return fmt.Errorf("line %d has unknown deploy host field %q", lineNumber, key)
+	}
+	return nil
+}
+
+func assignDeployRoleField(role *deployRole, key string, value string, lineNumber int) error {
+	switch key {
+	case "hosts":
+		hosts, err := parseTomlStringArray(value)
+		if err != nil {
+			return fmt.Errorf("line %d has invalid hosts: %w", lineNumber, err)
+		}
+		role.Hosts = hosts
+	case "remote_path":
+		role.RemotePath = parseTomlString(value)
+	case "compose_file":
+		role.ComposeFile = parseTomlString(value)
+	case "project_directory":
+		role.ProjectDirectory = parseTomlString(value)
+	case "public_port":
+		port, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("line %d has invalid public_port", lineNumber)
+		}
+		role.PublicPort = port
+	case "health_path":
+		role.HealthPath = parseTomlString(value)
+	case "nginx":
+		role.Nginx = parseTomlBool(value)
+	case "primary":
+		role.Primary = parseTomlString(value)
+	case "migration":
+		role.Migration = parseTomlString(value)
+	default:
+		return fmt.Errorf("line %d has unknown deploy role field %q", lineNumber, key)
+	}
+	return nil
+}
+
+func validateDeployTarget(target deployTarget) error {
+	switch target.Type {
+	case "ssh-compose":
+		return validateSSHComposeTarget(target)
+	case "ssh-compose-environment":
+		return validateSSHComposeEnvironmentTarget(target)
+	default:
+		return fmt.Errorf("deploy target %s has unsupported type %q", target.Name, target.Type)
+	}
+}
+
+func validateSSHComposeTarget(target deployTarget) error {
+	if target.Host == "" {
+		return fmt.Errorf("deploy target %s is missing host", target.Name)
+	}
+	if target.RemotePath == "" || !strings.HasPrefix(target.RemotePath, "/") {
+		return fmt.Errorf("deploy target %s remote_path must be absolute", target.Name)
+	}
+	if strings.ContainsAny(target.RemotePath, "\r\n") {
+		return fmt.Errorf("deploy target %s remote_path is invalid", target.Name)
+	}
+	if target.PublicPort < 1 || target.PublicPort > 65535 {
+		return fmt.Errorf("deploy target %s public_port must be between 1 and 65535", target.Name)
+	}
+	if target.HealthPath == "" || !strings.HasPrefix(target.HealthPath, "/") {
+		return fmt.Errorf("deploy target %s health_path must start with /", target.Name)
+	}
+	if target.Domain != "" && !regexp.MustCompile(`^[a-z0-9][a-z0-9.-]*[a-z0-9]$`).MatchString(target.Domain) {
+		return fmt.Errorf("deploy target %s has invalid domain", target.Name)
+	}
+	if target.Nginx && target.Domain == "" {
+		return fmt.Errorf("deploy target %s requires domain when nginx is enabled", target.Name)
+	}
+	if target.NginxSite != "" && !regexp.MustCompile(`^[a-z][a-z0-9-]*$`).MatchString(target.NginxSite) {
+		return fmt.Errorf("deploy target %s nginx_site must use lowercase letters, numbers, and dashes", target.Name)
+	}
+	return nil
+}
+
+func validateSSHComposeEnvironmentTarget(target deployTarget) error {
+	if len(target.Hosts) == 0 {
+		return fmt.Errorf("deploy target %s requires [deploy.hosts.*] entries", target.Name)
+	}
+	for name, host := range target.Hosts {
+		if host.SSH == "" {
+			return fmt.Errorf("deploy host %s is missing ssh", name)
+		}
+		if strings.ContainsAny(host.SSH, "\r\n") {
+			return fmt.Errorf("deploy host %s ssh is invalid", name)
+		}
+	}
+	if len(target.Roles) == 0 {
+		return fmt.Errorf("deploy target %s requires role tables", target.Name)
+	}
+
+	roleNames := map[string]bool{}
+	for _, role := range target.Roles {
+		roleNames[role.Name] = true
+		if len(role.Hosts) == 0 {
+			return fmt.Errorf("deploy role %s is missing hosts", role.Name)
+		}
+		for _, hostName := range role.Hosts {
+			if _, ok := target.Hosts[hostName]; !ok {
+				return fmt.Errorf("deploy role %s references unknown host %s", role.Name, hostName)
+			}
+		}
+		if role.RemotePath != "" && !strings.HasPrefix(role.RemotePath, "/") {
+			return fmt.Errorf("deploy role %s remote_path must be absolute", role.Name)
+		}
+		if role.PublicPort < 0 || role.PublicPort > 65535 {
+			return fmt.Errorf("deploy role %s public_port must be between 0 and 65535", role.Name)
+		}
+		if role.HealthPath != "" && !strings.HasPrefix(role.HealthPath, "/") {
+			return fmt.Errorf("deploy role %s health_path must start with /", role.Name)
+		}
+		if role.Nginx && target.Domain == "" {
+			return fmt.Errorf("deploy role %s requires target domain when nginx is enabled", role.Name)
+		}
+	}
+	for _, required := range []string{"web", "api", "db"} {
+		if !roleNames[required] {
+			return fmt.Errorf("deploy target %s is missing %s role", target.Name, required)
+		}
+	}
+	db, ok := deployRoleByName(target.Roles, "db")
+	if !ok {
+		return fmt.Errorf("deploy target %s is missing db role", target.Name)
+	}
+	if db.Primary == "" {
+		return fmt.Errorf("deploy role db requires primary host")
+	}
+	if !containsString(db.Hosts, db.Primary) {
+		return fmt.Errorf("deploy role db primary %s is not in db hosts", db.Primary)
+	}
+	if db.Migration != "once" {
+		return fmt.Errorf("deploy role db migration must be once")
+	}
+	if target.Domain != "" && !regexp.MustCompile(`^[a-z0-9][a-z0-9.-]*[a-z0-9]$`).MatchString(target.Domain) {
+		return fmt.Errorf("deploy target %s has invalid domain", target.Name)
+	}
+	return nil
+}
+
+func deployRoleByName(roles []deployRole, name string) (deployRole, bool) {
+	for _, role := range roles {
+		if role.Name == name {
+			return role, true
+		}
+	}
+	return deployRole{}, false
+}
+
+func deployHostRows(target deployTarget) []string {
+	names := make([]string, 0, len(target.Hosts))
+	for name := range target.Hosts {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	rows := make([]string, 0, len(names))
+	for _, name := range names {
+		host := target.Hosts[name]
+		value := host.SSH
+		if host.Address != "" {
+			value += " " + host.Address
+		}
+		rows = append(rows, fmt.Sprintf("%s -> %s", name, value))
+	}
+	return rows
+}
+
+func deployRoleRows(target deployTarget) []string {
+	roles := append([]deployRole(nil), target.Roles...)
+	sort.Slice(roles, func(i int, j int) bool {
+		return roles[i].Name < roles[j].Name
+	})
+
+	rows := make([]string, 0, len(roles))
+	for _, role := range roles {
+		parts := []string{fmt.Sprintf("%s: %s", role.Name, strings.Join(role.Hosts, ","))}
+		if role.PublicPort > 0 {
+			parts = append(parts, fmt.Sprintf("port %d", role.PublicPort))
+		}
+		if role.Nginx {
+			parts = append(parts, "nginx")
+		}
+		if role.Primary != "" {
+			parts = append(parts, "primary "+role.Primary)
+		}
+		if role.Migration != "" {
+			parts = append(parts, "migrate "+role.Migration)
+		}
+		rows = append(rows, strings.Join(parts, " "))
+	}
+	return rows
+}
+
+func (a app) applySSHComposeDeploy(target deployTarget, r renderer) error {
+	if _, err := exec.LookPath("ssh"); err != nil {
+		return errors.New("ssh is required for ssh-compose deploys")
+	}
+	if _, err := exec.LookPath("rsync"); err != nil {
+		return errors.New("rsync is required for ssh-compose deploys")
+	}
+
+	source, err := filepath.Abs(target.SourcePath)
+	if err != nil {
+		return err
+	}
+	if !isDir(source) {
+		return fmt.Errorf("deploy source does not exist: %s", source)
+	}
+
+	r.Row(outputRow{"prepare", "remote directory"})
+	if _, err := runSSHScript(target.Host, fmt.Sprintf(
+		"set -euo pipefail\nsudo mkdir -p %s\nsudo chown \"$(id -u):$(id -g)\" %s\n",
+		shellQuote(target.RemotePath),
+		shellQuote(target.RemotePath),
+	)); err != nil {
+		return err
+	}
+
+	r.Row(outputRow{"sync", source})
+	sourceWithSlash := source + string(os.PathSeparator)
+	remoteDest := target.Host + ":" + target.RemotePath + "/"
+	if _, err := commandOutput("", "rsync",
+		"-az",
+		"--delete",
+		"--exclude", ".git",
+		"--exclude", ".carbide",
+		"--exclude", ".env",
+		"--exclude", "app/.env",
+		sourceWithSlash,
+		remoteDest,
+	); err != nil {
+		return err
+	}
+
+	r.Row(outputRow{"env", "ensure remote .env"})
+	envContent, err := deployEnvContent(target)
+	if err != nil {
+		return err
+	}
+	if _, err := runSSHScriptInput(target.Host, fmt.Sprintf(
+		"set -euo pipefail\ncd %s\nif [ ! -f .env ]; then umask 077; cat > .env; else cat >/dev/null; fi\n",
+		shellQuote(target.RemotePath),
+	), envContent); err != nil {
+		return err
+	}
+
+	compose := remoteComposeCommand(target)
+	r.Row(outputRow{"compose", "config"})
+	if _, err := runSSHScript(target.Host, fmt.Sprintf(
+		"set -euo pipefail\ncd %s\n%s config >/dev/null\n",
+		shellQuote(target.RemotePath),
+		compose,
+	)); err != nil {
+		return err
+	}
+
+	r.Row(outputRow{"compose", "up -d --build"})
+	if _, err := runSSHScript(target.Host, fmt.Sprintf(
+		"set -euo pipefail\ncd %s\n%s up -d --build --remove-orphans\n",
+		shellQuote(target.RemotePath),
+		compose,
+	)); err != nil {
+		return err
+	}
+
+	if target.Nginx {
+		r.Row(outputRow{"nginx", target.Domain})
+		if err := installNginxSite(target); err != nil {
+			return err
+		}
+	}
+
+	healthURL := fmt.Sprintf("http://127.0.0.1:%d%s", target.PublicPort, target.HealthPath)
+	r.Row(outputRow{"health", healthURL})
+	if _, err := runSSHScript(target.Host, fmt.Sprintf(
+		"set -euo pipefail\nfor i in $(seq 1 40); do curl -fsS --max-time 5 %s >/dev/null && exit 0; sleep 2; done\ncurl -fsS --max-time 10 %s >/dev/null\n",
+		shellQuote(healthURL),
+		shellQuote(healthURL),
+	)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func deployEnvContent(target deployTarget) (string, error) {
+	password, err := randomHex(24)
+	if err != nil {
+		return "", err
+	}
+	composeName, appName := deployProjectNames()
+	publicURL := fmt.Sprintf("http://127.0.0.1:%d", target.PublicPort)
+	if target.Domain != "" {
+		scheme := "http"
+		if target.Nginx {
+			scheme = "https"
+		}
+		publicURL = scheme + "://" + target.Domain
+	}
+	return fmt.Sprintf(`COMPOSE_PROJECT_NAME=%s
+APP_ENV=production
+CARBIDE_HTTP_PORT=%d
+PUBLIC_APP_NAME=%s
+PUBLIC_URL=%s
+POSTGRES_PASSWORD=%s
+DATABASE_URL=postgres://carbide:%s@db:5432/carbide?sslmode=disable
+`, composeName, target.PublicPort, appName, publicURL, password, password), nil
+}
+
+func deployProjectNames() (string, string) {
+	metadata, err := readProjectMetadata(projectConfigPath)
+	if err != nil {
+		return "carbide-app", "Carbide App"
+	}
+
+	composeName := normalizeComposeProjectName(metadata.slug)
+	if composeName == "" {
+		composeName = normalizeComposeProjectName(metadata.name)
+	}
+	if composeName == "" {
+		composeName = "carbide-app"
+	}
+
+	appName := strings.TrimSpace(metadata.name)
+	if appName == "" || isTemplatePlaceholder(appName) || strings.ContainsAny(appName, "\r\n") {
+		appName = projectDisplayName(composeName)
+	}
+	return composeName, appName
+}
+
+func remoteComposeCommand(target deployTarget) string {
+	return fmt.Sprintf(
+		"docker compose --env-file .env -f %s --project-directory %s",
+		shellQuote(target.ComposeFile),
+		shellQuote(target.ProjectDirectory),
+	)
+}
+
+func installNginxSite(target deployTarget) error {
+	name := target.NginxSite
+	if name == "" {
+		name = "carbide-" + target.Name
+	}
+	available := "/etc/nginx/sites-available/" + name
+	enabled := "/etc/nginx/sites-enabled/" + name
+	certPath := "/etc/letsencrypt/live/" + target.Domain + "/fullchain.pem"
+	updateProxyPass := fmt.Sprintf(
+		`s#proxy_pass http://127\.0\.0\.1:[0-9]+;#proxy_pass http://127.0.0.1:%d;#g`,
+		target.PublicPort,
+	)
+	config := fmt.Sprintf(`server {
+    listen 80;
+    listen [::]:80;
+    server_name %s;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_pass http://127.0.0.1:%d;
+    }
+}
+`, target.Domain, target.PublicPort)
+
+	script := fmt.Sprintf(`set -euo pipefail
+sudo -n true
+if [ -f %s ] && sudo grep -q %s %s; then
+  cat >/dev/null
+  sudo perl -0pi -e %s %s
+else
+  tmp="$(mktemp)"
+  cat > "$tmp"
+  sudo mv "$tmp" %s
+  sudo ln -sf %s %s
+fi
+sudo nginx -t
+sudo systemctl reload nginx
+`,
+		shellQuote(available),
+		shellQuote(certPath),
+		shellQuote(available),
+		shellQuote(updateProxyPass),
+		shellQuote(available),
+		shellQuote(available),
+		shellQuote(available),
+		shellQuote(enabled),
+	)
+	_, err := runSSHScriptInput(target.Host, script, config)
+	return err
+}
+
+func runSSHScript(host string, script string) (string, error) {
+	return commandOutput("", "ssh", host, "bash", "-lc", script)
+}
+
+func runSSHScriptInput(host string, script string, input string) (string, error) {
+	return commandOutputInput("", input, "ssh", host, "bash", "-lc", script)
+}
+
+func shellQuote(value string) string {
+	if value == "" {
+		return "''"
+	}
+	return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'"
+}
+
+func randomHex(bytesCount int) (string, error) {
+	buf := make([]byte, bytesCount)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(buf), nil
 }
 
 func entryTimestamp(entry structuredLogEntry) time.Time {
@@ -2251,6 +4333,111 @@ func projectSlug(input string) string {
 	return strings.Trim(b.String(), "-")
 }
 
+type projectMetadata struct {
+	name string
+	slug string
+}
+
+func projectProfile() string {
+	data, err := os.ReadFile(projectConfigPath)
+	if err != nil {
+		return "app"
+	}
+
+	section := ""
+	scanner := bufio.NewScanner(strings.NewReader(string(data)))
+	for scanner.Scan() {
+		line := strings.TrimSpace(stripTomlComment(scanner.Text()))
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			section = strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, "["), "]"))
+			continue
+		}
+		if section != "" {
+			continue
+		}
+
+		key, value, ok := strings.Cut(line, "=")
+		if !ok || strings.TrimSpace(key) != "profile" {
+			continue
+		}
+		if profile := strings.TrimSpace(parseTomlString(value)); profile != "" {
+			return profile
+		}
+	}
+	return "app"
+}
+
+func readProjectMetadata(path string) (projectMetadata, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return projectMetadata{}, err
+	}
+
+	var metadata projectMetadata
+	section := ""
+	scanner := bufio.NewScanner(strings.NewReader(string(data)))
+	for scanner.Scan() {
+		line := strings.TrimSpace(stripTomlComment(scanner.Text()))
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			section = strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, "["), "]"))
+			continue
+		}
+		if section != "" {
+			continue
+		}
+
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		switch strings.TrimSpace(key) {
+		case "name":
+			metadata.name = parseTomlString(value)
+		case "slug":
+			metadata.slug = parseTomlString(value)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return projectMetadata{}, err
+	}
+	return metadata, nil
+}
+
+func composeProjectName() string {
+	metadata, err := readProjectMetadata(projectConfigPath)
+	if err == nil {
+		if slug := normalizeComposeProjectName(metadata.slug); slug != "" {
+			return slug
+		}
+	}
+
+	pwd, err := os.Getwd()
+	if err == nil {
+		if slug := normalizeComposeProjectName(filepath.Base(pwd)); slug != "" {
+			return slug
+		}
+	}
+	return "carbide-app"
+}
+
+func normalizeComposeProjectName(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" || isTemplatePlaceholder(value) {
+		return ""
+	}
+	return projectSlug(value)
+}
+
+func isTemplatePlaceholder(value string) bool {
+	return strings.Contains(value, "__PROJECT_")
+}
+
 func (a app) copyScaffold(target string, name string, slug string) error {
 	source := filepath.Join(a.home, "scaffold")
 	if !isDir(source) {
@@ -2271,6 +4458,9 @@ func copyScaffoldPart(source string, target string, name string, slug string) er
 		}
 		if rel == "." {
 			return os.MkdirAll(target, 0755)
+		}
+		if entry.IsDir() && rel == ".carbide" {
+			return filepath.SkipDir
 		}
 
 		dest := filepath.Join(target, rel)
@@ -2327,10 +4517,12 @@ func findCompose() (composeCommand, error) {
 
 func composeEnv(env []string) []string {
 	if isFile(composeFilePath) {
-		return setEnv(env, "COMPOSE_FILE", composeFilePath)
+		env = setEnv(env, "COMPOSE_FILE", composeFilePath)
+	} else if isFile(legacyComposeFilePath) {
+		env = setEnv(env, "COMPOSE_FILE", legacyComposeFilePath)
 	}
-	if isFile(legacyComposeFilePath) {
-		return setEnv(env, "COMPOSE_FILE", legacyComposeFilePath)
+	if isFile(projectConfigPath) {
+		env = setEnv(env, "COMPOSE_PROJECT_NAME", composeProjectName())
 	}
 	return env
 }
@@ -2718,10 +4910,36 @@ func buildInstalledBinary(home string) error {
 }
 
 func commandOutput(dir string, name string, args ...string) (string, error) {
+	return commandOutputEnv(dir, nil, name, args...)
+}
+
+func commandOutputEnv(dir string, env []string, name string, args ...string) (string, error) {
 	cmd := exec.Command(name, args...)
 	if dir != "" {
 		cmd.Dir = dir
 	}
+	if env != nil {
+		cmd.Env = env
+	}
+	var output bytes.Buffer
+	cmd.Stdout = &output
+	cmd.Stderr = &output
+	if err := cmd.Run(); err != nil {
+		text := strings.TrimSpace(output.String())
+		if text != "" {
+			return "", fmt.Errorf("%s %s failed: %w\n%s", name, strings.Join(args, " "), err, text)
+		}
+		return "", err
+	}
+	return strings.TrimSpace(output.String()), nil
+}
+
+func commandOutputInput(dir string, input string, name string, args ...string) (string, error) {
+	cmd := exec.Command(name, args...)
+	if dir != "" {
+		cmd.Dir = dir
+	}
+	cmd.Stdin = strings.NewReader(input)
 	var output bytes.Buffer
 	cmd.Stdout = &output
 	cmd.Stderr = &output

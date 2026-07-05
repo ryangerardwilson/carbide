@@ -1,4 +1,4 @@
-# Initial User Experience
+# Create Your First App
 
 The first Carbide experience should feel close to Laravel's default product
 loop: install one command, create an app, run one dev command, and land in a
@@ -14,6 +14,7 @@ carbide new demo
 cd demo
 carbide run dev
 carbide status
+carbide doctor
 carbide stop dev
 ```
 
@@ -57,6 +58,12 @@ and watch events appear in one timestamped, service-tagged stream and
 are mirrored to `.carbide/log/dev.jsonl`. `NO_COLOR` disables ANSI color
 without disabling the terminal startup or shutdown animation.
 
+`carbide doctor` runs the fast project contract check without starting
+containers. It verifies the generated root shape, `carbide.toml`, Compose
+services, env/secrets rules, frontend, API, DB, agent docs, and legacy
+regression markers. `carbide doctor runtime` runs the heavier Docker-backed
+health/auth/dashboard flow and stops containers it started.
+
 The generated app starts with no seeded users. The first browser visit opens the
 account creation flow. Registration creates the first user and session; later
 sessions use the login form.
@@ -92,7 +99,7 @@ Upgrades the installed CLI when a newer GitHub commit is available.
 ### `carbide new <project-name>`
 
 Creates a new project directory from the default starter scaffold. Human names
-are accepted: `carbide new My Carbide App` creates `my-carbide-app`, stores
+are accepted: `carbide new "My Carbide App"` creates `my-carbide-app`, stores
 `name = "My Carbide App"`, and stores `slug = "my-carbide-app"`. It fails if
 the target already exists.
 
@@ -112,6 +119,16 @@ detaches from the log stream without stopping containers.
 
 Prints a table of Compose services, container names, published host ports,
 internal container ports, and status.
+
+### `carbide doctor`
+
+Runs the fast project contract check without starting containers. It reports
+`ok`, `fail`, `warn`, and `skip` rows in a compact table.
+
+### `carbide doctor runtime`
+
+Runs Docker-backed checks: Compose config, stack start, `/health`, anonymous
+`/api/me`, registration, dashboard API/web shell, logout, and cleanup.
 
 ### `carbide stop dev`
 

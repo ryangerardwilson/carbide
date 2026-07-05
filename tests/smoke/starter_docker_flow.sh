@@ -76,9 +76,25 @@ for _ in $(seq 1 60); do
 done
 
 curl -fsS "http://localhost:$port/health" >/dev/null
-curl -fsS "http://localhost:$port/" > "$tmp_dir/home.html"
+curl -fsS -D "$tmp_dir/home.headers" -o "$tmp_dir/home.html" "http://localhost:$port/"
 grep -q '<div id="root"></div>' "$tmp_dir/home.html"
-grep -q "/_bun/client/" "$tmp_dir/home.html"
+grep -qi "cache-control: no-store" "$tmp_dir/home.headers"
+grep -Eq '/assets/main-[[:alnum:]_-]+\.js' "$tmp_dir/home.html"
+grep -Eq '/assets/main-[[:alnum:]_-]+\.css' "$tmp_dir/home.html"
+home_js_asset="$(grep -Eo '/assets/main-[[:alnum:]_-]+\.js' "$tmp_dir/home.html" | head -n 1)"
+home_css_asset="$(grep -Eo '/assets/main-[[:alnum:]_-]+\.css' "$tmp_dir/home.html" | head -n 1)"
+curl -fsS -D "$tmp_dir/home-js.headers" -o "$tmp_dir/home.js" "http://localhost:$port$home_js_asset"
+grep -Eq "^HTTP/[0-9.]+ 200" "$tmp_dir/home-js.headers"
+grep -qi "cache-control: public, max-age=31536000, immutable" "$tmp_dir/home-js.headers"
+grep -qi "content-type: text/javascript" "$tmp_dir/home-js.headers"
+curl -fsS -D "$tmp_dir/home-css.headers" -o "$tmp_dir/home.css" "http://localhost:$port$home_css_asset"
+grep -Eq "^HTTP/[0-9.]+ 200" "$tmp_dir/home-css.headers"
+grep -qi "cache-control: public, max-age=31536000, immutable" "$tmp_dir/home-css.headers"
+grep -qi "content-type: text/css" "$tmp_dir/home-css.headers"
+curl -fsS -D "$tmp_dir/asset-manifest.headers" -o "$tmp_dir/asset-manifest.json" "http://localhost:$port/asset-manifest.json"
+grep -qi "cache-control: no-store" "$tmp_dir/asset-manifest.headers"
+grep -q '"entry": "/assets/main-' "$tmp_dir/asset-manifest.json"
+grep -q '"stylesheets"' "$tmp_dir/asset-manifest.json"
 curl -fsS "http://localhost:$port/api/me" > "$tmp_dir/me-anon.json"
 grep -q '"authenticated":false' "$tmp_dir/me-anon.json"
 docker compose -f "$compose_file" logs api > "$tmp_dir/api.log"
@@ -99,6 +115,7 @@ if ! docker compose -f "$compose_file" run --rm --no-deps web bun run build > "$
   cat "$tmp_dir/web-build.log" >&2
   exit 1
 fi
+grep -q "assets:build" "$tmp_dir/web-build.log"
 grep -q "tailwind:build" "$tmp_dir/web-build.log"
 
 python3 - "$port" <<'PY' &
@@ -158,9 +175,11 @@ curl -fsS -b "$tmp_dir/cookies" "http://localhost:$port/api/me" > "$tmp_dir/me-a
 grep -q '"authenticated":true' "$tmp_dir/me-auth.json"
 grep -q 'first@carbide.local' "$tmp_dir/me-auth.json"
 
-curl -fsS -b "$tmp_dir/cookies" "http://localhost:$port/dashboard" > "$tmp_dir/dashboard-shell.html"
+curl -fsS -D "$tmp_dir/dashboard-shell.headers" -o "$tmp_dir/dashboard-shell.html" -b "$tmp_dir/cookies" "http://localhost:$port/dashboard"
 grep -q '<div id="root"></div>' "$tmp_dir/dashboard-shell.html"
-grep -q "/_bun/client/" "$tmp_dir/dashboard-shell.html"
+grep -qi "cache-control: no-store" "$tmp_dir/dashboard-shell.headers"
+grep -Eq '/assets/main-[[:alnum:]_-]+\.js' "$tmp_dir/dashboard-shell.html"
+grep -Eq '/assets/main-[[:alnum:]_-]+\.css' "$tmp_dir/dashboard-shell.html"
 
 curl -fsS -b "$tmp_dir/cookies" -X POST "http://localhost:$port/api/logout" > "$tmp_dir/logout.json"
 grep -q '"ok":true' "$tmp_dir/logout.json"

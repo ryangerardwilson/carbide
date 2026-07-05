@@ -46,11 +46,15 @@ carbide.toml
 Run:
 
 ```sh
+carbide doctor
 carbide doctor env
 ```
 
-to validate required, secret, browser-exposed, and framework-owned variables
-without printing secret values.
+to validate the project contract and the required, secret, browser-exposed, and
+framework-owned variables without printing secret values. Use
+`carbide doctor runtime` when you want the heavier Docker-backed check that
+starts the stack, checks health, creates a temporary user, verifies auth, and
+stops containers it started.
 
 Real deploy secrets belong to the deploy/IaC layer. This starter does not run a
 separate secrets container.
@@ -72,13 +76,18 @@ currently refuses to mutate anything.
 
 - `web/src/` owns the Bun web server, React app flow, and Tailwind
   CSS input.
+- `web/src/write-index.mjs` writes the generated browser shell with hashed
+  asset references after Bun builds React.
 - `web/src/component/l1/` owns primitive UI elements and Tailwind utility
-  tokens.
+  tokens, including the built-in light/dark/system theme toggle.
 - `web/src/component/l2/` owns composed UI patterns such as forms and app
   layouts.
 - `web/src/component/l3/` owns generated auth, dashboard, and loading
   screens.
 - `web/src/lib/` owns small non-component browser helpers such as `cx()`.
+- `web/src/styles.css` owns light and dark color variables and maps them into
+  Tailwind theme tokens. `web/index.html` applies the stored theme before the
+  React app paints.
 - `api/` owns the Go HTTP/API server, auth, sessions, routing, and JSON
   responses, its Go module, and its Dockerfile.
 - `db/` owns Postgres-backed data access, its Go module, and migration
@@ -101,11 +110,34 @@ it. Edits under `web/src/`, web package/config files,
 `api/`, `db/`, or `api/Dockerfile` rebuild and replace the relevant
 container.
 
+The web container cache-busts browser assets by default. React JS and CSS files
+are built into `web/public/assets/` with content hashes and served with
+one-year immutable caching. The app shell and asset manifest are served
+`no-store` so each page load discovers the current hashed asset names.
+`web/public/` and `web/src/tailwind.css` are generated output and are ignored.
+
+`carbide doctor` is the fast local contract check. It verifies the generated
+root shape, `carbide.toml`, the explicit runtime baseline, Compose services,
+env/secrets rules, Bun/React/Tailwind frontend contract, Go API contract,
+Postgres DB contract, agent docs, and legacy-regression markers without
+starting containers.
+
+Runtime versions are pinned as a Carbide baseline in `carbide.toml` under
+`[runtime]`. Framework-owned Docker images include `@sha256:` digests, React
+and Tailwind use exact versions, and generated Go modules use the supported
+Go directive declared there. A future Postgres major-version baseline change
+requires migration or volume recreation for existing data; Carbide should not
+silently rewrite durable database state.
+
 The first browser visit opens account creation. Create the first user, then use
 the login form for later sessions.
 
 The generated React layout is scaffolding, not doctrine. Keep it, replace it,
 or reorganize it to match the product you are building.
+
+The generated UI includes a light/dark/system theme control. Theme preference
+is browser-local state stored under `carbide.theme`; it does not touch the API
+or database.
 
 `carbide run dev` streams web, API, db, and watch logs in one
 terminal view and mirrors them to a local structured log file:
@@ -128,11 +160,14 @@ carbide follow logs service api
 - Go API container
 - Postgres service container
 - same-origin `/api` proxy from the Bun web service to the Go API service
+- content-hashed React assets with immutable cache headers
+- light/dark/system browser theme setup
 - register, login, logout, and dashboard experience with left-sidebar app
   navigation
 - small React starter components for auth, dashboard, and the app shell
 - Postgres-backed users and sessions
 - queryable structured dev logs
+- fast project contract doctor
 - checked-in local Docker Compose contract
 - checked-in env/secrets contract
 - deploy preview/apply contract with non-mutating default behavior

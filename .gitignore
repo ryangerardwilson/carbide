@@ -1,2 +1,5 @@
 .bin/
 .cli/
+scaffold/web/node_modules/
+scaffold/web/public/
+scaffold/web/src/tailwind.css

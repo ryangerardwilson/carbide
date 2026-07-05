@@ -13,7 +13,7 @@
 
     <header class="docs-topbar">
       <div class="topbar-inner">
-        <a class="brand" href="index.html" aria-label="Carbide documentation home">
+        <a class="brand" href="/" aria-label="Carbide documentation home">
           <span class="brand-mark">C</span>
           <span class="brand-copy">
             <span class="brand-name">Carbide</span>
@@ -37,24 +37,25 @@
           <div class="nav-group">
             <p class="nav-title">Prologue</p>
             <ul class="nav-list">
-              <li><a class="nav-link" href="index.html">Installation</a></li>
-              <li><a class="nav-link" href="version-policy.html">Version Policy</a></li>
+              <li><a class="nav-link" href="/">Installation</a></li>
+              <li><a class="nav-link" href="/version-policy">Version Policy</a></li>
             </ul>
           </div>
           <div class="nav-group">
             <p class="nav-title">Getting Started</p>
             <ul class="nav-list">
-              <li><a class="nav-link" href="initial-user-experience.html">Initial user experience</a></li>
-              <li><a class="nav-link" href="frontend-starter-contract.html">Frontend Starter Contract</a></li>
-              <li><a class="nav-link" href="repo-structure.html">Directory Structure</a></li>
+              <li><a class="nav-link" href="/create-your-first-app">Create Your First App</a></li>
+              <li><a class="nav-link" href="/frontend-starter-contract">Frontend Starter Contract</a></li>
+              <li><a class="nav-link" href="/repo-structure">Directory Structure</a></li>
             </ul>
           </div>
           <div class="nav-group">
             <p class="nav-title">Architecture</p>
             <ul class="nav-list">
-              <li><a class="nav-link" href="frontend-starter-contract.html#runtime-model">Runtime Model</a></li>
-              <li><a class="nav-link" href="ci-cd-regression-tests.html" aria-current="page">CI/CD Regression Plan</a></li>
-              <li><a class="nav-link" href="initial-user-experience.html#commands">CLI Commands</a></li>
+              <li><a class="nav-link" href="/frontend-starter-contract#runtime-model">Runtime Model</a></li>
+              <li><a class="nav-link" href="/deployment">Deployment</a></li>
+              <li><a class="nav-link" href="/ci-cd-regression-tests" aria-current="page">CI/CD Regression Plan</a></li>
+              <li><a class="nav-link" href="/create-your-first-app#commands">CLI Commands</a></li>
             </ul>
           </div>
           <div class="nav-group">
@@ -93,7 +94,8 @@
           <h3>Main Branch Gate</h3>
           <ul>
             <li>The pull request gate.</li>
-            <li>Documentation deployment to GitHub Pages.</li>
+            <li>Documentation deployment through the Carbide docs app.</li>
+            <li>Extensionless documentation routes with redirects from legacy <code>.html</code> URLs.</li>
             <li>Future release candidate smoke checks.</li>
           </ul>
         </section>
@@ -108,12 +110,12 @@
             <li><strong>Compatibility and race tests:</strong> exposes concurrency and generated app compatibility failures.</li>
             <li><strong>Postgres integration:</strong> tests readiness, pooling, migrations, transactions, and parameterized queries.</li>
             <li><strong>Container and IaC:</strong> validates Compose generation, web/API/db separation, health checks, file-watch rebuilds, external URL logs, registration-first JSON auth, environment contracts, <code>AGENTS.md</code>, generated <code>agents.d</code> operating notes, and Tailwind class-layer guidance.</li>
-            <li><strong>Env and deploy:</strong> protects <code>carbide doctor</code>, <code>carbide doctor env</code>, <code>carbide doctor runtime</code>, non-mutating <code>carbide deploy preview &lt;target&gt;</code>, and guarded <code>carbide deploy apply &lt;target&gt;</code>.</li>
-            <li><strong>Frontend:</strong> protects the Bun/React/Tailwind container, same-origin API proxy, lockfile install path, and dashboard app shell.</li>
+            <li><strong>Env and deploy:</strong> protects <code>carbide doctor</code>, <code>carbide doctor env</code>, <code>carbide doctor runtime</code>, non-mutating <code>carbide deploy preview &lt;target&gt;</code>, guarded unknown targets, checked-in <code>ssh-compose</code> targets, and preview-only environment targets with hosts and roles.</li>
+            <li><strong>Frontend:</strong> protects the Bun/React/Tailwind container, same-origin API proxy, lockfile install path, cache-busted browser assets, and dashboard app shell.</li>
             <li><strong>API:</strong> protects JSON auth responses, session cookies, <code>/api/me</code>, and Postgres-backed dashboard data.</li>
             <li><strong>CLI golden tests:</strong> protects scaffolding, deterministic generated files, and actionable command errors.</li>
             <li><strong>Security regression:</strong> protects cookies, CSRF, upload limits, SQL parameterization, and secret handling.</li>
-            <li><strong>Documentation regression:</strong> keeps examples, links, and published docs aligned with framework behavior.</li>
+            <li><strong>Documentation regression:</strong> keeps examples, extensionless links, redirects, and published docs aligned with framework behavior.</li>
           </ul>
         </section>
 
@@ -140,7 +142,7 @@ carbide doctor framework</code></pre>
     </div>
 
     <footer class="docs-footer">
-      <div class="footer-inner"><a href="index.html">Back to installation</a></div>
+      <div class="footer-inner"><a href="/">Back to installation</a></div>
     </footer>
   </body>
 </html>

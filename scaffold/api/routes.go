@@ -72,7 +72,7 @@ func (a *App) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]any{
 		"ok":      true,
 		"user":    map[string]string{"email": user.Email},
-		"message": "This dashboard is backed by the Go API and Postgres.",
+		"message": "Lorem ipsum dolor sit amet.",
 	})
 }
 

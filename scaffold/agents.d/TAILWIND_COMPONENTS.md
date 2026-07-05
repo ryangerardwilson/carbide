@@ -8,7 +8,7 @@ in `web/src/styles.css`.
 ## File Ownership
 
 - `web/src/component/l1/` owns primitives: buttons, inputs, surfaces, text,
-  and tokens. L1 components must not know app-specific data,
+  the theme toggle, and tokens. L1 components must not know app-specific data,
   routes, auth flow, fetches, sessions, or product domain facts.
 - `web/src/component/l2/` owns reusable composed patterns: forms, app shells,
   page layouts, and repeated UX structures made from L1 primitives. L2 may own
@@ -18,7 +18,9 @@ in `web/src/styles.css`.
   dashboard copy, and route-level product facts.
 - `web/src/component/l1/tokens.js` owns stable names for shared Tailwind
   utility groups.
-- `web/src/styles.css` owns the Tailwind import and small `@theme` block.
+- `web/src/styles.css` owns the Tailwind import, small `@theme` block, and
+  light/dark CSS variables.
+- `web/index.html` owns the no-flash theme bootstrap before React loads.
 - `web/src/lib/cx.js` owns the small class-name helper used by components.
 
 ## Tailwind Class Layers
@@ -82,6 +84,12 @@ add `sm:`, `md:`, `lg:`, `xl:`, and `2xl:` variants only as needed.
 - Prefer Tailwind utilities for one-off layout and styling.
 - Keep shared colors and theme variables in the `@theme` block in
   `web/src/styles.css`.
+- Keep light/dark color values in `web/src/styles.css` and map them to
+  Tailwind color tokens through CSS variables.
+- Keep theme choice as browser-local React state plus `localStorage`; do not
+  send theme preference to the API or database by default.
+- Use `ThemeToggle.jsx` for the built-in `light`, `dark`, and `system`
+  controls instead of creating one-off theme switches in screens.
 - Keep repeated component utility groups in `tokens.js`.
 - Do not add a parallel `theme.css` file or custom `cb-*` component classes.
 - Use custom CSS only for behavior that utilities cannot express cleanly.

@@ -13,7 +13,7 @@
 
     <header class="docs-topbar">
       <div class="topbar-inner">
-        <a class="brand" href="index.html" aria-label="Carbide documentation home">
+        <a class="brand" href="/" aria-label="Carbide documentation home">
           <span class="brand-mark">C</span>
           <span class="brand-copy">
             <span class="brand-name">Carbide</span>
@@ -37,24 +37,25 @@
           <div class="nav-group">
             <p class="nav-title">Prologue</p>
             <ul class="nav-list">
-              <li><a class="nav-link" href="index.html" aria-current="page">Installation</a></li>
-              <li><a class="nav-link" href="version-policy.html">Version Policy</a></li>
+              <li><a class="nav-link" href="/" aria-current="page">Installation</a></li>
+              <li><a class="nav-link" href="/version-policy">Version Policy</a></li>
             </ul>
           </div>
           <div class="nav-group">
             <p class="nav-title">Getting Started</p>
             <ul class="nav-list">
-              <li><a class="nav-link" href="initial-user-experience.html">Initial user experience</a></li>
-              <li><a class="nav-link" href="frontend-starter-contract.html">Frontend Starter Contract</a></li>
-              <li><a class="nav-link" href="repo-structure.html">Directory Structure</a></li>
+              <li><a class="nav-link" href="/create-your-first-app">Create Your First App</a></li>
+              <li><a class="nav-link" href="/frontend-starter-contract">Frontend Starter Contract</a></li>
+              <li><a class="nav-link" href="/repo-structure">Directory Structure</a></li>
             </ul>
           </div>
           <div class="nav-group">
             <p class="nav-title">Architecture</p>
             <ul class="nav-list">
-              <li><a class="nav-link" href="frontend-starter-contract.html#runtime-model">Runtime Model</a></li>
-              <li><a class="nav-link" href="ci-cd-regression-tests.html">CI/CD Regression Plan</a></li>
-              <li><a class="nav-link" href="initial-user-experience.html#commands">CLI Commands</a></li>
+              <li><a class="nav-link" href="/frontend-starter-contract#runtime-model">Runtime Model</a></li>
+              <li><a class="nav-link" href="/deployment">Deployment</a></li>
+              <li><a class="nav-link" href="/ci-cd-regression-tests">CI/CD Regression Plan</a></li>
+              <li><a class="nav-link" href="/create-your-first-app#commands">CLI Commands</a></li>
             </ul>
           </div>
           <div class="nav-group">
@@ -85,7 +86,7 @@ cd demo
 carbide run dev
 carbide doctor
 carbide status</code></pre>
-          <p>The installer builds the Go CLI. Human app names are accepted: <code>carbide new My Carbide App</code> creates <code>my-carbide-app</code> while storing the display name as <code>My Carbide App</code>.</p>
+          <p>The installer builds the Go CLI. Human app names are accepted: <code>carbide new "My Carbide App"</code> creates <code>my-carbide-app</code> while storing the display name as <code>My Carbide App</code>.</p>
           <p><code>carbide help</code> prints the command reference. <code>carbide upgrade</code> updates the installed CLI when a newer GitHub commit is available.</p>
         </section>
 
@@ -122,7 +123,8 @@ carbide status</code></pre>
             <li>Environment and secret contracts are checked in and validated without printing values.</li>
             <li>Runtime versions are explicit baselines with digest-pinned images and exact framework-owned package versions.</li>
             <li><code>carbide doctor</code> validates project shape, Compose, env/secrets, web/API/db, agent docs, and legacy-regression markers.</li>
-            <li>Deploys follow preview before apply; apply is guarded until a real deploy target exists.</li>
+            <li>Deploys follow preview before apply; targets are environments that can start as one host and grow into web/API/db roles across servers.</li>
+            <li><a href="/deployment">Deployment</a> covers single-VM <code>ssh-compose</code> targets and multi-VM role topology in <code>carbide.toml</code>.</li>
             <li>The default starter opens account creation first, then supports login, logout, and dashboard.</li>
             <li>The first IaC target is generated Docker Compose for local development.</li>
             <li>The CLI is implemented in Go and renders colored, aligned, script-safe output with full-width per-container startup and shutdown animation, status tables, timestamped logs, live log follow, and queryable structured dev logs.</li>
@@ -144,7 +146,7 @@ carbide status</code></pre>
 
         <section id="current-automation">
           <h2>Current Automation</h2>
-          <p>The repo has a CI gate for contract checks and a GitHub Pages workflow that publishes this documentation site from <code>docs/site</code> after pushes to <code>main</code>.</p>
+          <p>The repo has a CI gate for contract checks. The documentation app serves the static site from <code>docs/site</code> through Carbide on <code>de-sci</code>.</p>
           <p>The published docs domain is <code>carbide.ryangerardwilson.com</code>.</p>
         </section>
       </main>

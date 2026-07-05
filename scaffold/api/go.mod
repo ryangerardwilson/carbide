@@ -1,6 +1,6 @@
 module carbideapp/api
 
-go 1.23.0
+go 1.25.0
 
 require carbideapp/db v0.0.0
 

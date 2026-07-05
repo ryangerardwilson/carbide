@@ -28,7 +28,7 @@ jobs:
           go-version-file: cli/go.mod
 
       - name: Check shell syntax
-        run: bash -n tests/contract/check_repo_contract.sh tests/scaffold/cli_scaffold.sh tests/smoke/starter_docker_flow.sh cli/bin/carbide cli/install.sh
+        run: bash -n tests/contract/audit_versions.sh tests/contract/check_repo_contract.sh tests/scaffold/cli_scaffold.sh tests/smoke/starter_docker_flow.sh cli/bin/carbide cli/install.sh
 
       - name: Test Go CLI
         working-directory: cli

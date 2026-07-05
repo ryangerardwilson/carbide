@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Initial User Experience | Carbide Documentation</title>
+    <title>Create Your First App | Carbide Documentation</title>
     <meta name="description" content="The first install, create, run, and account-creation flow for Carbide.">
     <link rel="stylesheet" href="assets/styles.css">
     <script src="assets/intro.js" defer></script>
@@ -13,7 +13,7 @@
 
     <header class="docs-topbar">
       <div class="topbar-inner">
-        <a class="brand" href="index.html" aria-label="Carbide documentation home">
+        <a class="brand" href="/" aria-label="Carbide documentation home">
           <span class="brand-mark">C</span>
           <span class="brand-copy">
             <span class="brand-name">Carbide</span>
@@ -37,23 +37,24 @@
           <div class="nav-group">
             <p class="nav-title">Prologue</p>
             <ul class="nav-list">
-              <li><a class="nav-link" href="index.html">Installation</a></li>
-              <li><a class="nav-link" href="version-policy.html">Version Policy</a></li>
+              <li><a class="nav-link" href="/">Installation</a></li>
+              <li><a class="nav-link" href="/version-policy">Version Policy</a></li>
             </ul>
           </div>
           <div class="nav-group">
             <p class="nav-title">Getting Started</p>
             <ul class="nav-list">
-              <li><a class="nav-link" href="initial-user-experience.html" aria-current="page">Initial user experience</a></li>
-              <li><a class="nav-link" href="frontend-starter-contract.html">Frontend Starter Contract</a></li>
-              <li><a class="nav-link" href="repo-structure.html">Directory Structure</a></li>
+              <li><a class="nav-link" href="/create-your-first-app" aria-current="page">Create Your First App</a></li>
+              <li><a class="nav-link" href="/frontend-starter-contract">Frontend Starter Contract</a></li>
+              <li><a class="nav-link" href="/repo-structure">Directory Structure</a></li>
             </ul>
           </div>
           <div class="nav-group">
             <p class="nav-title">Architecture</p>
             <ul class="nav-list">
-              <li><a class="nav-link" href="frontend-starter-contract.html#runtime-model">Runtime Model</a></li>
-              <li><a class="nav-link" href="ci-cd-regression-tests.html">CI/CD Regression Plan</a></li>
+              <li><a class="nav-link" href="/frontend-starter-contract#runtime-model">Runtime Model</a></li>
+              <li><a class="nav-link" href="/deployment">Deployment</a></li>
+              <li><a class="nav-link" href="/ci-cd-regression-tests">CI/CD Regression Plan</a></li>
               <li><a class="nav-link" href="#commands">CLI Commands</a></li>
             </ul>
           </div>
@@ -73,7 +74,7 @@
         </div>
 
         <header class="article-header">
-          <h1>Initial User Experience</h1>
+          <h1>Create Your First App</h1>
           <p class="lead">The first Carbide app should boot with one command and include a Bun/React/Tailwind web service, Go API backend, Postgres-backed account creation, login, logout, and dashboard flow by default.</p>
           <p class="lead">Install, create, run, register is the intended first-session path.</p>
         </header>
@@ -122,7 +123,7 @@ carbide stop dev</code></pre>
           <ul>
             <li><code>carbide help</code> prints the command reference.</li>
             <li><code>carbide upgrade</code> upgrades the installed CLI when a newer GitHub commit is available.</li>
-            <li><code>carbide new &lt;project-name&gt;</code> creates a new project directory. Human names are accepted: <code>carbide new My Carbide App</code> creates <code>my-carbide-app</code>, stores <code>name = "My Carbide App"</code>, and stores <code>slug = "my-carbide-app"</code>.</li>
+            <li><code>carbide new &lt;project-name&gt;</code> creates a new project directory. Human names are accepted: <code>carbide new "My Carbide App"</code> creates <code>my-carbide-app</code>, stores <code>name = "My Carbide App"</code>, and stores <code>slug = "my-carbide-app"</code>.</li>
             <li><code>carbide init</code> initializes the current empty directory.</li>
             <li><code>carbide run dev</code> starts the Docker Compose dev stack, prints the app URL and API URL, then streams logs until <code>Ctrl+C</code> detaches.</li>
             <li><code>carbide status</code> prints services, containers, published ports, internal ports, and status.</li>
@@ -146,7 +147,7 @@ carbide stop dev</code></pre>
     </div>
 
     <footer class="docs-footer">
-      <div class="footer-inner"><a href="index.html">Back to installation</a></div>
+      <div class="footer-inner"><a href="/">Back to installation</a></div>
     </footer>
   </body>
 </html>

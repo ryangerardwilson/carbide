@@ -3,7 +3,7 @@ import { ui } from './tokens.js';
 
 const panelClassLayers = {
   l1: '',
-  l2: 'rounded-lg border p-5',
+  l2: 'rounded-lg border p-3',
   l3: cx(ui.border, ui.surface, ui.shadowSubtle)
 };
 
@@ -15,7 +15,7 @@ const dividerClassLayers = {
 
 const badgeClassLayers = {
   l1: 'inline-flex items-center',
-  l2: 'min-h-7 rounded-md px-2.5 text-sm font-bold'
+  l2: 'min-h-6 rounded-md px-2 text-xs font-semibold'
 };
 
 const metricClassLayers = {
@@ -26,17 +26,17 @@ const metricClassLayers = {
   },
   label: {
     l1: 'block',
-    l2: 'mb-1 text-sm',
+    l2: 'mb-0.5 text-xs',
     l3: ui.subtle
   },
   value: {
     l1: 'block truncate',
-    l2: '',
+    l2: 'text-sm/6 font-semibold',
     l3: ui.text
   },
   detail: {
     l1: 'block',
-    l2: 'mt-1 text-sm',
+    l2: 'mt-1 text-xs',
     l3: ui.subtle
   }
 };

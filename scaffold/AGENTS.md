@@ -14,6 +14,11 @@ Every root directory except `agents.d/` maps to a standalone Docker service:
 `web/`, `api/`, and `db/`. Shared runtime coordination lives in
 `docker-compose.yml`.
 
+Runtime versions are an explicit Carbide baseline in `carbide.toml` under
+`[runtime]`. Do not replace digest-pinned Docker images with floating tags,
+`latest`, or semver package ranges. Postgres major-version changes require a
+planned migration or local volume recreation.
+
 ## Operating Context
 
 Read the narrow file in `agents.d/` before changing the matching area:
@@ -33,7 +38,9 @@ carbide run dev
 carbide status
 carbide follow logs
 carbide stop dev
+carbide doctor
 carbide doctor env
+carbide doctor runtime
 ```
 
 Do not add seeded demo credentials. The first browser visit should create the

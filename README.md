@@ -132,12 +132,22 @@ carbide deploy apply dev
 ```
 
 `preview` is non-mutating and shows the planned change set. `apply` is the only
-path allowed to mutate infrastructure. Until Carbide ships a real deploy target,
-`apply` refuses to run.
+path allowed to mutate infrastructure. Generated starter apps still refuse
+`apply` until a checked-in deploy target exists. The first concrete target lives
+in `docs/app` as `de-sci`, an `ssh-compose` deployment for the documentation
+app.
+
+Deploy targets are modeled as environments, not just machines. The simplest
+environment can still be one host with `type = "ssh-compose"`. Larger
+environments use checked-in hosts and roles with
+`type = "ssh-compose-environment"` so `web`, `api`, and `db` can be planned
+across different servers. Carbide previews that topology today and keeps
+clustered `apply` guarded until migration order, health gates, load balancer
+updates, and rollback semantics are explicit.
 
 ## Documentation And Automation
 
-The public documentation site is published from `docs/site` to GitHub Pages at:
+The public documentation site is served by the Carbide docs app on `de-sci` at:
 
 ```text
 https://carbide.ryangerardwilson.com
@@ -149,6 +159,8 @@ regression plan lives in `docs/engineering/CI_CD_REGRESSION_TESTS.md`.
 The current repo layout lives in `docs/engineering/DIRECTORY_STRUCTURE.md`.
 The frontend starter contract lives in
 `docs/engineering/FRONTEND_STARTER_CONTRACT.md`.
+The runtime baseline and upgrade policy lives in
+`docs/engineering/VERSION_POLICY.md`.
 
 ## Install And Start
 
@@ -167,7 +179,7 @@ build, and Postgres inside containers. Docker with Docker Compose is required
 to run generated apps.
 
 `carbide new <project-name>` creates a new project directory. Human names are
-accepted: `carbide new My Carbide App` creates `my-carbide-app`, stores
+accepted: `carbide new "My Carbide App"` creates `my-carbide-app`, stores
 `name = "My Carbide App"`, and stores `slug = "my-carbide-app"`.
 `carbide init` initializes the current directory only when it is empty.
 `carbide run dev` starts the generated web, API, and Postgres
@@ -185,11 +197,28 @@ local development stack. `carbide help` prints the command reference.
 available. `carbide logs` reads the structured dev log file written by
 `carbide run dev`; examples include `carbide logs service api` and
 `carbide logs containing "/api/login" json`.
+`carbide doctor` runs the fast project contract check: root shape,
+`carbide.toml`, Compose services, env/secrets rules, web/API/db contracts,
+agent docs, and legacy-regression markers.
 `carbide doctor env` validates the env contract in `carbide.toml`, `.env`,
 local defaults, and secret/browser exposure rules without printing secret
-values.
-`carbide deploy preview <target>` prints the non-mutating deploy plan, while
-`carbide deploy apply <target>` is guarded until a deploy target exists.
+values. `carbide doctor runtime` runs the heavier Docker-backed health and auth
+flow check. `carbide doctor framework` runs framework source regressions from a
+Carbide source checkout. `carbide deploy preview <target>` prints the
+non-mutating deploy plan, while `carbide deploy apply <target>` runs only for
+checked-in deploy targets such as the docs app `de-sci` target; otherwise it
+remains guarded. Multi-server environment targets are previewable and
+validated, but `apply` is intentionally guarded until clustered orchestration is
+implemented.
+
+Runtime versions are treated as explicit Carbide baselines, not hidden moving
+dependencies. New projects record the current baseline in `carbide.toml` under
+`[runtime]`: supported Go module directive, digest-pinned Go/Bun/Debian/Postgres
+images, exact React and Tailwind package versions, and a runtime contract
+version. `carbide doctor` fails on floating Docker images, `latest`, semver
+ranges for framework-owned web packages, or unsupported Go directives. The
+scheduled dependency audit reports newer stable releases and changed image
+digests without editing project files.
 
 When Docker Compose supports file watch, `carbide run dev` starts the stack with
 quiet Compose output, watch enabled, and live logs streamed below the startup
@@ -210,14 +239,14 @@ written as JSONL to
 the whole local system from one command.
 
 Generated apps use explicit runtime boundaries. `web/` owns the Bun server,
-Tailwind build, browser UI, same-origin `/api` calls, and a small React starter
-under `component/l1`, `component/l2`, and `component/l3`. `api/` owns the Go
-HTTP server, auth, sessions, routing, and JSON responses. `db/` owns
-Postgres-backed data access and checked-in migration state. `carbide.toml`
-owns the project metadata, default dev port, environment contract, and deploy
-guardrails. `AGENTS.md` is the generated agent-facing entrypoint. `agents.d/`
-stores the specific operating notes for env, deploy, backup, restore, and
-Tailwind component organization.
+Tailwind build, content-hashed browser assets, same-origin `/api` calls, and a
+small React starter under `component/l1`, `component/l2`, and `component/l3`.
+`api/` owns the Go HTTP server, auth, sessions, routing, and JSON responses.
+`db/` owns Postgres-backed data access and checked-in migration state.
+`carbide.toml` owns the project metadata, default dev port, environment
+contract, and deploy guardrails. `AGENTS.md` is the generated agent-facing
+entrypoint. `agents.d/` stores the specific operating notes for env, deploy,
+backup, restore, and Tailwind component organization.
 
 At the generated project root, every directory except `agents.d/` maps to a
 standalone Docker service: `web/`, `api/`, and `db/`. Shared runtime
@@ -238,8 +267,8 @@ sidebar, section navigation, account/logout footer, and a main work area.
 
 - Source install from `cli/install.sh`.
 - Compiled Go CLI with `new`, `init`, `run dev`, `status`, `stop dev`,
-  `follow logs`, `logs`, `doctor env`, `deploy preview`, and guarded
-  `deploy apply`.
+  `follow logs`, `logs`, `doctor`, `doctor env`, `doctor runtime`,
+  `doctor framework`, `deploy preview`, and guarded `deploy apply`.
 - Generated `web`, `api`, and `db` services with Docker Compose watch.
 - Bun/React/Tailwind browser app with register, login, logout, dashboard, and
   left-sidebar app shell.
@@ -247,6 +276,7 @@ sidebar, section navigation, account/logout footer, and a main work area.
 - Environment/secrets contract in `carbide.toml`.
 - Generated `AGENTS.md` and `agents.d` operating notes.
 - Queryable structured dev logs in `.carbide/log/dev.jsonl`.
+- Fast project doctor and Docker-backed runtime doctor.
 - CI coverage for shell syntax, Go CLI tests, repo contract, scaffold checks,
   and generated Docker smoke flow.
 
@@ -277,7 +307,7 @@ sidebar, section navigation, account/logout footer, and a main work area.
 - Ship a small L1/L2/L3 React starter for auth, dashboard, and the app shell
   without turning Carbide into a frontend package ecosystem.
 - Make Tailwind the mandatory generated styling path.
-- Add a production frontend build/serve contract after the dev loop is stable.
+- Serve the React shell with content-hashed JS and CSS assets by default.
 
 ### Phase 4: Database Layer
 
@@ -326,7 +356,8 @@ sidebar, section navigation, account/logout footer, and a main work area.
 - Add health checks and readiness checks.
 - Extend the existing structured dev logs into the production container
   contract.
-- Add deployment examples for a single-node app and a worker process.
+- Harden single-VM deploy apply beyond the docs app target.
+- Implement clustered apply for previewed multi-VM environment targets.
 - Add backup, restore, and migration rollback guidance.
 
 ### Phase 9: Ecosystem

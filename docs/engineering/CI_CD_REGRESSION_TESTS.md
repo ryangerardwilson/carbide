@@ -10,11 +10,13 @@ Go API, Postgres, container, and infrastructure regression coverage.
 Runs on every pull request:
 
 - repository contract checks;
+- scheduled non-mutating dependency and image drift audit;
 - Go CLI unit tests;
 - shell syntax checks for repo-owned test and launcher scripts;
 - documentation site contract checks;
 - generated Docker stack smoke test with registration-first, Postgres-backed
   JSON auth;
+- `carbide doctor` fast project contract checks;
 - future API unit, integration, and compatibility checks.
 
 ### Main Branch Gate
@@ -22,7 +24,9 @@ Runs on every pull request:
 Runs after every push to `main`:
 
 - the pull request gate;
-- documentation deployment to GitHub Pages;
+- documentation deployment through the Carbide docs app;
+- documentation routes are served as extensionless canonical URLs, with legacy
+  `.html` paths redirected;
 - future release candidate smoke checks.
 
 ### Release Gate
@@ -54,6 +58,7 @@ Initial checks:
   tests;
 - documentation site files exist;
 - custom Pages domain is present in `docs/site/CNAME`;
+- docs-site internal links use extensionless routes, not `.html` hrefs;
 - workflow files exist.
 
 ### API Build And Behavior
@@ -116,6 +121,9 @@ Future checks:
 - web and API containers build from a clean checkout;
 - web installs with Bun from `bun.lock`;
 - Tailwind is a required generated web dependency and build step;
+- web builds content-hashed React JS and CSS assets;
+- web serves the HTML shell and asset manifest with `no-store`;
+- web serves hashed assets with one-year immutable cache headers;
 - web, API, and Postgres run as separate services;
 - health checks converge;
 - generated API logs the external web URL used for API proxying;
@@ -130,21 +138,31 @@ Future checks:
   `AGENTS.md`, and `agents.d/` operating notes for env, deploy, backup, and
   restore behavior;
 - generated agent context includes Tailwind component organization rules that
-  keep L1/L2/L3 as class layers, not component directories;
+  keep L1/L2/L3 as class-ownership layers reflected in component directories;
 - generated apps include a Bun/React/Tailwind web container, Go API
   container, and Postgres db container;
 - Bun web service proxies `/api` and `/health` to the API service;
 - `/api/me` reports anonymous and authenticated state correctly;
 - `/dashboard` is served by the React app shell;
+- `/dashboard` and `/` reference content-hashed JS and CSS assets;
 - restart behavior preserves Postgres data;
 - environment contract rejects missing required values;
 - secret values are never printed by `carbide doctor env`;
+- `carbide doctor` verifies generated project shape, env/secrets, Compose,
+  web/API/db contracts, agent docs, and legacy-regression markers without
+  starting containers;
+- `carbide doctor runtime` runs the Docker-backed health/auth/dashboard flow
+  and stops containers it started;
 - browser-exposed variables cannot be marked secret;
 - framework-owned keys are visible in the contract and protected from casual app
   override;
-- `carbide deploy preview <target>` is non-mutating and reports that no deploy
-  target exists yet;
-- `carbide deploy apply <target>` refuses until a real deploy target exists.
+- `carbide deploy preview <target>` is non-mutating and reports either the
+  checked-in target plan, including environment hosts and roles, or the guarded
+  unknown-target state;
+- `carbide deploy apply <target>` refuses unknown targets and runs only for
+  checked-in deploy targets with implemented apply semantics;
+- `ssh-compose-environment` targets are previewable and validated while
+  clustered apply remains guarded.
 
 ### CLI Golden Tests
 
@@ -172,10 +190,14 @@ Future checks:
   through timestamped service-tagged rows after the stack is ready;
 - `carbide status` prints a stable table of services, container names,
   published host ports, internal container ports, and status;
+- `carbide doctor` prints a stable table of project-contract checks;
 - `carbide doctor env` validates the generated environment contract without
   printing secret values;
+- `carbide doctor framework` runs source-repo regressions: shell syntax, Go
+  CLI tests, repo contract, scaffold checks, and Docker smoke;
 - `carbide deploy preview <target>` prints the non-mutating deploy plan;
-- `carbide deploy apply <target>` is guarded until a deploy target exists;
+- `carbide deploy apply <target>` applies only checked-in deploy targets and
+  remains guarded for unknown targets and preview-only environment targets;
 - `carbide follow logs` reattaches to live container logs and preserves
   timestamped, service-tagged rendering;
 - `carbide run dev` writes `.carbide/log/dev.jsonl`, and `carbide logs` can
@@ -214,6 +236,9 @@ Future checks:
 - generated command snippets are paste-ready;
 - links resolve inside the docs site;
 - release docs are versioned.
+- framework runtime baselines are documented in
+  `docs/engineering/VERSION_POLICY.md`, recorded in generated `carbide.toml`,
+  and audited without automatic mutation.
 
 ## Current Implemented Checks
 
@@ -225,6 +250,7 @@ bash -n tests/contract/check_repo_contract.sh tests/scaffold/cli_scaffold.sh tes
 bash tests/contract/check_repo_contract.sh
 bash tests/scaffold/cli_scaffold.sh
 bash tests/smoke/starter_docker_flow.sh
+carbide doctor framework
 ```
 
 This protects the repo, generated starter, Docker dev topology, and

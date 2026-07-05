@@ -13,7 +13,7 @@
 
     <header class="docs-topbar">
       <div class="topbar-inner">
-        <a class="brand" href="index.html" aria-label="Carbide documentation home">
+        <a class="brand" href="/" aria-label="Carbide documentation home">
           <span class="brand-mark">C</span>
           <span class="brand-copy">
             <span class="brand-name">Carbide</span>
@@ -37,24 +37,25 @@
           <div class="nav-group">
             <p class="nav-title">Prologue</p>
             <ul class="nav-list">
-              <li><a class="nav-link" href="index.html">Installation</a></li>
-              <li><a class="nav-link" href="version-policy.html">Version Policy</a></li>
+              <li><a class="nav-link" href="/">Installation</a></li>
+              <li><a class="nav-link" href="/version-policy">Version Policy</a></li>
             </ul>
           </div>
           <div class="nav-group">
             <p class="nav-title">Getting Started</p>
             <ul class="nav-list">
-              <li><a class="nav-link" href="initial-user-experience.html">Initial user experience</a></li>
-              <li><a class="nav-link" href="frontend-starter-contract.html" aria-current="page">Frontend Starter Contract</a></li>
-              <li><a class="nav-link" href="repo-structure.html">Directory Structure</a></li>
+              <li><a class="nav-link" href="/create-your-first-app">Create Your First App</a></li>
+              <li><a class="nav-link" href="/frontend-starter-contract" aria-current="page">Frontend Starter Contract</a></li>
+              <li><a class="nav-link" href="/repo-structure">Directory Structure</a></li>
             </ul>
           </div>
           <div class="nav-group">
             <p class="nav-title">Architecture</p>
             <ul class="nav-list">
               <li><a class="nav-link" href="#runtime-model">Runtime Model</a></li>
-              <li><a class="nav-link" href="ci-cd-regression-tests.html">CI/CD Regression Plan</a></li>
-              <li><a class="nav-link" href="initial-user-experience.html#commands">CLI Commands</a></li>
+              <li><a class="nav-link" href="/deployment">Deployment</a></li>
+              <li><a class="nav-link" href="/ci-cd-regression-tests">CI/CD Regression Plan</a></li>
+              <li><a class="nav-link" href="/create-your-first-app#commands">CLI Commands</a></li>
             </ul>
           </div>
           <div class="nav-group">
@@ -114,6 +115,7 @@
     |   `-- cx.js
     |-- main.jsx
     |-- server.jsx
+    |-- write-index.mjs
     `-- styles.css</code></pre>
           <p>The web app lives inside <code>web</code>. <code>main.jsx</code> owns browser route state and API calls, then renders the starter screens.</p>
           <p><code>component/l1</code>, <code>component/l2</code>, and <code>component/l3</code> mirror the Tailwind organization model: primitives, composed patterns, and product screens.</p>
@@ -126,12 +128,22 @@
           <p><code>styles.css</code> contains the Tailwind import and a small Tailwind v4 <code>@theme</code> block. <code>tokens.js</code> contains reusable Tailwind utility groups. The scaffold does not add a parallel <code>theme.css</code> file.</p>
         </section>
 
+        <section id="browser-assets">
+          <h2>Browser Assets</h2>
+          <p>Generated apps cache-bust React browser assets by default. <code>assets:build</code> runs Tailwind, runs Bun's browser build with content-hashed filenames under <code>web/public/assets/</code>, and writes <code>web/public/index.html</code> plus <code>web/public/asset-manifest.json</code>.</p>
+          <p>The HTML app shell and asset manifest are served with <code>Cache-Control: no-store</code>. Files under <code>/assets/</code> are served with <code>Cache-Control: public, max-age=31536000, immutable</code>.</p>
+          <p><code>web/public/</code> and <code>web/src/tailwind.css</code> are generated build output and are ignored in generated app repositories.</p>
+        </section>
+
         <section id="regression-requirements">
           <h2>Regression Requirements</h2>
           <ul>
             <li>Generated apps include web, API, and db containers.</li>
             <li>The Bun web service proxies <code>/api</code> and <code>/health</code> to the API service.</li>
             <li>Auth uses same-origin cookies without CORS setup.</li>
+            <li>The React app shell references content-hashed JS and CSS assets.</li>
+            <li>The app shell and asset manifest are served <code>no-store</code>.</li>
+            <li>Hashed assets are served with one-year immutable caching.</li>
             <li>Frontend installs with <code>bun install --frozen-lockfile</code> and builds with <code>bun run build</code>.</li>
             <li>Tailwind is required in the generated web app.</li>
             <li>The generated web app includes <code>component/l1</code>, <code>component/l2</code>, and <code>component/l3</code> starter tiers.</li>
@@ -146,13 +158,14 @@
           <li><a class="toc-link" href="#runtime-model">Runtime Model</a></li>
           <li><a class="toc-link" href="#generated-frontend">Generated Frontend</a></li>
           <li><a class="toc-link" href="#styling">Styling</a></li>
+          <li><a class="toc-link" href="#browser-assets">Browser Assets</a></li>
           <li><a class="toc-link" href="#regression-requirements">Regression Requirements</a></li>
         </ol>
       </aside>
     </div>
 
     <footer class="docs-footer">
-      <div class="footer-inner"><a href="index.html">Back to installation</a></div>
+      <div class="footer-inner"><a href="/">Back to installation</a></div>
     </footer>
   </body>
 </html>

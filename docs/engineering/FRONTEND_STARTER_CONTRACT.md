@@ -45,6 +45,7 @@ web/
     |   |   |-- Field.jsx
     |   |   |-- Surface.jsx
     |   |   |-- Text.jsx
+    |   |   |-- ThemeToggle.jsx
     |   |   |-- index.js
     |   |   `-- tokens.js
     |   |-- l2/
@@ -60,6 +61,7 @@ web/
     |   `-- cx.js
     |-- main.jsx
     |-- server.jsx
+    |-- write-index.mjs
     `-- styles.css
 ```
 
@@ -94,6 +96,21 @@ Bun lockfile.
 block. `tokens.js` contains reusable Tailwind utility groups for the generated
 auth and dashboard UI. The scaffold does not add a parallel `theme.css` file.
 
+## Browser Asset Contract
+
+Generated apps cache-bust React browser assets by default. `assets:build`
+runs Tailwind, runs Bun's browser build with content-hashed filenames under
+`web/public/assets/`, and writes `web/public/index.html` plus
+`web/public/asset-manifest.json`.
+
+The HTML app shell and asset manifest are served with `Cache-Control: no-store`
+so browsers always learn the current hashed asset names. Files under
+`/assets/` are served with `Cache-Control: public, max-age=31536000, immutable`
+because their URLs change when content changes.
+
+`web/public/` and `web/src/tailwind.css` are generated build output and are
+ignored in generated app repositories.
+
 ## Regression Tests
 
 The frontend contract needs dedicated regression coverage:
@@ -106,6 +123,9 @@ The frontend contract needs dedicated regression coverage:
 - login returns JSON and sets a session cookie;
 - `/api/me` reports authenticated and anonymous states correctly;
 - `/dashboard` is served by the React app shell;
+- the React app shell references content-hashed JS and CSS assets;
+- the app shell and asset manifest are served `no-store`;
+- hashed assets are served with one-year immutable caching;
 - web, API, and db watch paths are present in Compose;
 - generated web service installs with `bun install --frozen-lockfile` and builds
   with `bun run build`;

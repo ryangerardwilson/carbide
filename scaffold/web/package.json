@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "bun run tailwind:build && bun --hot src/server.jsx",
-    "build": "bun run tailwind:build && bun build --target=bun --production --outdir=build/server src/server.jsx",
+    "dev": "bun run assets:build && bun --hot src/server.jsx",
+    "build": "bun run assets:build && bun build --target=bun --production --outdir=build/server src/server.jsx",
+    "assets:build": "bun run tailwind:build && rm -rf public && bun build --target=browser --production --splitting --entry-naming='assets/[name]-[hash].[ext]' --chunk-naming='assets/[name]-[hash].[ext]' --asset-naming='assets/[name]-[hash].[ext]' --outdir=public src/main.jsx && bun src/write-index.mjs",
     "start": "NODE_ENV=production bun src/server.jsx",
     "tailwind:build": "tailwindcss -i ./src/styles.css -o ./src/tailwind.css --minify"
   },

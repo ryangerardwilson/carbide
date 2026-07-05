@@ -16,6 +16,7 @@ import (
 )
 
 const appName = "__PROJECT_NAME__"
+const templateAppName = "__" + "PROJECT_NAME" + "__"
 
 func main() {
 	port := envInt("APP_PORT", 8080)
@@ -39,7 +40,7 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	fmt.Printf("%s api listening on container port %d\n", appName, port)
+	fmt.Printf("%s api listening on container port %d\n", displayAppName(), port)
 	if publicURL != "" {
 		fmt.Printf("public API URL is %s/api\n", publicURL)
 	}
@@ -61,6 +62,13 @@ func main() {
 			log.Fatalf("server failed: %v", err)
 		}
 	}
+}
+
+func displayAppName() string {
+	if appName == templateAppName {
+		return "Lorem Ipsum"
+	}
+	return appName
 }
 
 func envInt(name string, fallback int) int {

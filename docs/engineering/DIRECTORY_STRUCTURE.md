@@ -24,18 +24,22 @@ documentation have clear ownership.
 |-- docs/
 |   |-- engineering/
 |   |   |-- CI_CD_REGRESSION_TESTS.md
+|   |   |-- CREATE_YOUR_FIRST_APP.md
+|   |   |-- DEPLOYMENT.md
 |   |   |-- DIRECTORY_STRUCTURE.md
 |   |   |-- FRONTEND_STARTER_CONTRACT.md
-|   |   `-- INITIAL_USER_EXPERIENCE.md
+|   |   `-- VERSION_POLICY.md
 |   `-- site/
 |       |-- CNAME
 |       |-- assets/
 |       |   `-- styles.css
 |       |-- ci-cd-regression-tests.html
+|       |-- create-your-first-app.html
+|       |-- deployment.html
 |       |-- frontend-starter-contract.html
 |       |-- index.html
-|       |-- initial-user-experience.html
-|       `-- repo-structure.html
+|       |-- repo-structure.html
+|       `-- version-policy.html
 |-- scaffold/
 |   |-- AGENTS.md
 |   |-- README.md
@@ -67,8 +71,10 @@ documentation have clear ownership.
 |       |-- package.json
 |       `-- src/
 |           |-- component/
+|           |-- lib/
 |           |-- main.jsx
 |           |-- server.jsx
+|           |-- write-index.mjs
 |           `-- styles.css
 |-- tests/
 |   |-- contract/
@@ -88,7 +94,7 @@ documentation have clear ownership.
 - `cli/go.mod`: Go module definition for the CLI.
 - `cli/internal/cli/`: Go implementation of the CLI and its unit tests.
 - `docs/engineering/`: source-of-truth engineering plans.
-- `docs/site/`: static GitHub Pages artifact.
+- `docs/site/`: static documentation site served by the Carbide docs app.
 - `scaffold/`: generated app source exactly as `carbide new` and
   `carbide init` write it to disk.
 - At the generated scaffold root, every directory except `agents.d/` maps to a

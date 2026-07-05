@@ -9,14 +9,14 @@ const variants = {
 };
 
 const sizes = {
-  sm: 'min-h-9 px-3 text-sm',
-  md: 'min-h-11 px-5',
-  lg: 'min-h-12 px-6 text-lg'
+  sm: 'min-h-7 px-2 text-xs',
+  md: 'min-h-8 px-3 text-xs',
+  lg: 'min-h-9 px-3.5 text-sm'
 };
 
 const buttonClassLayers = {
   l1: 'inline-flex items-center justify-center',
-  l2: 'gap-2 rounded-md font-bold outline-none',
+  l2: 'gap-1.5 rounded-md font-semibold outline-none',
   l3: 'transition disabled:cursor-wait disabled:opacity-65'
 };
 

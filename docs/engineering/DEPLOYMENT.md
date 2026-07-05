@@ -1,0 +1,137 @@
+# Deployment
+
+Carbide deploys from checked-in targets in `carbide.toml`. A target is an
+environment, not just a machine. The simplest environment is one VM running
+Docker Compose. Larger environments declare hosts and roles so the topology is
+reviewable before anything mutates.
+
+Always preview first:
+
+```sh
+carbide deploy preview production
+```
+
+`carbide deploy apply <target>` mutates infrastructure only for target types
+with implemented apply semantics. Today, `ssh-compose` applies to one VM.
+`ssh-compose-environment` validates and previews multi-VM topology, but apply is
+guarded until clustered orchestration is implemented.
+
+## Single VM
+
+Use `type = "ssh-compose"` when one VM runs the `web`, `api`, and `db`
+containers through Docker Compose.
+
+```toml
+[deploy]
+preview_before_apply = true
+
+[deploy.targets.production]
+type = "ssh-compose"
+host = "app-prod"
+domain = "app.example.com"
+remote_path = "/opt/my-carbide-app"
+source_path = "."
+compose_file = "docker-compose.yml"
+project_directory = "."
+public_port = 18080
+health_path = "/health"
+nginx = true
+nginx_site = "my-carbide-app"
+```
+
+`host` is the SSH destination used by `ssh` and `rsync`. It can be an SSH config
+alias such as `app-prod` or a direct destination such as
+`ubuntu@app.example.com`.
+
+The remote VM needs Docker Compose available. If `nginx = true`, the remote user
+must be able to run `sudo`; Carbide writes an nginx site for `domain`, proxies
+to `public_port`, and uses Certbot when a certificate is not already present.
+
+Deploy with:
+
+```sh
+carbide deploy preview production
+carbide deploy apply production
+```
+
+On apply, Carbide syncs `source_path` to `remote_path`, creates `.env` on the
+remote host if it does not exist, runs Compose config, starts the stack, updates
+nginx when requested, and checks `health_path` through `127.0.0.1:public_port`.
+
+## Multiple VMs
+
+Use `type = "ssh-compose-environment"` when the environment has explicit hosts
+and roles. This is the Carbide shape for multi-server apps.
+
+```toml
+[deploy]
+preview_before_apply = true
+
+[deploy.hosts.web-1]
+ssh = "web-1"
+description = "Public web entrypoint."
+
+[deploy.hosts.api-1]
+ssh = "api-1"
+description = "Private API host."
+
+[deploy.hosts.db-1]
+ssh = "db-1"
+description = "Primary Postgres host."
+
+[deploy.targets.production]
+type = "ssh-compose-environment"
+domain = "app.example.com"
+remote_path = "/opt/my-carbide-app"
+source_path = "."
+compose_file = "docker-compose.yml"
+project_directory = "."
+health_path = "/health"
+strategy = "preview-only"
+
+[deploy.targets.production.roles.web]
+hosts = ["web-1"]
+public_port = 18080
+nginx = true
+
+[deploy.targets.production.roles.api]
+hosts = ["api-1"]
+
+[deploy.targets.production.roles.db]
+hosts = ["db-1"]
+primary = "db-1"
+migration = "once"
+```
+
+Preview with:
+
+```sh
+carbide deploy preview production
+```
+
+The preview validates that each role references known hosts, that `web`, `api`,
+and `db` roles exist, that the `db` role has a primary host, and that migrations
+are declared as `once`.
+
+`carbide deploy apply production` is intentionally guarded for this target type
+until Carbide implements clustered orchestration, migration ordering, health
+gates, load-balancer changes, and rollback behavior.
+
+## Target Fields
+
+- `type`: `ssh-compose` for one VM, `ssh-compose-environment` for multi-VM
+  topology.
+- `host`: SSH destination for a single-VM `ssh-compose` target.
+- `domain`: public DNS name for the environment.
+- `remote_path`: absolute path on the remote host.
+- `source_path`: local path to sync before deploy.
+- `compose_file`: Compose file path relative to `remote_path`.
+- `project_directory`: Compose project directory relative to `remote_path`.
+- `public_port`: host port exposed by the web service.
+- `health_path`: HTTP path checked after deploy.
+- `nginx`: whether Carbide should manage nginx for the public entrypoint.
+- `nginx_site`: lowercase nginx site name.
+- `deploy.hosts.*.ssh`: SSH destination for a named multi-VM host.
+- `roles.*.hosts`: host names assigned to a role.
+- `roles.db.primary`: primary Postgres host.
+- `roles.db.migration`: currently must be `once`.

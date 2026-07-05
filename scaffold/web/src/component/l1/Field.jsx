@@ -3,25 +3,25 @@ import { ui } from './tokens.js';
 
 const fieldClassLayers = {
   l1: 'grid',
-  l2: 'gap-2 font-bold',
+  l2: 'gap-1 text-sm/6 font-semibold',
   l3: ui.text
 };
 
 const fieldHintClassLayers = {
   l1: '',
-  l2: 'text-sm font-normal',
+  l2: 'text-xs font-normal',
   l3: ui.subtle
 };
 
 const fieldErrorClassLayers = {
   l1: '',
-  l2: 'text-sm font-bold',
+  l2: 'text-xs font-bold',
   l3: ui.errorText
 };
 
 const inputClassLayers = {
   l1: 'block w-full',
-  l2: 'min-h-12 rounded-md border px-3 py-2 outline-none',
+  l2: 'min-h-8 rounded-md border px-2 py-1 text-sm/6 outline-none',
   l3: cx(ui.input, ui.focus, 'transition')
 };
 

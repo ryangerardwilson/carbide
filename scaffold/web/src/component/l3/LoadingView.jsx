@@ -4,7 +4,7 @@ import { cx } from '../../lib/cx.js';
 const loadingClassLayers = {
   shell: {
     l1: 'grid place-items-center',
-    l2: 'min-h-svh px-8 text-center',
+    l2: 'min-h-svh px-4 text-center',
     l3: ui.page
   }
 };

@@ -1,11 +1,11 @@
-import { CodeText, Metric, Muted, Panel, ui } from '../l1/index.js';
+import { Metric, Muted, Panel, ui } from '../l1/index.js';
 import { DashboardLayout } from '../l2/index.js';
 import { cx } from '../../lib/cx.js';
 
 const screenClassLayers = {
   workspace: {
     l1: 'grid',
-    l2: 'gap-6',
+    l2: 'gap-3',
     l3: ''
   },
   statusGrid: {
@@ -15,31 +15,31 @@ const screenClassLayers = {
   },
   statusCell: {
     l1: '',
-    l2: 'p-6',
+    l2: 'p-3',
     l3: ui.surface
   },
   sessionLabel: {
     l1: '',
-    l2: 'm-0 text-xs font-extrabold uppercase tracking-normal',
+    l2: 'm-0 text-xs font-bold uppercase tracking-normal',
     l3: ui.accent
   },
   sessionTitle: {
     l1: '',
-    l2: 'm-0 mt-2 text-3xl leading-tight',
+    l2: 'm-0 mt-1 text-base/6 font-semibold',
     l3: ui.text
   }
 };
 
 const dashboardNav = [
   {
-    description: 'Runtime health, same-origin API flow, and the active session.',
-    eyebrow: 'Local app',
-    label: 'Workspace',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    eyebrow: 'Lorem',
+    label: 'Ipsum',
     value: 'workspace'
   }
 ];
 
-function WorkspaceOverview({ user }) {
+function WorkspaceOverview() {
   return (
     <div className={cx(screenClassLayers.workspace.l1, screenClassLayers.workspace.l2, screenClassLayers.workspace.l3)}>
       <section
@@ -47,9 +47,9 @@ function WorkspaceOverview({ user }) {
         aria-label="Application status"
       >
         {[
-          ['Web', 'React + Bun container'],
-          ['API', 'Go API container'],
-          ['Database', 'Postgres db container']
+          ['Lorem', 'Ipsum dolor'],
+          ['Sit', 'Amet'],
+          ['Consectetur', 'Adipiscing']
         ].map(([label, value]) => (
           <div className={cx(screenClassLayers.statusCell.l1, screenClassLayers.statusCell.l2, screenClassLayers.statusCell.l3)} key={label}>
             <Metric label={label} value={value} />
@@ -57,19 +57,18 @@ function WorkspaceOverview({ user }) {
         ))}
       </section>
 
-      <Panel className="max-w-3xl">
-        <p className={cx(screenClassLayers.sessionLabel.l1, screenClassLayers.sessionLabel.l2, screenClassLayers.sessionLabel.l3)}>Session</p>
-        <h2 className={cx(screenClassLayers.sessionTitle.l1, screenClassLayers.sessionTitle.l2, screenClassLayers.sessionTitle.l3)}>Logged in as {user.email}</h2>
-        <Muted className="mt-4">
-          The browser talks to <CodeText>/api</CodeText> on the same origin. Bun proxies those
-          requests to Go, and Go persists the session in Postgres.
+      <Panel className="max-w-2xl">
+        <p className={cx(screenClassLayers.sessionLabel.l1, screenClassLayers.sessionLabel.l2, screenClassLayers.sessionLabel.l3)}>Dolor</p>
+        <h2 className={cx(screenClassLayers.sessionTitle.l1, screenClassLayers.sessionTitle.l2, screenClassLayers.sessionTitle.l3)}>Lorem ipsum dolor sit amet.</h2>
+        <Muted className="mt-2 text-xs/5">
+          Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
         </Muted>
       </Panel>
     </div>
   );
 }
 
-export function DashboardView({ appName, busy, onLogout, user }) {
+export function DashboardView({ appName, busy, onLogout, onThemeMode, resolvedTheme, themeMode, user }) {
   return (
     <DashboardLayout
       activeItem="workspace"
@@ -77,9 +76,12 @@ export function DashboardView({ appName, busy, onLogout, user }) {
       busy={busy}
       navItems={dashboardNav}
       onLogout={onLogout}
+      onThemeMode={onThemeMode}
+      resolvedTheme={resolvedTheme}
+      themeMode={themeMode}
       userEmail={user.email}
     >
-      <WorkspaceOverview user={user} />
+      <WorkspaceOverview />
     </DashboardLayout>
   );
 }

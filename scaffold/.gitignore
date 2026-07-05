@@ -1,9 +1,10 @@
 .env
 .carbide/
 build/
-view/web/build/
-view/web/dist/
-view/web/node_modules/
-view/web/src/tailwind.css
+web/build/
+web/dist/
+web/node_modules/
+web/public/
+web/src/tailwind.css
 *.o
 carbide-app

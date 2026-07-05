@@ -28,8 +28,10 @@ not to a separate secrets container or secrets sidecar container.
 Run:
 
 ```sh
+carbide doctor
 carbide doctor env
 ```
 
-The command validates the contract, reports missing required variables, and
+`carbide doctor` runs the fast project contract checks. `carbide doctor env`
+focuses on the environment contract, reports missing required variables, and
 summarizes secret/browser/framework-owned counts without printing values.
