@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run typecheck && bun run tailwind:build && bun --hot src/server.ts",
-    "start": "bun src/server.ts",
-    "tailwind:build": "bun src/build-styles.ts",
+    "dev": "bun run typecheck && bun run assets:build && bun --hot src/server.ts",
+    "build": "bun run typecheck && bun run assets:build && bun build --target=bun --production --outdir=build/server src/server.ts",
+    "assets:build": "bun run tailwind:build && bun run docs:styles && rm -rf public && bun build --target=browser --production --splitting --entry-naming='assets/[name]-[hash].[ext]' --chunk-naming='assets/[name]-[hash].[ext]' --asset-naming='assets/[name]-[hash].[ext]' --outdir=public src/main.tsx && bun src/write-index.ts",
+    "docs:styles": "bun src/build-styles.ts",
+    "start": "NODE_ENV=production bun src/server.ts",
+    "tailwind:build": "tailwindcss -i ./src/styles.css -o ./src/tailwind.css --minify",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

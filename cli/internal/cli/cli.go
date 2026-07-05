@@ -291,6 +291,11 @@ func (a app) run(args []string) error {
 			return a.commandDoctorFramework()
 		}
 		return errors.New("usage: carbide doctor [env|runtime|framework]")
+	case "project":
+		if len(args) == 2 && args[1] == "migrate" {
+			return a.commandProjectMigrate()
+		}
+		return errors.New("usage: carbide project migrate")
 	case "deploy":
 		if len(args) == 3 && args[1] == "preview" {
 			return a.commandDeployPreview(args[2])
@@ -357,6 +362,7 @@ func (a app) printHelp() {
 				{"init", "init current directory"},
 				{"logs", "query saved logs"},
 				{"new <project-name>", "create project directory"},
+				{"project migrate", "prepare agent-assisted framework migration"},
 				{"status", "show containers and ports"},
 				{"upgrade", "upgrade CLI from GitHub"},
 				{"version", "print installed version"},
@@ -479,6 +485,56 @@ func (a app) commandInit() error {
 		"project initialized",
 		outputRow{"path", pwd},
 		outputRow{"next", "carbide run dev"},
+	)
+	return nil
+}
+
+func (a app) commandProjectMigrate() error {
+	if !isFile(projectConfigPath) {
+		return errors.New("carbide project migrate requires carbide.toml")
+	}
+
+	pwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	metadata, err := readProjectMetadata(projectConfigPath)
+	if err != nil {
+		return err
+	}
+	name := strings.TrimSpace(metadata.name)
+	if name == "" || isTemplatePlaceholder(name) {
+		name = projectDisplayName(filepath.Base(pwd))
+	}
+	slug := strings.TrimSpace(metadata.slug)
+	if slug == "" || isTemplatePlaceholder(slug) {
+		slug = projectSlug(name)
+	}
+	if slug == "" {
+		slug = "carbide-app"
+	}
+
+	id := time.Now().UTC().Format("20060102T150405Z")
+	root := filepath.Join(".carbide", "migration", id)
+	scaffoldTarget := filepath.Join(root, "latest-scaffold")
+	briefPath := filepath.Join(root, "MIGRATION.md")
+	if err := os.MkdirAll(root, 0755); err != nil {
+		return err
+	}
+	if err := a.copyScaffold(scaffoldTarget, name, slug); err != nil {
+		return err
+	}
+	if err := os.WriteFile(briefPath, []byte(projectMigrationBrief(pwd, name, slug, scaffoldTarget, a.home)), 0644); err != nil {
+		return err
+	}
+
+	newRenderer(a.stdout).Message(
+		"Carbide project",
+		"migration workspace",
+		outputRow{"path", root},
+		outputRow{"scaffold", scaffoldTarget},
+		outputRow{"brief", briefPath},
+		outputRow{"next", "read MIGRATION.md and run carbide doctor"},
 	)
 	return nil
 }
@@ -849,6 +905,9 @@ func doctorFrontendContract() doctorResult {
 	if fileContains("web/src/styles.css", "theme.css") || treeContains("web/src", "cb-") || treeContains("web/src", "--cb-") {
 		return doctorFail("frontend", "parallel CSS theme detected")
 	}
+	if findings := scaffoldTailwindInputFindings("web/src/styles.css"); len(findings) > 0 {
+		return doctorFail("frontend", "scaffold Tailwind input contract: "+strings.Join(findings, "; "))
+	}
 	if lines := fileLineCount("web/src/styles.css"); lines > 220 {
 		return doctorFail("frontend", fmt.Sprintf("Tailwind input too large: %d lines", lines))
 	}
@@ -1146,6 +1205,17 @@ func doctorDocsComposeContract() doctorResult {
 		"CARBIDE_HTTP_PORT",
 		"service_healthy",
 		"./db/migration:/docker-entrypoint-initdb.d:ro",
+		"develop:",
+		"watch:",
+		"path: ./web/src",
+		"path: ./web/index.html",
+		"path: ./web/package.json",
+		"path: ./web/bun.lock",
+		"path: ./web/tsconfig.json",
+		"path: ./web/Dockerfile",
+		"path: ../site",
+		"path: ./api",
+		"path: ./db/migration",
 	}
 	if missing := missingNeedles(content, required); len(missing) > 0 {
 		return doctorFail("compose", "missing "+strings.Join(missing, ", "))
@@ -1159,10 +1229,15 @@ func doctorDocsWebContract() doctorResult {
 		"web/package.json",
 		"web/bun.lock",
 		"web/tsconfig.json",
+		"web/index.html",
 		"web/src/build-styles.ts",
+		"web/src/main.tsx",
 		"web/src/server.ts",
 		"web/src/styles.css",
+		"web/src/styles.d.ts",
+		"web/src/write-index.ts",
 		"web/src/lib/cx.ts",
+		"web/src/lib/types.ts",
 		"web/src/component/l1/Text.tsx",
 		"web/src/component/l1/Surface.tsx",
 		"web/src/component/l1/index.ts",
@@ -1183,12 +1258,15 @@ func doctorDocsWebContract() doctorResult {
 		return doctorFail("web", "docs web source must use TypeScript")
 	}
 	required := map[string][]string{
-		"web/Dockerfile":                      {"COPY app/web/src ./src", "bun run typecheck", "bun run tailwind:build", `CMD ["bun", "run", "start"]`, "COPY site ./site"},
-		"web/package.json":                    {`"tailwind:build"`, `"typecheck": "tsc --noEmit"`, `"@tailwindcss/cli":`, `"react":`, `"react-dom":`, `"tailwindcss":`, `"typescript": "6.0.3"`, `"@types/bun": "1.3.14"`, `"@types/react": "19.2.17"`, `"@types/react-dom": "19.2.3"`},
+		"web/Dockerfile":                      {"COPY app/web/index.html ./", "COPY app/web/src ./src", "bun run typecheck", "bun run assets:build", `CMD ["bun", "run", "start"]`, "COPY site ./site"},
+		"web/package.json":                    {`"build"`, `"assets:build"`, `"docs:styles"`, `"tailwind:build"`, `"typecheck": "tsc --noEmit"`, `"@tailwindcss/cli":`, `"react":`, `"react-dom":`, `"tailwindcss":`, `"typescript": "6.0.3"`, `"@types/bun": "1.3.14"`, `"@types/react": "19.2.17"`, `"@types/react-dom": "19.2.3"`, `--entry-naming='assets/[name]-[hash].[ext]'`},
 		"web/tsconfig.json":                   {`"strict": true`, `"jsx": "react-jsx"`, `"types": ["bun-types"]`},
 		"web/src/build-styles.ts":             {"tailwindcss", "./src/styles.css", "styles.css"},
-		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.tsx";`},
-		"web/src/server.ts":                   {"serveStatic", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3`, "docsResponseHeaders", "rewriteDocsHtml", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`},
+		"web/src/main.tsx":                    {"createRoot", "DocsRuntime", "./tailwind.css"},
+		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.tsx";`, `@source "./lib/**/*.ts";`, `@source "./main.tsx";`, `@source "./server.ts";`, `@theme`, `--color-carbide-page: var(--carbide-page);`},
+		"web/src/write-index.ts":              {"asset-manifest.json", `/assets/${scripts[0]}`},
+		"web/index.html":                      {"carbide.theme", "./src/main.tsx", "Carbide Docs"},
+		"web/src/server.ts":                   {"serveStatic", "servePublicFile", "publicRoot", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3`, "docsResponseHeaders", "rewriteDocsHtml", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`, "Cache-Control", "public, max-age=31536000, immutable", `return "no-store"`},
 		"web/src/component/l1/tokens.ts":      {"docsClassLayers", "l1:", "l2:", "l3:"},
 		"web/src/component/l2/DocsChrome.tsx": {"docsChromeClassLayers", "docsStaticClassMap", "rewriteDocsClasses", "docsStaticHeaders"},
 		"web/src/component/l3/DocsSite.tsx":   {"docsSiteClassLayers", "docsWebContract", "rewriteDocsHtml", "docsResponseHeaders"},
@@ -1198,18 +1276,90 @@ func doctorDocsWebContract() doctorResult {
 			return doctorFail("web", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
-	if strings.TrimSpace(readFileString("web/src/styles.css")) != strings.TrimSpace(docsTailwindInputContract) {
-		return doctorFail("web", "docs Tailwind input must contain only import/source directives")
+	if findings := docsTailwindInputFindings("web/src/styles.css"); len(findings) > 0 {
+		return doctorFail("web", "docs Tailwind input contract: "+strings.Join(findings, "; "))
 	}
 	return doctorOK("web", "Bun React Tailwind TypeScript docs")
 }
 
-const docsTailwindInputContract = `@import "tailwindcss";
+const scaffoldTailwindInputHeader = `@import "tailwindcss";
 
 @source "./component/**/*.tsx";
 @source "./lib/**/*.ts";
+@source "./main.tsx";
 @source "./server.ts";
 `
+
+func scaffoldTailwindInputFindings(path string) []string {
+	content := readFileString(path)
+	var findings []string
+	if strings.TrimSpace(content) == "" {
+		return []string{"missing Tailwind input"}
+	}
+	if !strings.HasPrefix(content, scaffoldTailwindInputHeader) {
+		findings = append(findings, "must start with Tailwind import/source directives")
+	}
+	if lines := fileLineCount(path); lines > 160 {
+		findings = append(findings, fmt.Sprintf("too large: %d lines", lines))
+	}
+	for _, needle := range []string{
+		`:root,`,
+		`[data-theme="light"]`,
+		`[data-theme="dark"]`,
+		`html {`,
+		`body {`,
+		`@theme {`,
+		`--color-carbide-page: var(--carbide-page);`,
+		`--color-carbide-text: var(--carbide-text);`,
+		`--color-carbide-action: var(--carbide-action);`,
+		`--shadow-carbide-subtle: var(--carbide-shadow-subtle);`,
+	} {
+		if !strings.Contains(content, needle) {
+			findings = append(findings, "missing "+needle)
+		}
+	}
+	for _, forbidden := range []string{
+		"@apply",
+		"@layer",
+		"@keyframes",
+		"@media",
+		"@container",
+		"@plugin",
+		"@config",
+		"<style",
+	} {
+		if strings.Contains(content, forbidden) {
+			findings = append(findings, "forbidden "+forbidden)
+		}
+	}
+	if regexp.MustCompile(`(?m)^\s*\.[A-Za-z_-][A-Za-z0-9_-]*(?:[\s,{:.#]|$)`).MatchString(content) {
+		findings = append(findings, "custom CSS class selectors belong in Tailwind component classes")
+	}
+	if regexp.MustCompile(`(?m)^\s*#[A-Za-z_-][A-Za-z0-9_-]*(?:[\s,{:.#]|$)`).MatchString(content) {
+		findings = append(findings, "custom ID selectors belong in Tailwind component classes")
+	}
+	return findings
+}
+
+func docsTailwindInputFindings(path string) []string {
+	findings := scaffoldTailwindInputFindings(path)
+	if generated := docsGeneratedTailwindFindings("../site/assets/styles.css"); len(generated) > 0 {
+		findings = append(findings, generated...)
+	}
+	return findings
+}
+
+func docsGeneratedTailwindFindings(path string) []string {
+	if !isFile(path) {
+		return nil
+	}
+	content := readFileString(path)
+	forbidden := regexp.MustCompile(`\.(docs-layout|docs-sidebar|docs-toc|docs-topbar|docs-content|docs-intro|skip-link|topbar-inner|brand-mark)(?:[\s,{:.#]|$)`)
+	if forbidden.MatchString(content) {
+		return []string{"generated docs CSS contains custom docs selectors"}
+	}
+	return nil
+}
 
 func doctorDocsAPIContract() doctorResult {
 	requiredFiles := []string{
@@ -4527,6 +4677,51 @@ func isTemplatePlaceholder(value string) bool {
 	return strings.Contains(value, "__PROJECT_")
 }
 
+func projectMigrationBrief(projectPath string, name string, slug string, scaffoldPath string, home string) string {
+	versionRows := []string{
+		"# Carbide Project Migration",
+		"",
+		"This workspace is generated by `carbide project migrate` for an AI-assisted framework upgrade.",
+		"It is intentionally not a deterministic code rewriter. Use the generated scaffold as the target contract, preserve app-specific behavior, and verify with `carbide doctor`.",
+		"",
+		"## Project",
+		"",
+		fmt.Sprintf("- Source path: `%s`", projectPath),
+		fmt.Sprintf("- App name: `%s`", name),
+		fmt.Sprintf("- App slug: `%s`", slug),
+		fmt.Sprintf("- Current profile: `%s`", projectProfile()),
+		fmt.Sprintf("- Carbide CLI version: `%s`", version),
+		fmt.Sprintf("- Carbide CLI commit: `%s`", displayCommit(home)),
+		fmt.Sprintf("- Latest scaffold: `%s`", scaffoldPath),
+		"",
+		"## Agent Instructions",
+		"",
+		"1. Compare the current project to `latest-scaffold/`.",
+		"2. Port framework-owned contracts first: `web/package.json`, `web/Dockerfile`, `web/tsconfig.json`, `web/src/styles.css`, browser asset build scripts, Compose watch paths, runtime baseline, and `agents.d` rules.",
+		"3. Preserve app-owned behavior: product screens, API routes, database migrations, deploy targets, secrets, data volumes, and public domain behavior.",
+		"4. Do not copy generated output such as `node_modules`, `web/public`, `web/src/tailwind.css`, `.carbide`, or local `.env` files.",
+		"5. Run `carbide doctor`, `carbide doctor runtime` when containers are available, and the app-specific build/test commands.",
+		"",
+		"## Suggested Prompt For Codex",
+		"",
+		"```text",
+		"Use .carbide/migration/*/latest-scaffold as the target Carbide framework contract. Migrate this project to that contract while preserving app-specific API, database, deploy, docs, and product behavior. After editing, run carbide doctor and the relevant build/tests.",
+		"```",
+		"",
+	}
+	return strings.Join(versionRows, "\n")
+}
+
+func displayCommit(home string) string {
+	if commit != "" {
+		return commit
+	}
+	if home != "" {
+		return gitShortHead(home)
+	}
+	return "unknown"
+}
+
 func (a app) copyScaffold(target string, name string, slug string) error {
 	source := filepath.Join(a.home, "scaffold")
 	if !isDir(source) {
@@ -4548,8 +4743,11 @@ func copyScaffoldPart(source string, target string, name string, slug string) er
 		if rel == "." {
 			return os.MkdirAll(target, 0755)
 		}
-		if entry.IsDir() && rel == ".carbide" {
-			return filepath.SkipDir
+		if skipGeneratedScaffoldPath(rel, entry.IsDir()) {
+			if entry.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
 		}
 
 		dest := filepath.Join(target, rel)
@@ -4580,6 +4778,23 @@ func copyScaffoldPart(source string, target string, name string, slug string) er
 		content = bytes.ReplaceAll(content, []byte("__PROJECT_SLUG__"), []byte(slug))
 		return os.WriteFile(dest, content, info.Mode().Perm())
 	})
+}
+
+func skipGeneratedScaffoldPath(rel string, isDir bool) bool {
+	rel = filepath.ToSlash(rel)
+	generatedDirs := map[string]bool{
+		".carbide":         true,
+		"web/node_modules": true,
+		"web/public":       true,
+	}
+	if isDir && generatedDirs[rel] {
+		return true
+	}
+	generatedFiles := map[string]bool{
+		".env":                 true,
+		"web/src/tailwind.css": true,
+	}
+	return generatedFiles[rel]
 }
 
 func isCurrentDirEmpty() (bool, error) {

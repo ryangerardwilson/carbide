@@ -11,6 +11,7 @@ const siteRootCandidates = [
   join(import.meta.dir, "..", "site"),
 ];
 const siteRoot = siteRootCandidates.find((candidate) => existsSync(candidate) && statSync(candidate).isDirectory()) || defaultSiteRoot;
+const publicRoot = join(import.meta.dir, "..", "public");
 const apiURL = process.env.API_URL || "http://api:8080";
 
 const contentTypes: Record<string, string> = {
@@ -19,6 +20,7 @@ const contentTypes: Record<string, string> = {
   ".ico": "image/x-icon",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".map": "application/json; charset=utf-8",
   ".svg": "image/svg+xml",
   ".txt": "text/plain; charset=utf-8",
 };
@@ -34,12 +36,32 @@ const routeAliases: Record<string, string> = {
 };
 
 function sitePath(pathname: string): string | null {
-  let requestPath = decodeURIComponent(pathname);
+  let requestPath;
+  try {
+    requestPath = decodeURIComponent(pathname);
+  } catch {
+    return null;
+  }
   if (requestPath === "/") requestPath = "/index.html";
   if (!extname(requestPath)) requestPath = `${requestPath}.html`;
 
   const candidate = normalize(join(siteRoot, requestPath));
   if (!candidate.startsWith(siteRoot + sep) && candidate !== siteRoot) {
+    return null;
+  }
+  return candidate;
+}
+
+function publicPath(pathname: string): string | null {
+  let requestPath;
+  try {
+    requestPath = decodeURIComponent(pathname);
+  } catch {
+    return null;
+  }
+
+  const candidate = normalize(join(publicRoot, requestPath));
+  if (!candidate.startsWith(publicRoot + sep) && candidate !== publicRoot) {
     return null;
   }
   return candidate;
@@ -103,6 +125,27 @@ async function serveStatic(pathname: string): Promise<Response> {
   }
 }
 
+async function servePublicFile(request: Request, pathname: string): Promise<Response> {
+  const path = publicPath(pathname);
+  if (!path) return new Response("not found", { status: 404 });
+
+  try {
+    const info = await stat(path);
+    if (!info.isFile()) return new Response("not found", { status: 404 });
+    return new Response(request.method === "HEAD" ? null : Bun.file(path), {
+      headers: {
+        "Cache-Control": cacheControlFor(pathname),
+        "Content-Type": contentTypes[extname(path)] || "application/octet-stream",
+      },
+    });
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+      return new Response("not found", { status: 404 });
+    }
+    throw error;
+  }
+}
+
 function cacheBustHtml(html: string): string {
   let output = html;
   for (const [assetPath, versionedPath] of versionedAssetPaths) {
@@ -118,7 +161,7 @@ function cacheControlFor(pathname: string): string {
   if (pathname.startsWith("/assets/")) {
     return "public, max-age=31536000, immutable";
   }
-  return "no-cache";
+  return "no-store";
 }
 
 function versionedAssetPath(assetPath: string): string {
@@ -142,7 +185,14 @@ Bun.serve({
     if (canonicalPath) {
       return redirectToCanonical(request, canonicalPath);
     }
-    return serveStatic(url.pathname);
+    const docsResponse = await serveStatic(url.pathname);
+    if (docsResponse.status !== 404) {
+      return docsResponse;
+    }
+    if (url.pathname.startsWith("/assets/") || url.pathname === "/asset-manifest.json") {
+      return servePublicFile(request, url.pathname);
+    }
+    return docsResponse;
   },
 });
 

@@ -197,6 +197,10 @@ local development stack. `carbide help` prints the command reference.
 available. `carbide logs` reads the structured dev log file written by
 `carbide run dev`; examples include `carbide logs service api` and
 `carbide logs containing "/api/login" json`.
+`carbide project migrate` prepares an AI-assisted migration workspace under
+`.carbide/migration/`, copies the latest scaffold contract, and writes a brief
+for an agent to port framework-owned files while preserving app-owned API,
+database, deploy, and product behavior.
 `carbide doctor` runs the fast project contract check: root shape,
 `carbide.toml`, Compose services, env/secrets rules, web/API/db contracts,
 agent docs, and legacy-regression markers.
@@ -267,9 +271,10 @@ sidebar, section navigation, account/logout footer, and a main work area.
 ### Current Baseline
 
 - Source install from `cli/install.sh`.
-- Compiled Go CLI with `new`, `init`, `run dev`, `status`, `stop dev`,
-  `follow logs`, `logs`, `doctor`, `doctor env`, `doctor runtime`,
-  `doctor framework`, `deploy preview`, and guarded `deploy apply`.
+- Compiled Go CLI with `new`, `init`, `project migrate`, `run dev`, `status`,
+  `stop dev`, `follow logs`, `logs`, `doctor`, `doctor env`,
+  `doctor runtime`, `doctor framework`, `deploy preview`, and guarded
+  `deploy apply`.
 - Generated `web`, `api`, and `db` services with Docker Compose watch.
 - Bun/React/Tailwind browser app with register, login, logout, dashboard, and
   left-sidebar app shell.

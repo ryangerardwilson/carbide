@@ -1,4 +1,6 @@
 .env
 .carbide/
 web/node_modules/
+web/public/
 web/site/
+web/src/tailwind.css

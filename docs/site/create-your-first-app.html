@@ -123,6 +123,7 @@ carbide stop dev</code></pre>
           <ul>
             <li><code>carbide help</code> prints the command reference.</li>
             <li><code>carbide upgrade</code> upgrades the installed CLI when a newer GitHub commit is available.</li>
+            <li><code>carbide project migrate</code> prepares an AI-assisted migration workspace under <code>.carbide/migration/</code>, copies the latest scaffold contract, and writes a brief for an agent to port framework-owned files while preserving app-owned behavior.</li>
             <li><code>carbide new &lt;project-name&gt;</code> creates a new project directory. Human names are accepted: <code>carbide new "My Carbide App"</code> creates <code>my-carbide-app</code>, stores <code>name = "My Carbide App"</code>, and stores <code>slug = "my-carbide-app"</code>.</li>
             <li><code>carbide init</code> initializes the current empty directory.</li>
             <li><code>carbide run dev</code> starts the Docker Compose dev stack, prints the app URL and API URL, then streams logs until <code>Ctrl+C</code> detaches.</li>

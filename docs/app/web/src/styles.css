@@ -2,4 +2,113 @@
 
 @source "./component/**/*.tsx";
 @source "./lib/**/*.ts";
+@source "./main.tsx";
 @source "./server.ts";
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --carbide-page: #ffffff;
+  --carbide-surface: #ffffff;
+  --carbide-surface-soft: #fafafa;
+  --carbide-surface-quiet: #f4f4f5;
+  --carbide-text: #050505;
+  --carbide-muted: #525252;
+  --carbide-subtle: #737373;
+  --carbide-border: color-mix(in srgb, #050505 10%, transparent);
+  --carbide-border-strong: color-mix(in srgb, #050505 22%, transparent);
+  --carbide-action: #050505;
+  --carbide-action-hover: #262626;
+  --carbide-action-soft: #f4f4f5;
+  --carbide-action-strong: #000000;
+  --carbide-danger: #7f1d1d;
+  --carbide-danger-hover: #450a0a;
+  --carbide-danger-soft: #fef2f2;
+  --carbide-danger-text: #7f1d1d;
+  --carbide-success-soft: #f5f5f5;
+  --carbide-success-text: #171717;
+  --carbide-warning-soft: #f5f5f5;
+  --carbide-warning-text: #171717;
+  --carbide-neutral-soft: #f5f5f5;
+  --carbide-neutral-text: #404040;
+  --carbide-hero: #ffffff;
+  --carbide-hero-text: #050505;
+  --carbide-hero-muted: #525252;
+  --carbide-focus: color-mix(in srgb, #050505 18%, transparent);
+  --carbide-shadow-subtle: 0 1px 2px color-mix(in srgb, #050505 8%, transparent);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --carbide-page: #000000;
+  --carbide-surface: #050505;
+  --carbide-surface-soft: #0a0a0a;
+  --carbide-surface-quiet: #111111;
+  --carbide-text: #fafafa;
+  --carbide-muted: #b5b5b5;
+  --carbide-subtle: #8a8a8a;
+  --carbide-border: color-mix(in srgb, #ffffff 12%, transparent);
+  --carbide-border-strong: color-mix(in srgb, #ffffff 24%, transparent);
+  --carbide-action: #ffffff;
+  --carbide-action-hover: #e5e5e5;
+  --carbide-action-soft: #171717;
+  --carbide-action-strong: #ffffff;
+  --carbide-danger: #fecaca;
+  --carbide-danger-hover: #fee2e2;
+  --carbide-danger-soft: color-mix(in srgb, #ffffff 10%, transparent);
+  --carbide-danger-text: #fecaca;
+  --carbide-success-soft: #171717;
+  --carbide-success-text: #f5f5f5;
+  --carbide-warning-soft: #171717;
+  --carbide-warning-text: #f5f5f5;
+  --carbide-neutral-soft: #171717;
+  --carbide-neutral-text: #d4d4d4;
+  --carbide-hero: #000000;
+  --carbide-hero-text: #ffffff;
+  --carbide-hero-muted: #b5b5b5;
+  --carbide-focus: color-mix(in srgb, #ffffff 24%, transparent);
+  --carbide-shadow-subtle: 0 1px 2px color-mix(in srgb, #000000 72%, transparent);
+}
+
+html {
+  background: var(--carbide-page);
+  font-size: 14px;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  line-height: 1.4;
+}
+
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-carbide-page: var(--carbide-page);
+  --color-carbide-surface: var(--carbide-surface);
+  --color-carbide-surface-soft: var(--carbide-surface-soft);
+  --color-carbide-surface-quiet: var(--carbide-surface-quiet);
+  --color-carbide-text: var(--carbide-text);
+  --color-carbide-muted: var(--carbide-muted);
+  --color-carbide-subtle: var(--carbide-subtle);
+  --color-carbide-border: var(--carbide-border);
+  --color-carbide-border-strong: var(--carbide-border-strong);
+  --color-carbide-action: var(--carbide-action);
+  --color-carbide-action-hover: var(--carbide-action-hover);
+  --color-carbide-action-soft: var(--carbide-action-soft);
+  --color-carbide-action-strong: var(--carbide-action-strong);
+  --color-carbide-danger: var(--carbide-danger);
+  --color-carbide-danger-hover: var(--carbide-danger-hover);
+  --color-carbide-danger-soft: var(--carbide-danger-soft);
+  --color-carbide-danger-text: var(--carbide-danger-text);
+  --color-carbide-success-soft: var(--carbide-success-soft);
+  --color-carbide-success-text: var(--carbide-success-text);
+  --color-carbide-warning-soft: var(--carbide-warning-soft);
+  --color-carbide-warning-text: var(--carbide-warning-text);
+  --color-carbide-neutral-soft: var(--carbide-neutral-soft);
+  --color-carbide-neutral-text: var(--carbide-neutral-text);
+  --color-carbide-hero: var(--carbide-hero);
+  --color-carbide-hero-text: var(--carbide-hero-text);
+  --color-carbide-hero-muted: var(--carbide-hero-muted);
+  --color-carbide-focus: var(--carbide-focus);
+  --shadow-carbide-subtle: var(--carbide-shadow-subtle);
+}

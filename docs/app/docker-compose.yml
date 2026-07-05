@@ -18,6 +18,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+    develop:
+      watch:
+        - action: rebuild
+          path: ./web/src
+        - action: rebuild
+          path: ./web/index.html
+        - action: rebuild
+          path: ./web/package.json
+        - action: rebuild
+          path: ./web/bun.lock
+        - action: rebuild
+          path: ./web/tsconfig.json
+        - action: rebuild
+          path: ./web/Dockerfile
+        - action: rebuild
+          path: ../site
     restart: unless-stopped
 
   api:
@@ -35,6 +51,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+    develop:
+      watch:
+        - action: rebuild
+          path: ./api
     restart: unless-stopped
 
   db:
@@ -51,6 +71,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 12
+    develop:
+      watch:
+        - action: rebuild
+          path: ./db/migration
     restart: unless-stopped
 
 volumes:

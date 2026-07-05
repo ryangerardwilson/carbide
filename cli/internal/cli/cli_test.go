@@ -127,8 +127,29 @@ func TestCopyScaffoldSkipsRuntimeDirectory(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(source, ".carbide", "log"), 0755); err != nil {
 		t.Fatalf("MkdirAll .carbide returned %v", err)
 	}
+	if err := os.MkdirAll(filepath.Join(source, "web", "node_modules", "pkg"), 0755); err != nil {
+		t.Fatalf("MkdirAll node_modules returned %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(source, "web", "public"), 0755); err != nil {
+		t.Fatalf("MkdirAll public returned %v", err)
+	}
 	if err := os.WriteFile(filepath.Join(source, ".carbide", "log", "dev.jsonl"), []byte("{}\n"), 0644); err != nil {
 		t.Fatalf("WriteFile dev log returned %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(source, "web", "node_modules", "pkg", "index.js"), []byte("module.exports = {}\n"), 0644); err != nil {
+		t.Fatalf("WriteFile node module returned %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(source, "web", "public", "index.html"), []byte("<html></html>\n"), 0644); err != nil {
+		t.Fatalf("WriteFile public returned %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(source, "web", "src"), 0755); err != nil {
+		t.Fatalf("MkdirAll src returned %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(source, "web", "src", "tailwind.css"), []byte("generated\n"), 0644); err != nil {
+		t.Fatalf("WriteFile tailwind returned %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(source, ".env"), []byte("secret=value\n"), 0644); err != nil {
+		t.Fatalf("WriteFile env returned %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(source, "README.md"), []byte("__PROJECT_NAME__\n"), 0644); err != nil {
 		t.Fatalf("WriteFile README returned %v", err)
@@ -139,6 +160,18 @@ func TestCopyScaffoldSkipsRuntimeDirectory(t *testing.T) {
 	}
 	if isDir(filepath.Join(target, ".carbide")) {
 		t.Fatalf("copyScaffoldPart copied runtime .carbide directory")
+	}
+	if isDir(filepath.Join(target, "web", "node_modules")) {
+		t.Fatalf("copyScaffoldPart copied node_modules")
+	}
+	if isDir(filepath.Join(target, "web", "public")) {
+		t.Fatalf("copyScaffoldPart copied public build output")
+	}
+	if isFile(filepath.Join(target, "web", "src", "tailwind.css")) {
+		t.Fatalf("copyScaffoldPart copied generated tailwind output")
+	}
+	if isFile(filepath.Join(target, ".env")) {
+		t.Fatalf("copyScaffoldPart copied local env")
 	}
 	content, err := os.ReadFile(filepath.Join(target, "README.md"))
 	if err != nil {
@@ -222,6 +255,7 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"  init",
 		"  logs",
 		"  new <project-name>",
+		"  project migrate",
 		"  status",
 		"  upgrade",
 		"  version",
@@ -245,6 +279,7 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"doctor env",
 		"doctor runtime",
 		"doctor framework",
+		"project migrate",
 		"run dev",
 		"stop dev",
 		"follow logs",
@@ -326,6 +361,87 @@ func TestDoctorRejectsLegacyRootDirectory(t *testing.T) {
 		}
 		if !strings.Contains(out.String(), "legacy root dirs: model") {
 			t.Fatalf("doctor output = %q", out.String())
+		}
+	})
+}
+
+func TestDoctorRejectsScaffoldTailwindInputDrift(t *testing.T) {
+	withGeneratedScaffold(t, func(dir string) {
+		stylesPath := filepath.Join(dir, "web", "src", "styles.css")
+		styles, err := os.ReadFile(stylesPath)
+		if err != nil {
+			t.Fatalf("ReadFile returned %v", err)
+		}
+		styles = append(styles, []byte("\n.custom-card { padding: 2rem; }\n")...)
+		if err := os.WriteFile(stylesPath, styles, 0644); err != nil {
+			t.Fatalf("WriteFile returned %v", err)
+		}
+
+		var out bytes.Buffer
+		a := app{stdout: &out}
+		err = a.run([]string{"doctor"})
+		if err == nil {
+			t.Fatalf("doctor should reject drifted scaffold Tailwind input")
+		}
+		if !strings.Contains(out.String(), "scaffold Tailwind input contract") ||
+			!strings.Contains(out.String(), "custom CSS class selectors belong in Tailwind component classes") {
+			t.Fatalf("doctor output = %q", out.String())
+		}
+	})
+}
+
+func TestProjectMigrateCreatesAgentWorkspace(t *testing.T) {
+	repoRoot, err := filepath.Abs(filepath.Join("..", "..", ".."))
+	if err != nil {
+		t.Fatalf("Abs repo root returned %v", err)
+	}
+
+	withGeneratedScaffold(t, func(dir string) {
+		var out bytes.Buffer
+		a := app{home: repoRoot, stdout: &out}
+		if err := a.run([]string{"project", "migrate"}); err != nil {
+			t.Fatalf("project migrate returned %v\n%s", err, out.String())
+		}
+
+		matches, err := filepath.Glob(filepath.Join(dir, ".carbide", "migration", "*"))
+		if err != nil {
+			t.Fatalf("Glob returned %v", err)
+		}
+		if len(matches) != 1 {
+			t.Fatalf("migration dirs = %v, want one", matches)
+		}
+		root := matches[0]
+		brief := filepath.Join(root, "MIGRATION.md")
+		latest := filepath.Join(root, "latest-scaffold")
+		for _, path := range []string{
+			brief,
+			filepath.Join(latest, "carbide.toml"),
+			filepath.Join(latest, "web", "src", "styles.css"),
+			filepath.Join(latest, "web", "src", "main.tsx"),
+		} {
+			if !isFile(path) {
+				t.Fatalf("missing migration artifact %s", path)
+			}
+		}
+		if isDir(filepath.Join(latest, "web", "node_modules")) ||
+			isDir(filepath.Join(latest, "web", "public")) ||
+			isFile(filepath.Join(latest, "web", "src", "tailwind.css")) {
+			t.Fatalf("migration scaffold copied generated web output")
+		}
+		content, err := os.ReadFile(brief)
+		if err != nil {
+			t.Fatalf("ReadFile brief returned %v", err)
+		}
+		got := string(content)
+		for _, want := range []string{
+			"AI-assisted framework upgrade",
+			"latest-scaffold",
+			"carbide doctor",
+			"Preserve app-owned behavior",
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("brief = %q, missing %q", got, want)
+			}
 		}
 	})
 }
@@ -756,7 +872,8 @@ func TestDoctorRejectsDocsTailwindInputDrift(t *testing.T) {
 		if err == nil {
 			t.Fatalf("doctor should reject drifted docs Tailwind input")
 		}
-		if !strings.Contains(out.String(), "docs Tailwind input must contain only import/source directives") {
+		if !strings.Contains(out.String(), "docs Tailwind input contract") ||
+			!strings.Contains(out.String(), "custom CSS class selectors belong in Tailwind component classes") {
 			t.Fatalf("doctor output = %q", out.String())
 		}
 	})

@@ -190,6 +190,9 @@ Future checks:
   through timestamped service-tagged rows after the stack is ready;
 - `carbide status` prints a stable table of services, container names,
   published host ports, internal container ports, and status;
+- `carbide project migrate` creates an agent-assisted migration workspace with
+  a latest-scaffold snapshot and migration brief, without copying generated
+  local artifacts;
 - `carbide doctor` prints a stable table of project-contract checks;
 - `carbide doctor env` validates the generated environment contract without
   printing secret values;

@@ -96,6 +96,14 @@ Prints the command reference.
 
 Upgrades the installed CLI when a newer GitHub commit is available.
 
+### `carbide project migrate`
+
+Prepares an AI-assisted framework migration workspace under
+`.carbide/migration/`. The command copies the latest scaffold contract from the
+installed Carbide checkout and writes a migration brief for an agent to port
+framework-owned files while preserving app-owned API, database, deploy, and
+product behavior.
+
 ### `carbide new <project-name>`
 
 Creates a new project directory from the default starter scaffold. Human names

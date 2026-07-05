@@ -23,12 +23,19 @@ required_files=(
   "docs/app/carbide.toml"
   "docs/app/docker-compose.yml"
   "docs/app/agents.d/TAILWIND_COMPONENTS.md"
+  "docs/app/web/Dockerfile"
   "docs/app/web/bun.lock"
+  "docs/app/web/index.html"
+  "docs/app/web/package.json"
   "docs/app/web/tsconfig.json"
   "docs/app/web/src/build-styles.ts"
+  "docs/app/web/src/main.tsx"
   "docs/app/web/src/server.ts"
   "docs/app/web/src/styles.css"
+  "docs/app/web/src/styles.d.ts"
+  "docs/app/web/src/write-index.ts"
   "docs/app/web/src/lib/cx.ts"
+  "docs/app/web/src/lib/types.ts"
   "docs/app/web/src/component/l1/Text.tsx"
   "docs/app/web/src/component/l1/Surface.tsx"
   "docs/app/web/src/component/l1/index.ts"
@@ -155,6 +162,7 @@ grep -q "carbide doctor" README.md
 grep -q "carbide doctor env" README.md
 grep -q "carbide doctor runtime" README.md
 grep -q "carbide doctor framework" README.md
+grep -q "carbide project migrate" README.md
 grep -q "carbide deploy preview" README.md
 grep -q "carbide deploy apply" README.md
 grep -q "VERSION_POLICY.md" README.md
@@ -346,6 +354,11 @@ grep -q "bg-carbide-hero text-carbide-hero-text" scaffold/web/src/component/l1/t
 ! grep -Eq "#0f766e|#115e59|#2dd4bf|#5eead4|#16433c|#0f302c|#16211b|#edf5ef|#ecfdf5|#166534" scaffold/web/src/styles.css
 ! grep -q "from-carbide-action via-carbide-hero-via" scaffold/web/src/component/l1/tokens.ts
 ! grep -q "theme.css" scaffold/web/src/styles.css
+! grep -Eq '^[[:space:]]*\.[A-Za-z_-]' scaffold/web/src/styles.css
+! grep -Eq '^[[:space:]]*#[A-Za-z_-]' scaffold/web/src/styles.css
+! grep -Eq '@apply|@layer|@keyframes|@media|@container|@plugin|@config' scaffold/web/src/styles.css
+grep -q "scaffoldTailwindInputFindings" cli/internal/cli/cli.go
+grep -q "scaffold Tailwind input contract" cli/internal/cli/cli.go
 grep -F -q "text-2xl/8 sm:text-3xl/9" scaffold/web/src/component/l1/Text.tsx
 grep -F -q "min-h-8 rounded-md border px-2 py-1 text-sm/6" scaffold/web/src/component/l1/Field.tsx
 grep -F -q "md: 'min-h-8 px-3 text-xs'" scaffold/web/src/component/l1/Button.tsx
@@ -530,23 +543,27 @@ grep -q 'versionedAssetPath' docs/app/web/src/server.ts
 grep -F -q '?v=${hash}' docs/app/web/src/server.ts
 grep -q 'assets/intro.js' docs/app/web/src/server.ts
 grep -q 'assets/styles.css' docs/app/web/src/server.ts
-grep -q 'return "no-cache"' docs/app/web/src/server.ts
+grep -q 'servePublicFile' docs/app/web/src/server.ts
+grep -q 'publicRoot' docs/app/web/src/server.ts
+grep -q 'public, max-age=31536000, immutable' docs/app/web/src/server.ts
+grep -q 'return "no-store"' docs/app/web/src/server.ts
 grep -q '@import "tailwindcss";' docs/app/web/src/styles.css
 grep -F -q '@source "./component/**/*.tsx";' docs/app/web/src/styles.css
-expected_docs_styles="$(mktemp)"
-cat > "$expected_docs_styles" <<'CSS'
-@import "tailwindcss";
-
-@source "./component/**/*.tsx";
-@source "./lib/**/*.ts";
-@source "./server.ts";
-CSS
-cmp -s "$expected_docs_styles" docs/app/web/src/styles.css
-rm -f "$expected_docs_styles"
-grep -q "docsTailwindInputContract" cli/internal/cli/cli.go
-grep -q "docs Tailwind input must contain only import/source directives" cli/internal/cli/cli.go
+grep -F -q '@source "./lib/**/*.ts";' docs/app/web/src/styles.css
+grep -F -q '@source "./main.tsx";' docs/app/web/src/styles.css
+grep -F -q '@source "./server.ts";' docs/app/web/src/styles.css
+cmp -s scaffold/web/src/styles.css docs/app/web/src/styles.css
+grep -q "docsTailwindInputFindings" cli/internal/cli/cli.go
+grep -q "docsGeneratedTailwindFindings" cli/internal/cli/cli.go
+grep -q "path: ./web/index.html" docs/app/docker-compose.yml
+grep -q "path: ../site" docs/app/docker-compose.yml
+grep -q "path: ./api" docs/app/docker-compose.yml
+grep -q "path: ./db/migration" docs/app/docker-compose.yml
 ! grep -q "docs-intro-skip" docs/app/web/src/styles.css
 ! grep -q "docs-intro" docs/app/web/src/styles.css
+grep -q '"assets:build"' docs/app/web/package.json
+grep -q '"docs:styles"' docs/app/web/package.json
+grep -q '"build"' docs/app/web/package.json
 grep -q '"tailwind:build"' docs/app/web/package.json
 grep -q '"typecheck": "tsc --noEmit"' docs/app/web/package.json
 grep -q "tailwindcss" docs/app/web/src/build-styles.ts
@@ -562,7 +579,13 @@ grep -q '"strict": true' docs/app/web/tsconfig.json
 grep -q '"jsx": "react-jsx"' docs/app/web/tsconfig.json
 grep -F -q '"types": ["bun-types"]' docs/app/web/tsconfig.json
 grep -q "bun run typecheck" docs/app/web/Dockerfile
-grep -q "bun run tailwind:build" docs/app/web/Dockerfile
+grep -q "bun run assets:build" docs/app/web/Dockerfile
+grep -q "COPY app/web/index.html" docs/app/web/Dockerfile
+grep -q "Carbide Docs | Carbide" docs/app/web/index.html
+grep -q "carbide.theme" docs/app/web/index.html
+grep -q "createRoot" docs/app/web/src/main.tsx
+grep -q "DocsRuntime" docs/app/web/src/main.tsx
+grep -q "asset-manifest.json" docs/app/web/src/write-index.ts
 grep -q "docsClassLayers" docs/app/web/src/component/l1/tokens.ts
 grep -q "docsStaticClassMap" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "rewriteDocsClasses" docs/app/web/src/component/l2/DocsChrome.tsx
@@ -575,10 +598,17 @@ grep -q "fileLineCount" cli/internal/cli/cli.go
 grep -q "component/l1" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "component/l2" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "component/l3" docs/app/agents.d/TAILWIND_COMPONENTS.md
+grep -q "generated scaffold contract" docs/app/agents.d/TAILWIND_COMPONENTS.md
+grep -q "bun run assets:build" docs/app/agents.d/TAILWIND_COMPONENTS.md
+grep -q "generated docs CSS contains custom" docs/app/agents.d/TAILWIND_COMPONENTS.md
+grep -q 'docs-\*' docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
 grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
+grep -q "carbide doctor.*rejects custom selectors" docs/site/frontend-starter-contract.html
+grep -q "component styling belongs in Tailwind utility classes" docs/site/frontend-starter-contract.html
 grep -q "carbide follow logs" docs/site/create-your-first-app.html
 grep -q "carbide status" docs/site/create-your-first-app.html
+grep -q "carbide project migrate" docs/site/create-your-first-app.html
 grep -q "carbide doctor runtime" docs/site/create-your-first-app.html
 grep -q "Install, create, run, register" docs/site/create-your-first-app.html
 grep -q "Single VM" docs/site/deployment.html
@@ -588,6 +618,8 @@ grep -q 'type = "ssh-compose-environment"' docs/site/deployment.html
 grep -q "clustered orchestration is implemented" docs/site/deployment.html
 grep -q "CI/CD regression plan" docs/site/ci-cd-regression-tests.html
 grep -q "carbide doctor framework" docs/site/ci-cd-regression-tests.html
+grep -q "carbide project migrate" docs/site/ci-cd-regression-tests.html
+grep -q "carbide project migrate" docs/site/version-policy.html
 grep -q "Directory Structure" docs/site/repo-structure.html
 grep -q "Generated App Layout" docs/site/repo-structure.html
 grep -q 'carbide new "My Carbide App"' docs/site/repo-structure.html
@@ -595,6 +627,7 @@ grep -q "my-carbide-app/" docs/site/repo-structure.html
 grep -q "web/src/component/l1" docs/site/repo-structure.html
 grep -q "web/src/component/l2" docs/site/repo-structure.html
 grep -q "web/src/component/l3" docs/site/repo-structure.html
+grep -q "minimal .*html.*body.* browser defaults" docs/site/repo-structure.html
 grep -q "web, api, db" docs/site/repo-structure.html
 grep -q "Generated apps do not include root" docs/site/repo-structure.html
 ! grep -q ".github/workflows" docs/site/repo-structure.html

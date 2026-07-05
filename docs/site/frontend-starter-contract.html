@@ -129,6 +129,7 @@
           <h2>Styling</h2>
           <p>The starter uses Tailwind as the required styling path. The web container installs with Bun and builds generated CSS from the checked-in Tailwind input.</p>
           <p><code>styles.css</code> contains the Tailwind import, TypeScript-aware source directives, and a small Tailwind v4 <code>@theme</code> block. <code>tokens.ts</code> contains reusable Tailwind utility groups. The scaffold does not add a parallel <code>theme.css</code> file.</p>
+          <p><code>carbide doctor</code> rejects custom selectors, <code>@apply</code>, <code>@layer</code>, keyframes, media rules, and container rules in <code>styles.css</code>; component styling belongs in Tailwind utility classes and component class layers.</p>
           <p><code>typecheck</code> runs <code>tsc --noEmit</code>. Docker builds run typecheck before building browser assets.</p>
         </section>
 

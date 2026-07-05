@@ -14,5 +14,7 @@ carbide deploy apply de-sci
 The web container is the public entrypoint. It serves `docs/site` and proxies
 `/api` and `/health` to the API container. Its source lives in `web/src`,
 uses Tailwind, and keeps UI implementation boundaries in `component/l1`,
-`component/l2`, and `component/l3`. The API container proves Postgres wiring
-and exposes deploy health checks.
+`component/l2`, and `component/l3`. Its `web/index.html`, `web/src/main.tsx`,
+`web/src/write-index.ts`, and browser asset scripts mirror the generated
+Carbide scaffold. The API container proves Postgres wiring and exposes deploy
+health checks.

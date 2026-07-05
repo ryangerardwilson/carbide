@@ -94,3 +94,7 @@ add `sm:`, `md:`, `lg:`, `xl:`, and `2xl:` variants only as needed.
 - Do not add a parallel `theme.css` file or custom `cb-*` component classes.
 - Use custom CSS only for behavior that utilities cannot express cleanly.
 - Avoid arbitrary values unless the exact value is required by the design.
+- `carbide doctor` must fail when `web/src/styles.css` grows into component
+  CSS. Custom class selectors, ID selectors, `@apply`, `@layer`, keyframes, and
+  media/container rules belong in Tailwind utility classes, component class
+  layers, or a deliberate component abstraction instead.
