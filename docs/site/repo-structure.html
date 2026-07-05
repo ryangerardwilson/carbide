@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Directory Structure | Carbide Documentation</title>
-    <meta name="description" content="The repository and scaffold directory structure for Carbide.">
+    <meta name="description" content="The generated app directory structure for Carbide projects.">
     <link rel="stylesheet" href="assets/styles.css">
     <script src="assets/intro.js" defer></script>
   </head>
@@ -75,139 +75,125 @@
 
         <header class="article-header">
           <h1>Directory Structure</h1>
-          <p class="lead">The repo separates CLI code, generated app scaffolding, tests, automation, and published documentation from the start.</p>
-          <p class="lead">Directory structure is part of the Carbide product contract.</p>
+          <p class="lead">This is the project layout users get after running <code>carbide new "My Carbide App"</code> or <code>carbide init</code>.</p>
+          <p class="lead">The generated app structure is the product contract.</p>
         </header>
 
-        <section id="repository-layout">
-          <h2>Repository Layout</h2>
-          <pre><code>.
-|-- .github/workflows/
-|-- cli/
-|   |-- bin/carbide
-|   |-- cmd/carbide/
+        <section id="generated-layout">
+          <h2>Generated App Layout</h2>
+          <pre><code>my-carbide-app/
+|-- AGENTS.md
+|-- README.md
+|-- .env.example
+|-- .gitignore
+|-- carbide.toml
+|-- docker-compose.yml
+|-- agents.d/
+|   |-- BACKUP_RESTORE.md
+|   |-- DEPLOY.md
+|   |-- ENVIRONMENT.md
+|   `-- TAILWIND_COMPONENTS.md
+|-- api/
+|   |-- Dockerfile
+|   |-- auth.go
 |   |-- go.mod
-|   |-- install.sh
-|   `-- internal/cli/
-|-- docs/engineering/
-|   |-- CI_CD_REGRESSION_TESTS.md
-|   |-- CREATE_YOUR_FIRST_APP.md
-|   |-- DEPLOYMENT.md
-|   |-- DIRECTORY_STRUCTURE.md
-|   |-- FRONTEND_STARTER_CONTRACT.md
-|   `-- VERSION_POLICY.md
-|-- docs/app/
-|   |-- agents.d/
-|   |   `-- TAILWIND_COMPONENTS.md
-|   |-- api/
-|   |-- db/
-|   |-- docker-compose.yml
-|   `-- web/
-|       |-- Dockerfile
-|       |-- bun.lock
-|       |-- package.json
-|       `-- src/
-|           |-- component/
-|           |   |-- l1/
-|           |   |-- l2/
-|           |   `-- l3/
-|           |-- lib/
-|           |-- build-styles.js
-|           |-- server.jsx
-|           `-- styles.css
-|-- docs/site/
-|   |-- assets/
-|   |   `-- styles.css
-|   |-- ci-cd-regression-tests.html
-|   |-- create-your-first-app.html
-|   |-- deployment.html
-|   |-- frontend-starter-contract.html
-|   |-- index.html
-|   |-- repo-structure.html
-|   `-- version-policy.html
-|-- scaffold/
-|   |-- AGENTS.md
-|   |-- README.md
-|   |-- agents.d/
-|   |   |-- BACKUP_RESTORE.md
-|   |   |-- DEPLOY.md
-|   |   |-- ENVIRONMENT.md
-|   |   `-- TAILWIND_COMPONENTS.md
-|   |-- api/
-|   |   |-- Dockerfile
-|   |   |-- go.mod
-|   |   `-- go.sum
-|   |-- carbide.toml
-|   |-- db/
-|   |   |-- go.mod
-|   |   |-- go.sum
-|   |   `-- migration/
-|   |-- docker-compose.yml
-|   `-- web/
-|       |-- Dockerfile
-|       |-- bun.lock
-|       |-- index.html
-|       |-- package.json
-|       `-- src/
-|           |-- component/
-|           |-- lib/
-|           |-- main.jsx
-|           |-- server.jsx
-|           |-- write-index.mjs
-|           `-- styles.css
-|-- tests/contract/
-|-- tests/scaffold/
-|-- tests/smoke/
-`-- README.md</code></pre>
+|   |-- go.sum
+|   |-- main.go
+|   `-- routes.go
+|-- db/
+|   |-- go.mod
+|   |-- go.sum
+|   |-- migration/
+|   |   `-- 001_auth.sql
+|   |-- session.go
+|   `-- user.go
+`-- web/
+    |-- Dockerfile
+    |-- bun.lock
+    |-- index.html
+    |-- package.json
+    `-- src/
+        |-- component/
+        |   |-- l1/
+        |   |   |-- Button.jsx
+        |   |   |-- Field.jsx
+        |   |   |-- Surface.jsx
+        |   |   |-- Text.jsx
+        |   |   |-- ThemeToggle.jsx
+        |   |   |-- index.js
+        |   |   `-- tokens.js
+        |   |-- l2/
+        |   |   |-- AuthForm.jsx
+        |   |   |-- Layouts.jsx
+        |   |   `-- index.js
+        |   `-- l3/
+        |       |-- AuthView.jsx
+        |       |-- DashboardView.jsx
+        |       |-- LoadingView.jsx
+        |       `-- index.js
+        |-- lib/
+        |   `-- cx.js
+        |-- main.jsx
+        |-- server.jsx
+        |-- styles.css
+        `-- write-index.mjs</code></pre>
         </section>
 
-        <section id="ownership">
-          <h2>Ownership</h2>
+        <section id="root-contract">
+          <h2>Root Contract</h2>
           <ul>
-            <li><strong>.github/workflows:</strong> CI and dependency drift checks.</li>
-            <li><strong>cli/bin/carbide:</strong> source checkout launcher for the Go CLI.</li>
-            <li><strong>cli/cmd/carbide:</strong> installable CLI entrypoint.</li>
-            <li><strong>cli/go.mod:</strong> Go module definition for the CLI.</li>
-            <li><strong>cli/internal/cli:</strong> Go implementation of the CLI and its unit tests.</li>
-            <li><strong>docs/engineering:</strong> source-of-truth engineering plans.</li>
-            <li><strong>docs/app:</strong> Carbide app that deploys the documentation site with web, API, and db containers.</li>
-            <li><strong>docs/app/web/src/component/l1, l2, l3:</strong> docs app frontend implementation boundaries; the docs app dogfoods Carbide's Tailwind component contract.</li>
-            <li><strong>docs/app/web/src/styles.css:</strong> Tailwind source for the documentation site; <code>docs/site/assets/styles.css</code> is the generated asset.</li>
-            <li><strong>docs/site:</strong> static documentation site served by the Carbide docs app.</li>
-            <li><strong>scaffold:</strong> generated app source exactly as <code>carbide new</code> and <code>carbide init</code> write it to disk.</li>
-            <li><strong>scaffold root rule:</strong> every generated root directory except <code>agents.d</code> maps to a standalone Docker service: <code>web</code>, <code>api</code>, and <code>db</code>.</li>
-            <li><strong>scaffold/AGENTS.md:</strong> generated agent-facing entrypoint for runtime shape, operating context, and safe default commands.</li>
-            <li><strong>scaffold/api:</strong> generated Go HTTP/API server, auth, routing, session, JSON response code, API module, and API Dockerfile.</li>
-            <li><strong>scaffold/carbide.toml:</strong> generated project metadata, default dev port, environment contract, and deploy guardrails.</li>
-            <li><strong>scaffold/db:</strong> generated Postgres-backed data access code and database module.</li>
-            <li><strong>scaffold/db/migration:</strong> checked-in generated schema state.</li>
-            <li><strong>scaffold/agents.d:</strong> generated operating notes for env, deploy, backup, restore, and Tailwind component organization.</li>
-            <li><strong>scaffold/web:</strong> generated Bun/React/Tailwind web app, browser UI, web container source, and API proxy.</li>
-            <li><strong>scaffold/docker-compose.yml:</strong> generated local Docker Compose infrastructure.</li>
-            <li><strong>scaffold/web/src/component/l1:</strong> generated primitive UI elements and Tailwind utility tokens.</li>
-            <li><strong>scaffold/web/src/component/l2:</strong> generated composed UI patterns such as forms and app layouts.</li>
-            <li><strong>scaffold/web/src/component/l3:</strong> generated auth, dashboard, and loading screens.</li>
-            <li><strong>scaffold/web/src/lib:</strong> generated non-component browser helpers such as the <code>cx()</code> class-name helper.</li>
-            <li><strong>tests/contract:</strong> repository contract checks.</li>
-            <li><strong>tests/scaffold:</strong> generated-project and CLI scaffold checks.</li>
-            <li><strong>tests/smoke:</strong> end-to-end smoke checks that boot generated apps.</li>
-            <li><strong>cli/install.sh:</strong> GitHub URL installer that builds the Go CLI.</li>
+            <li><strong>web, api, db:</strong> each maps to a standalone Docker service.</li>
+            <li><strong>agents.d:</strong> the only non-container root directory; it stores local agent operating context.</li>
+            <li><strong>docker-compose.yml:</strong> local runtime coordination across the three services.</li>
+            <li><strong>carbide.toml:</strong> app name, slug, default dev port, runtime baseline, environment contract, and deploy targets.</li>
+            <li><strong>AGENTS.md:</strong> generated agent-facing entrypoint for runtime shape, operating context, and safe commands.</li>
+            <li><strong>.env.example:</strong> local development variables without real secrets.</li>
+          </ul>
+          <p>Generated apps do not include root <code>src</code>, <code>frontend</code>, <code>backend</code>, <code>model</code>, <code>controller</code>, <code>view</code>, <code>infra</code>, or <code>doc</code> directories.</p>
+        </section>
+
+        <section id="services">
+          <h2>Service Directories</h2>
+          <ul>
+            <li><strong>web:</strong> Bun, React, and Tailwind. It is the public browser entrypoint, serves browser assets, and proxies <code>/api</code> and <code>/health</code> to the API service.</li>
+            <li><strong>api:</strong> Go HTTP/API service. It owns auth, sessions, validation, routing, JSON responses, and the API Dockerfile.</li>
+            <li><strong>db:</strong> Postgres-facing data module. It owns data access helpers and checked-in migration state.</li>
           </ul>
         </section>
 
-        <section id="rules">
-          <h2>Rules</h2>
-          <p>Empty directories are not kept as placeholders. When a directory gains behavior, its first file should make that behavior testable.</p>
-          <p>The framework root intentionally has no placeholder <code>src</code>, <code>infra</code>, or <code>examples</code> directory. Generated apps avoid non-container root directories beside <code>agents.d</code>; shared runtime coordination belongs in <code>docker-compose.yml</code>.</p>
+        <section id="frontend">
+          <h2>Frontend Structure</h2>
+          <ul>
+            <li><strong>web/src/component/l1:</strong> primitives and Tailwind utility tokens.</li>
+            <li><strong>web/src/component/l2:</strong> reusable composed patterns such as forms and layouts.</li>
+            <li><strong>web/src/component/l3:</strong> product screens such as auth, dashboard, and loading states.</li>
+            <li><strong>web/src/lib:</strong> small non-component browser helpers, including <code>cx()</code>.</li>
+            <li><strong>web/src/styles.css:</strong> Tailwind input, theme variables, and global browser rules.</li>
+            <li><strong>web/src/write-index.mjs:</strong> writes the generated app shell with hashed asset references after Bun builds React.</li>
+          </ul>
+          <p>Generated output such as <code>web/public</code>, <code>web/src/tailwind.css</code>, <code>.carbide</code>, and <code>web/node_modules</code> is ignored.</p>
+        </section>
+
+        <section id="agent-context">
+          <h2>Agent Context</h2>
+          <ul>
+            <li><strong>agents.d/ENVIRONMENT.md:</strong> environment and secrets handling.</li>
+            <li><strong>agents.d/DEPLOY.md:</strong> preview-before-apply deploy behavior.</li>
+            <li><strong>agents.d/BACKUP_RESTORE.md:</strong> Postgres backup and restore context.</li>
+            <li><strong>agents.d/TAILWIND_COMPONENTS.md:</strong> Tailwind component organization.</li>
+          </ul>
+          <p>These files are part of the generated app contract because Carbide is built for developer-and-agent workflows.</p>
         </section>
       </main>
 
       <aside class="docs-toc" aria-label="On this page">
         <p class="toc-title">On this page</p>
         <ol class="toc-list">
-          <li><a class="toc-link" href="#repository-layout">Repository Layout</a></li>
-          <li><a class="toc-link" href="#ownership">Ownership</a></li>
-          <li><a class="toc-link" href="#rules">Rules</a></li>
+          <li><a class="toc-link" href="#generated-layout">Generated App Layout</a></li>
+          <li><a class="toc-link" href="#root-contract">Root Contract</a></li>
+          <li><a class="toc-link" href="#services">Service Directories</a></li>
+          <li><a class="toc-link" href="#frontend">Frontend Structure</a></li>
+          <li><a class="toc-link" href="#agent-context">Agent Context</a></li>
         </ol>
       </aside>
     </div>

@@ -523,7 +523,24 @@ grep -q 'type = "ssh-compose-environment"' docs/site/deployment.html
 grep -q "clustered orchestration is implemented" docs/site/deployment.html
 grep -q "CI/CD regression plan" docs/site/ci-cd-regression-tests.html
 grep -q "carbide doctor framework" docs/site/ci-cd-regression-tests.html
-grep -q "Directory structure" docs/site/repo-structure.html
+grep -q "Directory Structure" docs/site/repo-structure.html
+grep -q "Generated App Layout" docs/site/repo-structure.html
+grep -q 'carbide new "My Carbide App"' docs/site/repo-structure.html
+grep -q "my-carbide-app/" docs/site/repo-structure.html
+grep -q "web/src/component/l1" docs/site/repo-structure.html
+grep -q "web/src/component/l2" docs/site/repo-structure.html
+grep -q "web/src/component/l3" docs/site/repo-structure.html
+grep -q "web, api, db" docs/site/repo-structure.html
+grep -q "Generated apps do not include root" docs/site/repo-structure.html
+! grep -q ".github/workflows" docs/site/repo-structure.html
+! grep -q "cli/internal/cli" docs/site/repo-structure.html
+! grep -q "docs/app/" docs/site/repo-structure.html
+grep -q "project layout users get" docs/engineering/DIRECTORY_STRUCTURE.md
+grep -q "my-carbide-app/" docs/engineering/DIRECTORY_STRUCTURE.md
+grep -q "web/src/component/l1/" docs/engineering/DIRECTORY_STRUCTURE.md
+! grep -q ".github/" docs/engineering/DIRECTORY_STRUCTURE.md
+! grep -q "cli/internal" docs/engineering/DIRECTORY_STRUCTURE.md
+! grep -q "docs/app/" docs/engineering/DIRECTORY_STRUCTURE.md
 grep -q 'class="docs-topbar"' docs/site/index.html
 grep -q 'class="docs-sidebar"' docs/site/index.html
 grep -q 'class="docs-content"' docs/site/index.html
