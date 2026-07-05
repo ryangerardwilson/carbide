@@ -1,8 +1,14 @@
+import { existsSync, statSync } from "node:fs";
 import { stat, readFile } from "node:fs/promises";
 import { extname, join, normalize, sep } from "node:path";
+import { docsResponseHeaders } from "./component/l3/index.js";
 
 const port = Number(process.env.PORT || 8080);
-const siteRoot = join(import.meta.dir, "site");
+const siteRootCandidates = [
+  join(import.meta.dir, "..", "..", "..", "site"),
+  join(import.meta.dir, "..", "site"),
+];
+const siteRoot = siteRootCandidates.find((candidate) => existsSync(candidate) && statSync(candidate).isDirectory()) || siteRootCandidates[0];
 const apiURL = process.env.API_URL || "http://api:8080";
 
 const contentTypes = {
@@ -79,10 +85,7 @@ async function serveStatic(pathname) {
       ? "public, max-age=31536000, immutable"
       : "no-cache";
     return new Response(body, {
-      headers: {
-        "cache-control": cache,
-        "content-type": type,
-      },
+      headers: docsResponseHeaders({ cache, type }),
     });
   } catch (error) {
     if (error && error.code === "ENOENT") {

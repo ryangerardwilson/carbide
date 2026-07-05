@@ -1,2 +1,4 @@
 .env
 .carbide/
+web/node_modules/
+web/site/

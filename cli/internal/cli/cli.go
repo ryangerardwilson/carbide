@@ -725,6 +725,12 @@ func doctorRuntimeBaselineContract() doctorResult {
 		"web/Dockerfile": {
 			"FROM " + baselineBunImage,
 		},
+		"web/package.json": {
+			fmt.Sprintf(`"react": "%s"`, baselineReactVersion),
+			fmt.Sprintf(`"react-dom": "%s"`, baselineReactVersion),
+			fmt.Sprintf(`"tailwindcss": "%s"`, baselineTailwindVersion),
+			fmt.Sprintf(`"@tailwindcss/cli": "%s"`, baselineTailwindVersion),
+		},
 		composeFilePath: {
 			"image: " + baselinePostgresImage,
 		},
@@ -733,12 +739,6 @@ func doctorRuntimeBaselineContract() doctorResult {
 		},
 		"db/go.mod": {
 			"go " + baselineGoModuleVersion,
-		},
-		"web/package.json": {
-			fmt.Sprintf(`"react": "%s"`, baselineReactVersion),
-			fmt.Sprintf(`"react-dom": "%s"`, baselineReactVersion),
-			fmt.Sprintf(`"tailwindcss": "%s"`, baselineTailwindVersion),
-			fmt.Sprintf(`"@tailwindcss/cli": "%s"`, baselineTailwindVersion),
 		},
 	}
 	for path, needles := range required {
@@ -1074,6 +1074,12 @@ func doctorDocsRuntimeBaselineContract() doctorResult {
 		"web/Dockerfile": {
 			"FROM " + baselineBunImage,
 		},
+		"web/package.json": {
+			fmt.Sprintf(`"react": "%s"`, baselineReactVersion),
+			fmt.Sprintf(`"react-dom": "%s"`, baselineReactVersion),
+			fmt.Sprintf(`"tailwindcss": "%s"`, baselineTailwindVersion),
+			fmt.Sprintf(`"@tailwindcss/cli": "%s"`, baselineTailwindVersion),
+		},
 		composeFilePath: {
 			"image: " + baselinePostgresImage,
 		},
@@ -1095,6 +1101,9 @@ func doctorDocsRuntimeBaselineContract() doctorResult {
 	}
 	if findings := unsupportedGoDirectiveFindings([]string{"api/go.mod", "db/go.mod"}); len(findings) > 0 {
 		return doctorFail("runtime baseline", "Go directive drift: "+strings.Join(findings, ", "))
+	}
+	if findings := packageVersionRangeFindings("web/package.json"); len(findings) > 0 {
+		return doctorFail("runtime baseline", "package ranges: "+strings.Join(findings, ", "))
 	}
 	return doctorOK("runtime baseline", "docs pinned images")
 }
@@ -1125,21 +1134,43 @@ func doctorDocsWebContract() doctorResult {
 	requiredFiles := []string{
 		"web/Dockerfile",
 		"web/package.json",
-		"web/server.jsx",
+		"web/bun.lock",
+		"web/src/build-styles.js",
+		"web/src/server.jsx",
+		"web/src/styles.css",
+		"web/src/lib/cx.js",
+		"web/src/component/l1/Text.jsx",
+		"web/src/component/l1/Surface.jsx",
+		"web/src/component/l1/index.js",
+		"web/src/component/l1/tokens.js",
+		"web/src/component/l2/DocsChrome.jsx",
+		"web/src/component/l2/index.js",
+		"web/src/component/l3/DocsSite.jsx",
+		"web/src/component/l3/index.js",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
 		return doctorFail("web", "missing "+strings.Join(missing, ", "))
 	}
+	requiredDirs := []string{"web/src/component/l1", "web/src/component/l2", "web/src/component/l3", "web/src/lib"}
+	if missing := missingDirs(requiredDirs); len(missing) > 0 {
+		return doctorFail("web", "missing "+strings.Join(missing, ", "))
+	}
 	required := map[string][]string{
-		"web/Dockerfile": {"COPY site ./site", `CMD ["bun", "server.jsx"]`},
-		"web/server.jsx": {"serveStatic", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`},
+		"web/Dockerfile":                      {"COPY app/web/src ./src", "bun run tailwind:build", `CMD ["bun", "run", "start"]`, "COPY site ./site"},
+		"web/package.json":                    {`"tailwind:build"`, `"@tailwindcss/cli":`, `"react":`, `"react-dom":`, `"tailwindcss":`},
+		"web/src/build-styles.js":             {"tailwindcss", "./src/styles.css", "styles.css"},
+		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.jsx";`},
+		"web/src/server.jsx":                  {"serveStatic", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3/index.js`, "docsResponseHeaders"},
+		"web/src/component/l1/tokens.js":      {"docsClassLayers", "l1:", "l2:", "l3:"},
+		"web/src/component/l2/DocsChrome.jsx": {"docsChromeClassLayers", "docsStaticHeaders"},
+		"web/src/component/l3/DocsSite.jsx":   {"docsSiteClassLayers", "docsWebContract", "docsResponseHeaders"},
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
 			return doctorFail("web", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
-	return doctorOK("web", "Bun static docs")
+	return doctorOK("web", "Bun React Tailwind docs")
 }
 
 func doctorDocsAPIContract() doctorResult {
@@ -1184,15 +1215,17 @@ func doctorDocsAgentsContract() doctorResult {
 		"agents.d/ENVIRONMENT.md",
 		"agents.d/DEPLOY.md",
 		"agents.d/BACKUP_RESTORE.md",
+		"agents.d/TAILWIND_COMPONENTS.md",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
 		return doctorFail("agents", "missing "+strings.Join(missing, ", "))
 	}
 	required := map[string][]string{
-		"AGENTS.md":                  {"carbide doctor", "carbide deploy preview de-sci"},
-		"agents.d/ENVIRONMENT.md":    {"remote `.env`", "POSTGRES_PASSWORD"},
-		"agents.d/DEPLOY.md":         {"preview-before-apply", "ssh-compose"},
-		"agents.d/BACKUP_RESTORE.md": {"Postgres", "carbide_docs_pgdata"},
+		"AGENTS.md":                       {"carbide doctor", "carbide deploy preview de-sci"},
+		"agents.d/ENVIRONMENT.md":         {"remote `.env`", "POSTGRES_PASSWORD"},
+		"agents.d/DEPLOY.md":              {"preview-before-apply", "ssh-compose"},
+		"agents.d/BACKUP_RESTORE.md":      {"Postgres", "carbide_docs_pgdata"},
+		"agents.d/TAILWIND_COMPONENTS.md": {"Tailwind", "component/l1", "component/l2", "component/l3"},
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {

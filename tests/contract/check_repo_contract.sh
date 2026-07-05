@@ -22,7 +22,20 @@ required_files=(
   "docs/engineering/VERSION_POLICY.md"
   "docs/app/carbide.toml"
   "docs/app/docker-compose.yml"
-  "docs/app/web/server.jsx"
+  "docs/app/agents.d/TAILWIND_COMPONENTS.md"
+  "docs/app/web/bun.lock"
+  "docs/app/web/src/build-styles.js"
+  "docs/app/web/src/server.jsx"
+  "docs/app/web/src/styles.css"
+  "docs/app/web/src/lib/cx.js"
+  "docs/app/web/src/component/l1/Text.jsx"
+  "docs/app/web/src/component/l1/Surface.jsx"
+  "docs/app/web/src/component/l1/index.js"
+  "docs/app/web/src/component/l1/tokens.js"
+  "docs/app/web/src/component/l2/DocsChrome.jsx"
+  "docs/app/web/src/component/l2/index.js"
+  "docs/app/web/src/component/l3/DocsSite.jsx"
+  "docs/app/web/src/component/l3/index.js"
   "docs/site/index.html"
   "docs/site/deployment.html"
   "docs/site/frontend-starter-contract.html"
@@ -475,12 +488,28 @@ grep -q 'href="/frontend-starter-contract"' docs/site/index.html
 grep -q 'href="/deployment"' docs/site/index.html
 grep -q 'href="/ci-cd-regression-tests"' docs/site/index.html
 ! grep -R -E 'href="[^"]+\.html' docs/site >/dev/null
-grep -q "canonicalDocsPath" docs/app/web/server.jsx
-grep -q '"/initial-user-experience": "/create-your-first-app"' docs/app/web/server.jsx
-grep -q 'pathname === "/index.html"' docs/app/web/server.jsx
-grep -q 'pathname.endsWith(".html")' docs/app/web/server.jsx
-grep -q "status: 308" docs/app/web/server.jsx
-grep -q 'location: `${pathname}${target.search}`' docs/app/web/server.jsx
+grep -q "canonicalDocsPath" docs/app/web/src/server.jsx
+grep -q '"/initial-user-experience": "/create-your-first-app"' docs/app/web/src/server.jsx
+grep -q 'pathname === "/index.html"' docs/app/web/src/server.jsx
+grep -q 'pathname.endsWith(".html")' docs/app/web/src/server.jsx
+grep -q "status: 308" docs/app/web/src/server.jsx
+grep -q 'location: `${pathname}${target.search}`' docs/app/web/src/server.jsx
+grep -q 'docsResponseHeaders' docs/app/web/src/server.jsx
+grep -q '@import "tailwindcss";' docs/app/web/src/styles.css
+grep -F -q '@source "./component/**/*.jsx";' docs/app/web/src/styles.css
+grep -q '"tailwind:build"' docs/app/web/package.json
+grep -q "tailwindcss" docs/app/web/src/build-styles.js
+grep -q '"@tailwindcss/cli": "4.3.2"' docs/app/web/package.json
+grep -q '"tailwindcss": "4.3.2"' docs/app/web/package.json
+grep -q '"react": "19.2.7"' docs/app/web/package.json
+grep -q '"react-dom": "19.2.7"' docs/app/web/package.json
+grep -q "bun run tailwind:build" docs/app/web/Dockerfile
+grep -q "docsClassLayers" docs/app/web/src/component/l1/tokens.js
+grep -q "docsChromeClassLayers" docs/app/web/src/component/l2/DocsChrome.jsx
+grep -q "docsWebContract" docs/app/web/src/component/l3/DocsSite.jsx
+grep -q "component/l1" docs/app/agents.d/TAILWIND_COMPONENTS.md
+grep -q "component/l2" docs/app/agents.d/TAILWIND_COMPONENTS.md
+grep -q "component/l3" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
 grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
 grep -q "carbide follow logs" docs/site/create-your-first-app.html
@@ -509,7 +538,7 @@ grep -q ".docs-layout" docs/site/assets/styles.css
 grep -q ".docs-sidebar" docs/site/assets/styles.css
 grep -q ".docs-toc" docs/site/assets/styles.css
 grep -q ".docs-topbar" docs/site/assets/styles.css
-grep -q "@media (max-width: 860px)" docs/site/assets/styles.css
+grep -E -q '@media \(max-width: ?860px\)' docs/site/assets/styles.css
 
 for page in docs/site/*.html; do
   grep -q 'class="docs-topbar"' "$page"

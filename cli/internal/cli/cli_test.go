@@ -716,7 +716,7 @@ func TestDoctorPrintsDocsProjectContract(t *testing.T) {
 			"runtime baseline  ok",
 			"env contract      ok",
 			"compose           ok      docs web api db",
-			"web               ok      Bun static docs",
+			"web               ok      Bun React Tailwind docs",
 			"api               ok      docs health API",
 			"database          ok      Postgres deploy checks",
 			"agents            ok      docs agents.d",

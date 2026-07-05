@@ -22,6 +22,28 @@ documentation have clear ownership.
 |           |-- cli.go
 |           `-- cli_test.go
 |-- docs/
+|   |-- app/
+|   |   |-- agents.d/
+|   |   |   |-- BACKUP_RESTORE.md
+|   |   |   |-- DEPLOY.md
+|   |   |   |-- ENVIRONMENT.md
+|   |   |   `-- TAILWIND_COMPONENTS.md
+|   |   |-- api/
+|   |   |-- db/
+|   |   |-- docker-compose.yml
+|   |   `-- web/
+|   |       |-- Dockerfile
+|   |       |-- bun.lock
+|   |       |-- package.json
+|   |       `-- src/
+|   |           |-- component/
+|   |           |   |-- l1/
+|   |           |   |-- l2/
+|   |           |   `-- l3/
+|   |           |-- lib/
+|   |           |-- build-styles.js
+|   |           |-- server.jsx
+|   |           `-- styles.css
 |   |-- engineering/
 |   |   |-- CI_CD_REGRESSION_TESTS.md
 |   |   |-- CREATE_YOUR_FIRST_APP.md
@@ -93,6 +115,13 @@ documentation have clear ownership.
 - `cli/go.mod`: Go module definition for the CLI.
 - `cli/internal/cli/`: Go implementation of the CLI and its unit tests.
 - `docs/engineering/`: source-of-truth engineering plans.
+- `docs/app/`: Carbide app that deploys the documentation site with web, API,
+  and db containers.
+- `docs/app/web/src/component/l1/`, `l2/`, and `l3/`: docs app frontend
+  implementation boundaries; the docs app dogfoods Carbide's Tailwind component
+  contract.
+- `docs/app/web/src/styles.css`: Tailwind source for the documentation site;
+  `docs/site/assets/styles.css` is the generated asset.
 - `docs/site/`: static documentation site served by the Carbide docs app.
 - `scaffold/`: generated app source exactly as `carbide new` and
   `carbide init` write it to disk.

@@ -4,6 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "bun server.jsx"
-  }
+    "dev": "bun run tailwind:build && bun --hot src/server.jsx",
+    "start": "bun src/server.jsx",
+    "tailwind:build": "bun src/build-styles.js"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "4.3.2",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "tailwindcss": "4.3.2"
+  },
+  "devDependencies": {}
 }
