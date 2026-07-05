@@ -1,6 +1,14 @@
 import { docsClassLayers } from "../l1/index.js";
 
+const docsHtmlClass = [
+  "scroll-smooth",
+  "bg-neutral-950",
+  "[color-scheme:dark]",
+  "motion-reduce:scroll-auto",
+].join(" ");
+
 const docsBodyClass = [
+  "min-w-80",
   "bg-neutral-950",
   "font-sans",
   "text-sm",
@@ -342,7 +350,7 @@ export function docsStaticHeaders({ cache, type, contract }) {
 }
 
 export function rewriteDocsClasses(html) {
-  return addBodyClass(html).replace(/class="([^"]*)"/g, (_match, classValue) => {
+  return addDocumentClasses(html).replace(/class="([^"]*)"/g, (_match, classValue) => {
     const classes = classValue
       .split(/\s+/)
       .filter(Boolean)
@@ -352,8 +360,10 @@ export function rewriteDocsClasses(html) {
   });
 }
 
-function addBodyClass(html) {
-  return html.replace("<body>", `<body class="${docsBodyClass}">`);
+function addDocumentClasses(html) {
+  return html
+    .replace("<html lang=\"en\">", `<html lang="en" class="${docsHtmlClass}">`)
+    .replace("<body>", `<body class="${docsBodyClass}">`);
 }
 
 function dedupeClasses(classes) {

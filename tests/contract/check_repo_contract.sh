@@ -515,10 +515,20 @@ grep -q 'assets/styles.css' docs/app/web/src/server.jsx
 grep -q 'return "no-cache"' docs/app/web/src/server.jsx
 grep -q '@import "tailwindcss";' docs/app/web/src/styles.css
 grep -F -q '@source "./component/**/*.jsx";' docs/app/web/src/styles.css
-styles_lines="$(wc -l < docs/app/web/src/styles.css)"
-test "$styles_lines" -le 260
-! grep -E -q '\.(article-header|brand|breadcrumb|callout|docs-content|docs-footer|docs-layout|docs-sidebar|docs-toc|docs-topbar|footer-inner|github-link|lead|nav-|runtime-|search-box|sidebar-nav|skip-link|toc-|topbar-|version-pill)' docs/app/web/src/styles.css
+expected_docs_styles="$(mktemp)"
+cat > "$expected_docs_styles" <<'CSS'
+@import "tailwindcss";
+
+@source "./component/**/*.jsx";
+@source "./lib/**/*.js";
+@source "./server.jsx";
+CSS
+cmp -s "$expected_docs_styles" docs/app/web/src/styles.css
+rm -f "$expected_docs_styles"
+grep -q "docsTailwindInputContract" cli/internal/cli/cli.go
+grep -q "docs Tailwind input must contain only import/source directives" cli/internal/cli/cli.go
 ! grep -q "docs-intro-skip" docs/app/web/src/styles.css
+! grep -q "docs-intro" docs/app/web/src/styles.css
 grep -q '"tailwind:build"' docs/app/web/package.json
 grep -q "tailwindcss" docs/app/web/src/build-styles.js
 grep -q '"@tailwindcss/cli": "4.3.2"' docs/app/web/package.json
@@ -535,7 +545,6 @@ grep -q "docsChromeClassLayers" docs/app/web/src/component/l2/DocsChrome.jsx
 grep -q "docsWebContract" docs/app/web/src/component/l3/DocsSite.jsx
 grep -q "rewriteDocsHtml" docs/app/web/src/component/l3/DocsSite.jsx
 grep -q "fileLineCount" cli/internal/cli/cli.go
-grep -q "parallel docs CSS selectors" cli/internal/cli/cli.go
 grep -q "component/l1" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "component/l2" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "component/l3" docs/app/agents.d/TAILWIND_COMPONENTS.md

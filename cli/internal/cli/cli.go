@@ -1173,37 +1173,18 @@ func doctorDocsWebContract() doctorResult {
 			return doctorFail("web", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
-	if lines := fileLineCount("web/src/styles.css"); lines > 260 {
-		return doctorFail("web", fmt.Sprintf("docs Tailwind input too large: %d lines", lines))
-	}
-	forbiddenSelectors := []string{
-		".article-header",
-		".brand",
-		".breadcrumb",
-		".callout",
-		".docs-content",
-		".docs-footer",
-		".docs-layout",
-		".docs-sidebar",
-		".docs-toc",
-		".docs-topbar",
-		".footer-inner",
-		".github-link",
-		".lead",
-		".nav-",
-		".runtime-",
-		".search-box",
-		".sidebar-nav",
-		".skip-link",
-		".toc-",
-		".topbar-",
-		".version-pill",
-	}
-	if hits := containedNeedles(readFileString("web/src/styles.css"), forbiddenSelectors); len(hits) > 0 {
-		return doctorFail("web", "parallel docs CSS selectors: "+strings.Join(hits, ", "))
+	if strings.TrimSpace(readFileString("web/src/styles.css")) != strings.TrimSpace(docsTailwindInputContract) {
+		return doctorFail("web", "docs Tailwind input must contain only import/source directives")
 	}
 	return doctorOK("web", "Bun React Tailwind docs")
 }
+
+const docsTailwindInputContract = `@import "tailwindcss";
+
+@source "./component/**/*.jsx";
+@source "./lib/**/*.js";
+@source "./server.jsx";
+`
 
 func doctorDocsAPIContract() doctorResult {
 	requiredFiles := []string{

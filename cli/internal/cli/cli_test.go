@@ -729,7 +729,7 @@ func TestDoctorPrintsDocsProjectContract(t *testing.T) {
 	})
 }
 
-func TestDoctorRejectsOversizedDocsTailwindInput(t *testing.T) {
+func TestDoctorRejectsDocsTailwindInputDrift(t *testing.T) {
 	source, err := filepath.Abs(filepath.Join("..", "..", "..", "docs", "app"))
 	if err != nil {
 		t.Fatalf("Abs docs app returned %v", err)
@@ -744,7 +744,7 @@ func TestDoctorRejectsOversizedDocsTailwindInput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadFile returned %v", err)
 	}
-	styles = append(styles, []byte(strings.Repeat("/* layout drift */\n", 120))...)
+	styles = append(styles, []byte("\n.docs-layout { display: grid; }\n")...)
 	if err := os.WriteFile(stylesPath, styles, 0644); err != nil {
 		t.Fatalf("WriteFile returned %v", err)
 	}
@@ -754,9 +754,9 @@ func TestDoctorRejectsOversizedDocsTailwindInput(t *testing.T) {
 		a := app{stdout: &out}
 		err := a.run([]string{"doctor"})
 		if err == nil {
-			t.Fatalf("doctor should reject oversized docs Tailwind input")
+			t.Fatalf("doctor should reject drifted docs Tailwind input")
 		}
-		if !strings.Contains(out.String(), "docs Tailwind input too large") {
+		if !strings.Contains(out.String(), "docs Tailwind input must contain only import/source directives") {
 			t.Fatalf("doctor output = %q", out.String())
 		}
 	})
