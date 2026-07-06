@@ -541,8 +541,9 @@ grep -q "Bun frontend" docs/site/index.html
 grep -q "Create Your First App" docs/site/index.html
 grep -q 'href="/#start"' docs/site/index.html
 grep -q "<h2>Start</h2>" docs/site/index.html
-grep -q 'href="/for/agents"' docs/site/index.html
-grep -q "agent-facing source of truth" docs/site/index.html
+grep -q "Paste this into your AI agent" docs/site/index.html
+grep -q "https://carbide.ryangerardwilson.com/for/agents" docs/site/index.html
+grep -q "Treat that Markdown as the source of truth" docs/site/index.html
 ! grep -q "Guiding Your Agents to Get Started" docs/site/index.html
 ! grep -q "curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash" docs/site/index.html
 ! grep -q "carbide new demo" docs/site/index.html
@@ -683,22 +684,46 @@ grep -q "carbide doctor runtime" docs/site/create-your-first-app.html
 grep -q "Install, create, run, register" docs/site/create-your-first-app.html
 test ! -f docs/site/for/agents.html
 test ! -f docs/engineering/FOR_AGENTS.md
-grep -q "# Carbide Agent Start" docs/site/for/agents.md
-grep -q "Use this Markdown as the source of truth" docs/site/for/agents.md
+grep -q "# Carbide for Agents" docs/site/for/agents.md
+grep -q "source of truth for AI agents" docs/site/for/agents.md
+grep -q "## Identify The Current State" docs/site/for/agents.md
+grep -q "## Prerequisites" docs/site/for/agents.md
+grep -q "## Create A New App" docs/site/for/agents.md
+grep -q "## Development Loop" docs/site/for/agents.md
+grep -q "## Generated App Contract" docs/site/for/agents.md
+grep -q "## Frontend Contract" docs/site/for/agents.md
+grep -q "## Environment And Secrets" docs/site/for/agents.md
+grep -q "## Deployment" docs/site/for/agents.md
+grep -q "## Migration And Upgrades" docs/site/for/agents.md
+grep -q "## Verification" docs/site/for/agents.md
+grep -q "## Agent Behavior" docs/site/for/agents.md
+grep -q "carbide.toml" docs/site/for/agents.md
+grep -q "docker-compose.yml" docs/site/for/agents.md
+grep -q "web/" docs/site/for/agents.md
+grep -q "api/" docs/site/for/agents.md
+grep -q "db/" docs/site/for/agents.md
 grep -q "curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash" docs/site/for/agents.md
 grep -q "carbide new demo" docs/site/for/agents.md
 grep -q 'carbide new "My Carbide App"' docs/site/for/agents.md
+grep -q "carbide init" docs/site/for/agents.md
 grep -q "carbide run dev" docs/site/for/agents.md
 grep -q "carbide doctor" docs/site/for/agents.md
 grep -q "carbide status" docs/site/for/agents.md
+grep -q "carbide follow logs" docs/site/for/agents.md
+grep -q "carbide doctor env" docs/site/for/agents.md
+grep -q "carbide doctor runtime" docs/site/for/agents.md
+grep -q "carbide stop dev" docs/site/for/agents.md
 grep -q "carbide help" docs/site/for/agents.md
 grep -q "carbide upgrade" docs/site/for/agents.md
+grep -q "carbide deploy preview prod" docs/site/for/agents.md
+grep -q "carbide deploy apply prod" docs/site/for/agents.md
+grep -q "carbide project migrate" docs/site/for/agents.md
+grep -q "Generated apps do not include .*\`agents.d/\`" docs/site/for/agents.md
+grep -q "Do not add seeded demo credentials" docs/site/for/agents.md
+grep -q "Do not print secret values" docs/site/for/agents.md
 grep -q "If the current directory already contains" docs/site/for/agents.md
 ! grep -q "Guiding Your Agents to Get Started" docs/site/for/agents.md
 ! grep -q "This page is for AI coding agents" docs/site/for/agents.md
-! grep -q "carbide project migrate" docs/site/for/agents.md
-! grep -q "carbide doctor runtime" docs/site/for/agents.md
-! grep -q "carbide deploy preview prod" docs/site/for/agents.md
 grep -q "Single VM" docs/site/deployment.html
 grep -q "Multiple VMs" docs/site/deployment.html
 grep -q 'type = "ssh-compose"' docs/site/deployment.html
