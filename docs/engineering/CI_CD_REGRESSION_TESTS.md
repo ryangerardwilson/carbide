@@ -16,7 +16,7 @@ Runs on every pull request:
 - documentation site contract checks;
 - generated Docker stack smoke test with registration-first, Postgres-backed
   JSON auth;
-- `carbide doctor` fast project contract checks;
+- `carbide health` fast app-law checks;
 - future API unit, integration, and compatibility checks.
 
 ### Main Branch Gate
@@ -135,8 +135,8 @@ Future checks:
   source, web package/config files, `api/`, `db/`, and
   `api/Dockerfile` changes;
 - generated apps include an env contract in `carbide.toml`, `.env.example`,
-  a `PROJECT.md` product-context file, and an `AGENTS.md` pointer to
-  `/for/agents` with a raw GitHub fallback;
+  a `README.md` app-truth file, and an `AGENTS.md` pointer to `/for/agents`
+  with a raw GitHub fallback;
 - generated frontend structure keeps L1/L2/L3 as class-ownership layers
   reflected in component directories;
 - generated apps include a Bun/React/Tailwind web container, Go API
@@ -147,11 +147,11 @@ Future checks:
 - `/dashboard` and `/` reference content-hashed JS and CSS assets;
 - restart behavior preserves Postgres data;
 - environment contract rejects missing required values;
-- secret values are never printed by `carbide doctor env`;
-- `carbide doctor` verifies generated project shape, env/secrets, Compose,
+- secret values are never printed by `carbide health env`;
+- `carbide health` verifies generated project shape, env/secrets, Compose,
   web/API/db contracts, the `AGENTS.md` pointer, and legacy-regression markers without
   starting containers;
-- `carbide doctor runtime` runs the Docker-backed health/auth/dashboard flow
+- `carbide health runtime` runs the Docker-backed health/auth/dashboard flow
   and stops containers it started;
 - browser-exposed variables cannot be marked secret;
 - framework-owned keys are visible in the contract and protected from casual app
@@ -194,19 +194,17 @@ Future checks:
   through timestamped service-tagged rows after the stack is ready;
 - `carbide status` prints a stable table of services, container names,
   published host ports, internal container ports, and status;
-- `carbide urls json`, `carbide status json`, `carbide doctor json`,
-  `carbide doctor env json`, `carbide doctor runtime json`,
-  `carbide doctor framework json`, and deploy JSON subcommands emit valid,
+- `carbide urls json`, `carbide status json`, `carbide health json`,
+  `carbide health env json`, `carbide health runtime json`,
+  `carbide health framework json`, and deploy JSON subcommands emit valid,
   ANSI-free machine-readable state;
-- `carbide project migrate` creates a manual framework-upgrade workspace with a
-  latest-scaffold snapshot and migration brief, without copying generated local
-  artifacts;
-- `carbide doctor` prints a stable table of project-contract checks;
-- `carbide doctor` verifies `PROJECT.md` exists and is not a competing
-  framework runbook;
-- `carbide doctor env` validates the generated environment contract without
+- `carbide audit` creates a manual audit workspace with a starter-reference
+  snapshot and an audit brief, without copying generated local artifacts or
+  rewriting app code;
+- `carbide health` prints a stable table of app-law checks;
+- `carbide health env` validates the generated environment contract without
   printing secret values;
-- `carbide doctor framework` runs source-repo regressions: shell syntax, Go
+- `carbide health framework` runs source-repo regressions: shell syntax, Go
   CLI tests, repo contract, scaffold checks, and Docker smoke;
 - `carbide deploy preview prod` prints the non-mutating deploy plan;
 - `carbide deploy check prod` prints a non-mutating deploy classifier;
@@ -264,7 +262,7 @@ bash -n tests/contract/check_repo_contract.sh tests/scaffold/cli_scaffold.sh tes
 bash tests/contract/check_repo_contract.sh
 bash tests/scaffold/cli_scaffold.sh
 bash tests/smoke/starter_docker_flow.sh
-carbide doctor framework
+carbide health framework
 ```
 
 This protects the repo, generated starter, Docker dev topology, and

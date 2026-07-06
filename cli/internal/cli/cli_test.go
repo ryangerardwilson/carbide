@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -245,25 +246,25 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"Usage:",
 		"  carbide <command> [arguments]",
 		"Available commands:",
+		"  audit",
 		"  clean dev",
 		"  deploy apply prod",
 		"  deploy check prod",
 		"  deploy check prod json",
 		"  deploy preview prod",
 		"  deploy preview prod json",
-		"  doctor",
-		"  doctor json",
-		"  doctor env",
-		"  doctor env json",
-		"  doctor framework",
-		"  doctor framework json",
-		"  doctor runtime",
-		"  doctor runtime json",
+		"  health",
+		"  health json",
+		"  health env",
+		"  health env json",
+		"  health framework",
+		"  health framework json",
+		"  health runtime",
+		"  health runtime json",
 		"  help",
 		"  init",
 		"  logs",
 		"  new <project-name>",
-		"  project migrate",
 		"  status",
 		"  status json",
 		"  upgrade",
@@ -290,15 +291,15 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"deploy preview prod json",
 		"deploy apply prod",
 		"clean dev",
-		"doctor",
-		"doctor json",
-		"doctor env",
-		"doctor env json",
-		"doctor runtime",
-		"doctor runtime json",
-		"doctor framework",
-		"doctor framework json",
-		"project migrate",
+		"health",
+		"health json",
+		"health env",
+		"health env json",
+		"health runtime",
+		"health runtime json",
+		"health framework",
+		"health framework json",
+		"audit",
 		"run dev",
 		"status json",
 		"stop dev",
@@ -336,41 +337,37 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 	}
 }
 
-func TestDoctorPrintsProjectContract(t *testing.T) {
+func TestHealthPrintsAppLaws(t *testing.T) {
 	withGeneratedScaffold(t, func(dir string) {
 		var out bytes.Buffer
 		a := app{stdout: &out}
-		if err := a.run([]string{"doctor"}); err != nil {
-			t.Fatalf("doctor returned %v\n%s", err, out.String())
+		if err := a.run([]string{"health"}); err != nil {
+			t.Fatalf("health returned %v\n%s", err, out.String())
 		}
 
 		got := out.String()
-		for _, want := range []string{
-			"Carbide doctor",
-			"project contract",
-			"project shape     ok",
-			"runtime baseline  ok",
-			"env contract      ok      0 missing, 2 secrets",
-			"compose           ok      web api db",
-			"frontend          ok      Bun React Tailwind TypeScript",
-			"api               ok      Go HTTP API",
-			"database          ok      Postgres users sessions",
-			"agents            ok      AGENTS.md /for/agents",
-			"product context   ok      PROJECT.md",
-			"regressions       ok      no legacy markers",
-			"runtime           skip    run carbide doctor runtime",
-		} {
-			if !strings.Contains(got, want) {
-				t.Fatalf("doctor output = %q, missing %q", got, want)
+		patterns := []string{
+			`(?m)^Carbide health$`,
+			`(?m)^app laws$`,
+			`(?m)^project shape\s+ok\s+web api db$`,
+			`(?m)^env contract\s+ok\s+0 missing, 2 secrets$`,
+			`(?m)^compose\s+ok\s+web api db$`,
+			`(?m)^agents\s+ok\s+AGENTS.md /for/agents$`,
+			`(?m)^regressions\s+ok\s+no legacy markers$`,
+			`(?m)^runtime\s+skip\s+run carbide health runtime$`,
+		}
+		for _, pattern := range patterns {
+			if !regexp.MustCompile(pattern).MatchString(got) {
+				t.Fatalf("health output = %q, missing /%s/", got, pattern)
 			}
 		}
 		if strings.Contains(got, "postgres://") {
-			t.Fatalf("doctor output printed secret value: %q", got)
+			t.Fatalf("health output printed secret value: %q", got)
 		}
 	})
 }
 
-func TestDoctorRejectsLegacyRootDirectory(t *testing.T) {
+func TestHealthRejectsLegacyRootDirectory(t *testing.T) {
 	withGeneratedScaffold(t, func(dir string) {
 		if err := os.Mkdir("model", 0755); err != nil {
 			t.Fatalf("Mkdir model returned %v", err)
@@ -378,93 +375,17 @@ func TestDoctorRejectsLegacyRootDirectory(t *testing.T) {
 
 		var out bytes.Buffer
 		a := app{stdout: &out}
-		err := a.run([]string{"doctor"})
+		err := a.run([]string{"health"})
 		if err == nil {
-			t.Fatalf("doctor should reject legacy root directory")
+			t.Fatalf("health should reject legacy root directory")
 		}
 		if !strings.Contains(out.String(), "legacy root dirs: model") {
-			t.Fatalf("doctor output = %q", out.String())
+			t.Fatalf("health output = %q", out.String())
 		}
 	})
 }
 
-func TestDoctorRejectsScaffoldTailwindInputDrift(t *testing.T) {
-	withGeneratedScaffold(t, func(dir string) {
-		stylesPath := filepath.Join(dir, "web", "src", "styles.css")
-		styles, err := os.ReadFile(stylesPath)
-		if err != nil {
-			t.Fatalf("ReadFile returned %v", err)
-		}
-		styles = append(styles, []byte("\n.custom-card { padding: 2rem; }\n")...)
-		if err := os.WriteFile(stylesPath, styles, 0644); err != nil {
-			t.Fatalf("WriteFile returned %v", err)
-		}
-
-		var out bytes.Buffer
-		a := app{stdout: &out}
-		err = a.run([]string{"doctor"})
-		if err == nil {
-			t.Fatalf("doctor should reject drifted scaffold Tailwind input")
-		}
-		if !strings.Contains(out.String(), "scaffold Tailwind input contract") ||
-			!strings.Contains(out.String(), "custom CSS class selectors belong in Tailwind component classes") {
-			t.Fatalf("doctor output = %q", out.String())
-		}
-	})
-}
-
-func TestDoctorRejectsGlobalDefaultsInTailwindInput(t *testing.T) {
-	withGeneratedScaffold(t, func(dir string) {
-		stylesPath := filepath.Join(dir, "web", "src", "styles.css")
-		styles, err := os.ReadFile(stylesPath)
-		if err != nil {
-			t.Fatalf("ReadFile returned %v", err)
-		}
-		styles = append(styles, []byte("\nhtml { font-size: 14px; }\nbody { min-width: 320px; line-height: 1.4; }\n")...)
-		if err := os.WriteFile(stylesPath, styles, 0644); err != nil {
-			t.Fatalf("WriteFile returned %v", err)
-		}
-
-		var out bytes.Buffer
-		a := app{stdout: &out}
-		err = a.run([]string{"doctor"})
-		if err == nil {
-			t.Fatalf("doctor should reject global defaults in styles.css")
-		}
-		if !strings.Contains(out.String(), "scaffold Tailwind input contract") ||
-			!strings.Contains(out.String(), "forbidden html {") ||
-			!strings.Contains(out.String(), "forbidden body {") {
-			t.Fatalf("doctor output = %q", out.String())
-		}
-	})
-}
-
-func TestDoctorRejectsGeneratedThemeVariablesInStyles(t *testing.T) {
-	withGeneratedScaffold(t, func(dir string) {
-		stylesPath := filepath.Join(dir, "web", "src", "styles.css")
-		styles, err := os.ReadFile(stylesPath)
-		if err != nil {
-			t.Fatalf("ReadFile returned %v", err)
-		}
-		styles = append(styles, []byte("\n@theme { --color-carbide-page: var(--carbide-page); }\n:root { --carbide-page: #ffffff; }\n")...)
-		if err := os.WriteFile(stylesPath, styles, 0644); err != nil {
-			t.Fatalf("WriteFile returned %v", err)
-		}
-
-		var out bytes.Buffer
-		a := app{stdout: &out}
-		err = a.run([]string{"doctor"})
-		if err == nil {
-			t.Fatalf("doctor should reject generated theme variables in styles.css")
-		}
-		if !strings.Contains(out.String(), "scaffold Tailwind input contract") ||
-			!strings.Contains(out.String(), "forbidden @theme") {
-			t.Fatalf("doctor output = %q", out.String())
-		}
-	})
-}
-
-func TestProjectMigrateCreatesAgentWorkspace(t *testing.T) {
+func TestAuditCreatesAgentWorkspace(t *testing.T) {
 	repoRoot, err := filepath.Abs(filepath.Join("..", "..", ".."))
 	if err != nil {
 		t.Fatalf("Abs repo root returned %v", err)
@@ -473,20 +394,20 @@ func TestProjectMigrateCreatesAgentWorkspace(t *testing.T) {
 	withGeneratedScaffold(t, func(dir string) {
 		var out bytes.Buffer
 		a := app{home: repoRoot, stdout: &out}
-		if err := a.run([]string{"project", "migrate"}); err != nil {
-			t.Fatalf("project migrate returned %v\n%s", err, out.String())
+		if err := a.run([]string{"audit"}); err != nil {
+			t.Fatalf("audit returned %v\n%s", err, out.String())
 		}
 
-		matches, err := filepath.Glob(filepath.Join(dir, ".carbide", "migration", "*"))
+		matches, err := filepath.Glob(filepath.Join(dir, ".carbide", "audit", "*"))
 		if err != nil {
 			t.Fatalf("Glob returned %v", err)
 		}
 		if len(matches) != 1 {
-			t.Fatalf("migration dirs = %v, want one", matches)
+			t.Fatalf("audit dirs = %v, want one", matches)
 		}
 		root := matches[0]
-		brief := filepath.Join(root, "MIGRATION.md")
-		latest := filepath.Join(root, "latest-scaffold")
+		brief := filepath.Join(root, "AUDIT.md")
+		latest := filepath.Join(root, "starter-reference")
 		for _, path := range []string{
 			brief,
 			filepath.Join(latest, "carbide.toml"),
@@ -494,13 +415,13 @@ func TestProjectMigrateCreatesAgentWorkspace(t *testing.T) {
 			filepath.Join(latest, "web", "src", "main.tsx"),
 		} {
 			if !isFile(path) {
-				t.Fatalf("missing migration artifact %s", path)
+				t.Fatalf("missing audit artifact %s", path)
 			}
 		}
 		if isDir(filepath.Join(latest, "web", "node_modules")) ||
 			isDir(filepath.Join(latest, "web", "public")) ||
 			isFile(filepath.Join(latest, "web", "src", "tailwind.css")) {
-			t.Fatalf("migration scaffold copied generated web output")
+			t.Fatalf("audit scaffold copied generated web output")
 		}
 		content, err := os.ReadFile(brief)
 		if err != nil {
@@ -508,12 +429,13 @@ func TestProjectMigrateCreatesAgentWorkspace(t *testing.T) {
 		}
 		got := string(content)
 		for _, want := range []string{
-			"manual framework upgrade",
-			"latest-scaffold",
+			"Carbide Audit",
+			"Current Taste",
+			"starter-reference",
 			"What This Command Created",
-			"carbide doctor",
-			"Preserve app-owned behavior",
-			"Expect manual judgment",
+			"carbide health",
+			"Carbide does not rewrite app code",
+			"Codex may edit app code intentionally",
 		} {
 			if !strings.Contains(got, want) {
 				t.Fatalf("brief = %q, missing %q", got, want)
@@ -522,7 +444,7 @@ func TestProjectMigrateCreatesAgentWorkspace(t *testing.T) {
 	})
 }
 
-func TestDoctorEnvPrintsContractSummary(t *testing.T) {
+func TestHealthEnvPrintsContractSummary(t *testing.T) {
 	withWorkingDir(t, t.TempDir(), func() {
 		config := `name = "demo"
 
@@ -551,13 +473,13 @@ local_default = "Demo"
 
 		var out bytes.Buffer
 		a := app{stdout: &out}
-		if err := a.run([]string{"doctor", "env"}); err != nil {
+		if err := a.run([]string{"health", "env"}); err != nil {
 			t.Fatalf("run returned %v", err)
 		}
 
 		got := out.String()
 		for _, want := range []string{
-			"Carbide doctor",
+			"Carbide health",
 			"environment contract",
 			"contract   carbide.toml",
 			"env        .env not found; local defaults active",
@@ -568,16 +490,16 @@ local_default = "Demo"
 			"framework  1 owned",
 		} {
 			if !strings.Contains(got, want) {
-				t.Fatalf("doctor env output = %q, missing %q", got, want)
+				t.Fatalf("health env output = %q, missing %q", got, want)
 			}
 		}
 		if strings.Contains(got, "postgres://") {
-			t.Fatalf("doctor env output printed secret value: %q", got)
+			t.Fatalf("health env output printed secret value: %q", got)
 		}
 	})
 }
 
-func TestDoctorEnvRejectsMissingRequiredValue(t *testing.T) {
+func TestHealthEnvRejectsMissingRequiredValue(t *testing.T) {
 	withWorkingDir(t, t.TempDir(), func() {
 		config := `name = "demo"
 
@@ -594,15 +516,15 @@ secret = true
 
 		var out bytes.Buffer
 		a := app{stdout: &out}
-		err := a.run([]string{"doctor", "env"})
+		err := a.run([]string{"health", "env"})
 		if err == nil {
-			t.Fatalf("doctor env should reject missing required values")
+			t.Fatalf("health env should reject missing required values")
 		}
 		if !strings.Contains(err.Error(), "missing required value") {
-			t.Fatalf("doctor env error = %v", err)
+			t.Fatalf("health env error = %v", err)
 		}
 		if !strings.Contains(out.String(), "missing  API_SECRET") {
-			t.Fatalf("doctor env output = %q", out.String())
+			t.Fatalf("health env output = %q", out.String())
 		}
 	})
 }
@@ -925,7 +847,7 @@ migration = "once"
 	})
 }
 
-func TestDoctorPrintsDocsProjectContract(t *testing.T) {
+func TestHealthPrintsDocsProjectContract(t *testing.T) {
 	source, err := filepath.Abs(filepath.Join("..", "..", "..", "docs", "app"))
 	if err != nil {
 		t.Fatalf("Abs docs app returned %v", err)
@@ -938,14 +860,14 @@ func TestDoctorPrintsDocsProjectContract(t *testing.T) {
 	withWorkingDir(t, target, func() {
 		var out bytes.Buffer
 		a := app{stdout: &out}
-		if err := a.run([]string{"doctor"}); err != nil {
-			t.Fatalf("doctor returned %v\n%s", err, out.String())
+		if err := a.run([]string{"health"}); err != nil {
+			t.Fatalf("health returned %v\n%s", err, out.String())
 		}
 
 		got := out.String()
 		for _, want := range []string{
-			"Carbide doctor",
-			"project contract",
+			"Carbide health",
+			"app laws",
 			"project shape     ok",
 			"config            ok",
 			"runtime baseline  ok",
@@ -955,16 +877,16 @@ func TestDoctorPrintsDocsProjectContract(t *testing.T) {
 			"api               ok      docs health API",
 			"database          ok      Postgres deploy checks",
 			"agents            ok      docs AGENTS.md /for/agents",
-			"runtime           skip    run carbide doctor runtime",
+			"runtime           skip    run carbide health runtime",
 		} {
 			if !strings.Contains(got, want) {
-				t.Fatalf("doctor output = %q, missing %q", got, want)
+				t.Fatalf("health output = %q, missing %q", got, want)
 			}
 		}
 	})
 }
 
-func TestDoctorRejectsDocsTailwindInputDrift(t *testing.T) {
+func TestHealthRejectsDocsTailwindInputDrift(t *testing.T) {
 	source, err := filepath.Abs(filepath.Join("..", "..", "..", "docs", "app"))
 	if err != nil {
 		t.Fatalf("Abs docs app returned %v", err)
@@ -987,13 +909,13 @@ func TestDoctorRejectsDocsTailwindInputDrift(t *testing.T) {
 	withWorkingDir(t, target, func() {
 		var out bytes.Buffer
 		a := app{stdout: &out}
-		err := a.run([]string{"doctor"})
+		err := a.run([]string{"health"})
 		if err == nil {
-			t.Fatalf("doctor should reject drifted docs Tailwind input")
+			t.Fatalf("health should reject drifted docs Tailwind input")
 		}
 		if !strings.Contains(out.String(), "docs Tailwind input contract") ||
 			!strings.Contains(out.String(), "custom CSS class selectors belong in Tailwind component classes") {
-			t.Fatalf("doctor output = %q", out.String())
+			t.Fatalf("health output = %q", out.String())
 		}
 	})
 }

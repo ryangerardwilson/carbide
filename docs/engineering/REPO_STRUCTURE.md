@@ -14,7 +14,7 @@ The Carbide framework repo root is intentionally small:
 
 ## Ownership
 
-- `cli/`: Go CLI source, installed CLI wrapper, parser, renderer, doctor,
+- `cli/`: Go CLI source, installed CLI wrapper, parser, renderer, health,
   deploy, scaffold copy, logs, and tests.
 - `docs/engineering/`: durable engineering docs.
 - `docs/site/`: checked-in static docs pages served by the docs app.

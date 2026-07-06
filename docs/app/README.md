@@ -13,7 +13,7 @@ Use this app only for the docs runtime and deploy loop:
 
 ```sh
 export CARBIDE_DOCS_DEPLOY_SSH=<ssh-destination>
-carbide doctor
+carbide health
 carbide deploy check prod
 carbide deploy preview prod
 carbide deploy apply prod

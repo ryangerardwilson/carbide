@@ -228,7 +228,7 @@ type jsonCommandReport struct {
 	URLs     *urlsJSONReport     `json:"urls,omitempty"`
 	Env      *envJSONReport      `json:"env,omitempty"`
 	Deploy   *deployJSONReport   `json:"deploy,omitempty"`
-	Checks   []doctorJSONCheck   `json:"checks,omitempty"`
+	Checks   []healthJSONCheck   `json:"checks,omitempty"`
 	Services []serviceJSONReport `json:"services,omitempty"`
 	Errors   []string            `json:"errors,omitempty"`
 	Next     []string            `json:"next,omitempty"`
@@ -256,7 +256,7 @@ type envJSONReport struct {
 	FrameworkOwned  int      `json:"framework_owned"`
 }
 
-type doctorJSONCheck struct {
+type healthJSONCheck struct {
 	Check  string `json:"check"`
 	Status string `json:"status"`
 	Detail string `json:"detail"`
@@ -365,37 +365,42 @@ func (a app) run(args []string) error {
 			return errors.New("usage: carbide init")
 		}
 		return a.commandInit()
-	case "doctor":
+	case "health":
 		if len(args) == 1 {
-			return a.commandDoctor()
+			return a.commandHealth()
 		}
 		if len(args) == 2 && args[1] == "json" {
-			return a.commandDoctorJSON()
+			return a.commandHealthJSON()
 		}
 		if len(args) == 2 && args[1] == "env" {
-			return a.commandDoctorEnv()
+			return a.commandHealthEnv()
 		}
 		if len(args) == 3 && args[1] == "env" && args[2] == "json" {
-			return a.commandDoctorEnvJSON()
+			return a.commandHealthEnvJSON()
 		}
 		if len(args) == 2 && args[1] == "runtime" {
-			return a.commandDoctorRuntime()
+			return a.commandHealthRuntime()
 		}
 		if len(args) == 3 && args[1] == "runtime" && args[2] == "json" {
-			return a.commandDoctorRuntimeJSON()
+			return a.commandHealthRuntimeJSON()
 		}
 		if len(args) == 2 && args[1] == "framework" {
-			return a.commandDoctorFramework()
+			return a.commandHealthFramework()
 		}
 		if len(args) == 3 && args[1] == "framework" && args[2] == "json" {
-			return a.commandDoctorFrameworkJSON()
+			return a.commandHealthFrameworkJSON()
 		}
-		return errors.New("usage: carbide doctor [json|env [json]|runtime [json]|framework [json]]")
+		return errors.New("usage: carbide health [json|env [json]|runtime [json]|framework [json]]")
+	case "audit":
+		if len(args) != 1 {
+			return errors.New("usage: carbide audit")
+		}
+		return a.commandAudit()
 	case "project":
 		if len(args) == 2 && args[1] == "migrate" {
-			return a.commandProjectMigrate()
+			return a.commandAudit()
 		}
-		return errors.New("usage: carbide project migrate")
+		return errors.New("usage: carbide audit")
 	case "deploy":
 		if len(args) == 3 && args[1] == "check" {
 			return a.commandDeployCheck(args[2], false)
@@ -477,25 +482,25 @@ func (a app) printHelp() {
 	r.CommandList([]helpCommandSection{
 		{
 			rows: []outputRow{
+				{"audit", "prepare a starter audit workspace"},
 				{"clean dev", "normalize local dev state"},
 				{"deploy apply prod", "apply production deploy"},
 				{"deploy check prod", "classify deploy target state"},
 				{"deploy check prod json", "classify deploy target as JSON"},
 				{"deploy preview prod", "preview production deploy"},
 				{"deploy preview prod json", "preview production deploy as JSON"},
-				{"doctor", "check project contract"},
-				{"doctor json", "check project contract as JSON"},
-				{"doctor env", "validate env contract"},
-				{"doctor env json", "validate env contract as JSON"},
-				{"doctor framework", "run framework regressions"},
-				{"doctor framework json", "run framework regressions as JSON"},
-				{"doctor runtime", "run Docker runtime checks"},
-				{"doctor runtime json", "run Docker runtime checks as JSON"},
+				{"health", "show law compliance"},
+				{"health json", "show law compliance as JSON"},
+				{"health env", "validate env contract"},
+				{"health env json", "validate env contract as JSON"},
+				{"health framework", "run framework regressions"},
+				{"health framework json", "run framework regressions as JSON"},
+				{"health runtime", "run Docker runtime checks"},
+				{"health runtime json", "run Docker runtime checks as JSON"},
 				{"help", "show this help"},
 				{"init", "init current directory"},
 				{"logs", "query saved logs"},
 				{"new <project-name>", "create project directory"},
-				{"project migrate", "prepare framework upgrade workspace"},
 				{"status", "show containers and ports"},
 				{"status json", "show containers and ports as JSON"},
 				{"upgrade", "upgrade CLI from GitHub"},
@@ -625,9 +630,9 @@ func (a app) commandInit() error {
 	return nil
 }
 
-func (a app) commandProjectMigrate() error {
+func (a app) commandAudit() error {
 	if !isFile(projectConfigPath) {
-		return errors.New("carbide project migrate requires carbide.toml")
+		return errors.New("carbide audit requires carbide.toml")
 	}
 
 	pwd, err := os.Getwd()
@@ -651,50 +656,49 @@ func (a app) commandProjectMigrate() error {
 	}
 
 	id := time.Now().UTC().Format("20060102T150405Z")
-	root := filepath.Join(".carbide", "migration", id)
-	scaffoldTarget := filepath.Join(root, "latest-scaffold")
-	briefPath := filepath.Join(root, "MIGRATION.md")
+	root := filepath.Join(".carbide", "audit", id)
+	scaffoldTarget := filepath.Join(root, "starter-reference")
+	briefPath := filepath.Join(root, "AUDIT.md")
 	if err := os.MkdirAll(root, 0755); err != nil {
 		return err
 	}
 	if err := a.copyScaffold(scaffoldTarget, name, slug); err != nil {
 		return err
 	}
-	if err := os.WriteFile(briefPath, []byte(projectMigrationBrief(pwd, name, slug, scaffoldTarget, a.home)), 0644); err != nil {
+	if err := os.WriteFile(briefPath, []byte(projectAuditBrief(pwd, name, slug, scaffoldTarget, a.home)), 0644); err != nil {
 		return err
 	}
 
 	newRenderer(a.stdout).Message(
-		"Carbide project",
-		"migration workspace",
+		"Carbide audit",
+		"starter workspace",
 		outputRow{"path", root},
-		outputRow{"scaffold", scaffoldTarget},
+		outputRow{"starter", scaffoldTarget},
 		outputRow{"brief", briefPath},
-		outputRow{"mode", "manual porting against latest scaffold"},
-		outputRow{"next", "read MIGRATION.md, port framework files, run carbide doctor"},
+		outputRow{"next", "read AUDIT.md, compare starter-reference, run carbide health"},
 	)
 	return nil
 }
 
-type doctorResult struct {
+type healthResult struct {
 	check  string
 	status string
 	detail string
 }
 
-func (a app) commandDoctor() error {
-	results := a.projectDoctorResults()
-	results = append(results, doctorResult{"runtime", "skip", "run carbide doctor runtime"})
-	return a.renderDoctorResults("project contract", results)
+func (a app) commandHealth() error {
+	results := a.projectHealthResults()
+	results = append(results, healthResult{"runtime", "skip", "run carbide health runtime"})
+	return a.renderHealthResults("app laws", results)
 }
 
-func (a app) commandDoctorJSON() error {
-	results := a.projectDoctorResults()
-	results = append(results, doctorResult{"runtime", "skip", "run carbide doctor runtime"})
-	return a.renderDoctorResultsJSON("doctor", results, []string{"carbide doctor runtime"})
+func (a app) commandHealthJSON() error {
+	results := a.projectHealthResults()
+	results = append(results, healthResult{"runtime", "skip", "run carbide health runtime"})
+	return a.renderHealthResultsJSON("health", results, []string{"carbide health runtime"})
 }
 
-func (a app) commandDoctorEnv() error {
+func (a app) commandHealthEnv() error {
 	if !isFile("carbide.toml") {
 		return errors.New("run this inside a Carbide project")
 	}
@@ -714,7 +718,7 @@ func (a app) commandDoctorEnv() error {
 	}
 
 	r := newRenderer(a.stdout)
-	r.Title("Carbide doctor", "environment contract")
+	r.Title("Carbide health", "environment contract")
 	r.Rows(
 		outputRow{"contract", projectConfigPath},
 		outputRow{"env", envFile},
@@ -736,7 +740,7 @@ func (a app) commandDoctorEnv() error {
 	return nil
 }
 
-func (a app) commandDoctorEnvJSON() error {
+func (a app) commandHealthEnvJSON() error {
 	if !isFile("carbide.toml") {
 		return errors.New("run this inside a Carbide project")
 	}
@@ -747,12 +751,12 @@ func (a app) commandDoctorEnvJSON() error {
 	}
 	env := envJSONFromReport(report)
 	ok := len(report.missingRequired) == 0 && len(report.warnings) == 0
-	out := a.baseJSONReport("doctor env")
+	out := a.baseJSONReport("health env")
 	out.OK = ok
 	out.Env = &env
 	if !ok {
 		out.Errors = append(out.Errors, envProblemDetails(report)...)
-		out.Next = []string{"set missing required values in .env or the deployment secret layer", "carbide doctor env"}
+		out.Next = []string{"set missing required values in .env or the deployment secret layer", "carbide health env"}
 	}
 	if err := a.writeJSON(out); err != nil {
 		return err
@@ -763,62 +767,62 @@ func (a app) commandDoctorEnvJSON() error {
 	return nil
 }
 
-func (a app) commandDoctorRuntime() error {
-	results := a.projectDoctorResults()
-	if doctorFailures(results) > 0 {
-		results = append(results, doctorResult{"runtime", "skip", "fix project contract first"})
-		return a.renderDoctorResults("runtime contract", results)
+func (a app) commandHealthRuntime() error {
+	results := a.projectHealthResults()
+	if healthFailures(results) > 0 {
+		results = append(results, healthResult{"runtime", "skip", "fix app laws first"})
+		return a.renderHealthResults("runtime contract", results)
 	}
 
-	runtimeResults := a.runtimeDoctorResults()
+	runtimeResults := a.runtimeHealthResults()
 	results = append(results, runtimeResults...)
-	return a.renderDoctorResults("runtime contract", results)
+	return a.renderHealthResults("runtime contract", results)
 }
 
-func (a app) commandDoctorRuntimeJSON() error {
-	results := a.projectDoctorResults()
-	if doctorFailures(results) > 0 {
-		results = append(results, doctorResult{"runtime", "skip", "fix project contract first"})
-		return a.renderDoctorResultsJSON("doctor runtime", results, []string{"fix project contract first", "carbide doctor runtime"})
+func (a app) commandHealthRuntimeJSON() error {
+	results := a.projectHealthResults()
+	if healthFailures(results) > 0 {
+		results = append(results, healthResult{"runtime", "skip", "fix app laws first"})
+		return a.renderHealthResultsJSON("health runtime", results, []string{"fix app laws first", "carbide health runtime"})
 	}
 
-	results = append(results, a.runtimeDoctorResults()...)
-	return a.renderDoctorResultsJSON("doctor runtime", results, nil)
+	results = append(results, a.runtimeHealthResults()...)
+	return a.renderHealthResultsJSON("health runtime", results, nil)
 }
 
-func (a app) commandDoctorFramework() error {
-	results := a.frameworkDoctorResults()
-	return a.renderDoctorResults("framework regressions", results)
+func (a app) commandHealthFramework() error {
+	results := a.frameworkHealthResults()
+	return a.renderHealthResults("framework regressions", results)
 }
 
-func (a app) commandDoctorFrameworkJSON() error {
-	results := a.frameworkDoctorResults()
-	return a.renderDoctorResultsJSON("doctor framework", results, nil)
+func (a app) commandHealthFrameworkJSON() error {
+	results := a.frameworkHealthResults()
+	return a.renderHealthResultsJSON("health framework", results, nil)
 }
 
-func (a app) renderDoctorResults(subtitle string, results []doctorResult) error {
+func (a app) renderHealthResults(subtitle string, results []healthResult) error {
 	rows := make([]tableRow, 0, len(results))
 	for _, result := range results {
 		rows = append(rows, tableRow{result.check, result.status, result.detail})
 	}
 
 	r := newRenderer(a.stdout)
-	r.Title("Carbide doctor", subtitle)
+	r.Title("Carbide health", subtitle)
 	r.Table([]string{"check", "status", "detail"}, rows)
 
-	failures := doctorFailures(results)
+	failures := healthFailures(results)
 	if failures > 0 {
-		return fmt.Errorf("doctor found %d failing check(s)", failures)
+		return fmt.Errorf("law compliance has %d failing check(s)", failures)
 	}
 	return nil
 }
 
-func (a app) renderDoctorResultsJSON(command string, results []doctorResult, next []string) error {
-	failures := doctorFailures(results)
+func (a app) renderHealthResultsJSON(command string, results []healthResult, next []string) error {
+	failures := healthFailures(results)
 	report := a.baseJSONReport(command)
 	report.OK = failures == 0
-	report.Checks = doctorJSONChecks(results)
-	report.Errors = doctorFailureDetails(results)
+	report.Checks = healthJSONChecks(results)
+	report.Errors = healthFailureDetails(results)
 	report.Next = next
 	if failures > 0 && len(report.Next) == 0 {
 		report.Next = []string{"fix failing checks", commandWithoutJSON(command)}
@@ -827,15 +831,15 @@ func (a app) renderDoctorResultsJSON(command string, results []doctorResult, nex
 		return err
 	}
 	if failures > 0 {
-		return fmt.Errorf("doctor found %d failing check(s)", failures)
+		return fmt.Errorf("law compliance has %d failing check(s)", failures)
 	}
 	return nil
 }
 
-func doctorJSONChecks(results []doctorResult) []doctorJSONCheck {
-	checks := make([]doctorJSONCheck, 0, len(results))
+func healthJSONChecks(results []healthResult) []healthJSONCheck {
+	checks := make([]healthJSONCheck, 0, len(results))
 	for _, result := range results {
-		checks = append(checks, doctorJSONCheck{
+		checks = append(checks, healthJSONCheck{
 			Check:  result.check,
 			Status: result.status,
 			Detail: result.detail,
@@ -844,7 +848,7 @@ func doctorJSONChecks(results []doctorResult) []doctorJSONCheck {
 	return checks
 }
 
-func doctorFailureDetails(results []doctorResult) []string {
+func healthFailureDetails(results []healthResult) []string {
 	var errors []string
 	for _, result := range results {
 		if result.status == "fail" {
@@ -858,7 +862,7 @@ func commandWithoutJSON(command string) string {
 	return "carbide " + command
 }
 
-func doctorFailures(results []doctorResult) int {
+func healthFailures(results []healthResult) int {
 	count := 0
 	for _, result := range results {
 		if result.status == "fail" {
@@ -868,74 +872,69 @@ func doctorFailures(results []doctorResult) int {
 	return count
 }
 
-func doctorOK(check string, detail string) doctorResult {
-	return doctorResult{check: check, status: "ok", detail: detail}
+func healthOK(check string, detail string) healthResult {
+	return healthResult{check: check, status: "ok", detail: detail}
 }
 
-func doctorFail(check string, detail string) doctorResult {
-	return doctorResult{check: check, status: "fail", detail: detail}
+func healthFail(check string, detail string) healthResult {
+	return healthResult{check: check, status: "fail", detail: detail}
 }
 
-func doctorWarn(check string, detail string) doctorResult {
-	return doctorResult{check: check, status: "warn", detail: detail}
+func healthWarn(check string, detail string) healthResult {
+	return healthResult{check: check, status: "warn", detail: detail}
 }
 
-func doctorSkip(check string, detail string) doctorResult {
-	return doctorResult{check: check, status: "skip", detail: detail}
+func healthSkip(check string, detail string) healthResult {
+	return healthResult{check: check, status: "skip", detail: detail}
 }
 
-func (a app) projectDoctorResults() []doctorResult {
+func (a app) projectHealthResults() []healthResult {
 	if !isFile(projectConfigPath) {
-		return []doctorResult{doctorFail("project", "missing carbide.toml")}
+		return []healthResult{healthFail("project", "missing carbide.toml")}
 	}
 
 	if projectProfile() == "docs" {
-		return []doctorResult{
-			doctorDocsProjectShape(),
-			doctorDocsConfigContract(),
-			doctorDocsRuntimeBaselineContract(),
-			doctorEnvContract(),
-			doctorDocsComposeContract(),
-			doctorDocsWebContract(),
-			doctorDocsAPIContract(),
-			doctorDocsDatabaseContract(),
-			doctorDocsAgentsContract(),
-			doctorForbiddenRegressions("."),
+		return []healthResult{
+			healthDocsProjectShape(),
+			healthDocsConfigContract(),
+			healthDocsRuntimeBaselineContract(),
+			healthEnvContract(),
+			healthDocsComposeContract(),
+			healthDocsWebContract(),
+			healthDocsAPIContract(),
+			healthDocsDatabaseContract(),
+			healthDocsAgentsContract(),
+			healthForbiddenRegressions("."),
 		}
 	}
 
-	return []doctorResult{
-		doctorProjectShape(),
-		doctorConfigContract(),
-		doctorRuntimeBaselineContract(),
-		doctorEnvContract(),
-		doctorComposeContract(),
-		doctorFrontendContract(),
-		doctorAPIContract(),
-		doctorDatabaseContract(),
-		doctorAgentsContract(),
-		doctorProductContextContract(),
-		doctorForbiddenRegressions("."),
+	return []healthResult{
+		healthProjectShape(),
+		healthConfigContract(),
+		healthEnvContract(),
+		healthComposeContract(),
+		healthAgentsContract(),
+		healthForbiddenRegressions("."),
 	}
 }
 
-func doctorProjectShape() doctorResult {
+func healthProjectShape() healthResult {
 	requiredDirs := []string{"web", "api", "db"}
 	if missing := missingDirs(requiredDirs); len(missing) > 0 {
-		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
+		return healthFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
 
-	requiredFiles := []string{projectConfigPath, composeFilePath, "AGENTS.md", "PROJECT.md"}
+	requiredFiles := []string{projectConfigPath, composeFilePath, "AGENTS.md", "README.md"}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
-		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
+		return healthFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
 
 	forbidden := []string{"src", "model", "controller", "view", "views", "frontend", "templates", "include", "infra", "doc"}
 	if found := existingDirs(forbidden); len(found) > 0 {
-		return doctorFail("project shape", "legacy root dirs: "+strings.Join(found, ", "))
+		return healthFail("project shape", "legacy root dirs: "+strings.Join(found, ", "))
 	}
 	if isFile("go.mod") || isFile("go.sum") || isFile("Dockerfile") {
-		return doctorFail("project shape", "root Go/Docker files are not allowed")
+		return healthFail("project shape", "root Go/Docker files are not allowed")
 	}
 
 	services := composeServiceNamesFromFile(composeFilePath)
@@ -950,48 +949,35 @@ func doctorProjectShape() doctorResult {
 	}
 	extras := rootDirsOutsideContract(allowed)
 	if len(extras) > 0 {
-		return doctorFail("project shape", "non-service root dirs: "+strings.Join(extras, ", "))
+		return healthFail("project shape", "non-service root dirs: "+strings.Join(extras, ", "))
 	}
-	return doctorOK("project shape", "web api db")
+	return healthOK("project shape", "web api db")
 }
 
-func doctorConfigContract() doctorResult {
+func healthConfigContract() healthResult {
 	content, err := os.ReadFile(projectConfigPath)
 	if err != nil {
-		return doctorFail("config", err.Error())
+		return healthFail("config", err.Error())
 	}
 	text := string(content)
 	required := []string{
 		"name = ",
 		"slug = ",
-		"carbide_version = ",
 		"[dev]",
 		"default_port = 8080",
 		`database = "postgres"`,
-		"[runtime]",
-		fmt.Sprintf("contract_version = %d", runtimeContractVersion),
-		`policy = "explicit-baseline"`,
-		fmt.Sprintf(`go_module = "%s"`, baselineGoModuleVersion),
-		fmt.Sprintf(`go_builder_image = "%s"`, baselineGoBuilderImage),
-		fmt.Sprintf(`api_runtime_image = "%s"`, baselineAPIRuntimeImage),
-		fmt.Sprintf(`bun_image = "%s"`, baselineBunImage),
-		fmt.Sprintf(`postgres_image = "%s"`, baselinePostgresImage),
-		fmt.Sprintf(`react = "%s"`, baselineReactVersion),
-		fmt.Sprintf(`react_dom = "%s"`, baselineReactVersion),
-		fmt.Sprintf(`tailwindcss = "%s"`, baselineTailwindVersion),
-		fmt.Sprintf(`tailwind_cli = "%s"`, baselineTailwindVersion),
 		"[env]",
 		"contract_version = 1",
 		"[deploy]",
 		"preview_before_apply = true",
 	}
 	if missing := missingNeedles(text, required); len(missing) > 0 {
-		return doctorFail("config", "missing "+strings.Join(missing, ", "))
+		return healthFail("config", "missing "+strings.Join(missing, ", "))
 	}
-	return doctorOK("config", "carbide.toml")
+	return healthOK("config", "carbide.toml")
 }
 
-func doctorRuntimeBaselineContract() doctorResult {
+func healthRuntimeBaselineContract() healthResult {
 	required := map[string][]string{
 		projectConfigPath: {
 			fmt.Sprintf("contract_version = %d", runtimeContractVersion),
@@ -1031,50 +1017,50 @@ func doctorRuntimeBaselineContract() doctorResult {
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
-			return doctorFail("runtime baseline", path+" missing "+strings.Join(missing, ", "))
+			return healthFail("runtime baseline", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
 	if findings := floatingDockerReferences([]string{"api/Dockerfile", "web/Dockerfile", composeFilePath}); len(findings) > 0 {
-		return doctorFail("runtime baseline", "floating Docker refs: "+strings.Join(findings, ", "))
+		return healthFail("runtime baseline", "floating Docker refs: "+strings.Join(findings, ", "))
 	}
 	if findings := packageVersionRangeFindings("web/package.json"); len(findings) > 0 {
-		return doctorFail("runtime baseline", "package ranges: "+strings.Join(findings, ", "))
+		return healthFail("runtime baseline", "package ranges: "+strings.Join(findings, ", "))
 	}
 	if findings := unsupportedGoDirectiveFindings([]string{"api/go.mod", "db/go.mod"}); len(findings) > 0 {
-		return doctorFail("runtime baseline", "Go directive drift: "+strings.Join(findings, ", "))
+		return healthFail("runtime baseline", "Go directive drift: "+strings.Join(findings, ", "))
 	}
-	return doctorOK("runtime baseline", "Go 1.25 React 19.2 Tailwind 4.3 Bun 1.3 Postgres 17")
+	return healthOK("runtime baseline", "Go 1.25 React 19.2 Tailwind 4.3 Bun 1.3 Postgres 17")
 }
 
-func doctorEnvContract() doctorResult {
+func healthEnvContract() healthResult {
 	report, err := inspectEnvContract()
 	if err != nil {
-		return doctorFail("env contract", err.Error())
+		return healthFail("env contract", err.Error())
 	}
 	detail := fmt.Sprintf("%d missing, %d secrets", len(report.missingRequired), report.secretCount)
 	if len(report.missingRequired) > 0 {
-		return doctorFail("env contract", detail)
+		return healthFail("env contract", detail)
 	}
 	if len(report.warnings) > 0 {
-		return doctorFail("env contract", strings.Join(report.warnings, "; "))
+		return healthFail("env contract", strings.Join(report.warnings, "; "))
 	}
-	return doctorOK("env contract", detail)
+	return healthOK("env contract", detail)
 }
 
-func doctorComposeContract() doctorResult {
+func healthComposeContract() healthResult {
 	content, err := os.ReadFile(composeFilePath)
 	if err != nil {
-		return doctorFail("compose", "missing docker-compose.yml")
+		return healthFail("compose", "missing docker-compose.yml")
 	}
 	text := string(content)
 	services := composeServiceNamesFromFile(composeFilePath)
 	for _, service := range []string{"web", "api", "db"} {
 		if !containsString(services, service) {
-			return doctorFail("compose", "missing "+service+" service")
+			return healthFail("compose", "missing "+service+" service")
 		}
 	}
 	if containsString(services, "backend") || containsString(services, "database") {
-		return doctorFail("compose", "legacy service names present")
+		return healthFail("compose", "legacy service names present")
 	}
 	required := []string{
 		"API_URL: http://api:8080",
@@ -1089,12 +1075,12 @@ func doctorComposeContract() doctorResult {
 		"path: ./db",
 	}
 	if missing := missingNeedles(text, required); len(missing) > 0 {
-		return doctorFail("compose", "missing "+strings.Join(missing, ", "))
+		return healthFail("compose", "missing "+strings.Join(missing, ", "))
 	}
-	return doctorOK("compose", "web api db")
+	return healthOK("compose", "web api db")
 }
 
-func doctorFrontendContract() doctorResult {
+func healthFrontendContract() healthResult {
 	requiredFiles := []string{
 		"web/Dockerfile",
 		"web/package.json",
@@ -1121,32 +1107,32 @@ func doctorFrontendContract() doctorResult {
 		"web/src/component/l3/LoadingView.tsx",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
-		return doctorFail("frontend", "missing "+strings.Join(missing, ", "))
+		return healthFail("frontend", "missing "+strings.Join(missing, ", "))
 	}
 	requiredDirs := []string{"web/src/component/l1", "web/src/component/l2", "web/src/component/l3"}
 	if missing := missingDirs(requiredDirs); len(missing) > 0 {
-		return doctorFail("frontend", "missing "+strings.Join(missing, ", "))
+		return healthFail("frontend", "missing "+strings.Join(missing, ", "))
 	}
 	forbiddenFiles := []string{"web/package-lock.json", "web/vite.config.js", "web/src/component/l1/theme.css"}
 	if found := existingFiles(forbiddenFiles); len(found) > 0 {
-		return doctorFail("frontend", "forbidden "+strings.Join(found, ", "))
+		return healthFail("frontend", "forbidden "+strings.Join(found, ", "))
 	}
 	if anyPathWithExtension("web/src", ".jsx") || anyPathWithExtension("web/src", ".js") || anyPathWithExtension("web/src", ".mjs") {
-		return doctorFail("frontend", "frontend source must use TypeScript")
+		return healthFail("frontend", "frontend source must use TypeScript")
 	}
 	if fileContains("web/src/styles.css", "theme.css") ||
 		treeContains("web/src", "cb-") ||
 		treeContains("web/src", "--cb-") {
-		return doctorFail("frontend", "parallel CSS theme detected")
+		return healthFail("frontend", "parallel CSS theme detected")
 	}
 	if findings := scaffoldTailwindInputFindings("web/src/styles.css"); len(findings) > 0 {
-		return doctorFail("frontend", "scaffold Tailwind input contract: "+strings.Join(findings, "; "))
+		return healthFail("frontend", "scaffold Tailwind input contract: "+strings.Join(findings, "; "))
 	}
 	if treeContains("web/src", "carbide-") || treeContains("web/src", "--carbide-") {
-		return doctorFail("frontend", "generated carbide styling hooks detected")
+		return healthFail("frontend", "generated carbide styling hooks detected")
 	}
 	if lines := fileLineCount("web/src/styles.css"); lines > 60 {
-		return doctorFail("frontend", fmt.Sprintf("Tailwind input too large: %d lines", lines))
+		return healthFail("frontend", fmt.Sprintf("Tailwind input too large: %d lines", lines))
 	}
 	if fileContains("web/src/styles.css", "#0f766e") ||
 		fileContains("web/src/styles.css", "#115e59") ||
@@ -1155,7 +1141,7 @@ func doctorFrontendContract() doctorResult {
 		fileContains("web/src/styles.css", "#16433c") ||
 		fileContains("web/src/styles.css", "#0f302c") ||
 		fileContains("web/src/component/l1/tokens.ts", "from-carbide-action via-carbide-hero-via") {
-		return doctorFail("frontend", "green scaffold palette detected")
+		return healthFail("frontend", "green scaffold palette detected")
 	}
 	if fileContains("web/src/component/l2/Layouts.tsx", "text-7xl") ||
 		fileContains("web/src/component/l2/Layouts.tsx", "text-5xl") ||
@@ -1168,13 +1154,13 @@ func doctorFrontendContract() doctorResult {
 		fileContains("web/src/component/l1/Field.tsx", "min-h-12 rounded-md border") ||
 		fileContains("web/src/component/l1/Field.tsx", "min-h-10 rounded-md border") ||
 		treeContains("web/src/component", "font-extrabold") {
-		return doctorFail("frontend", "oversized scaffold density detected")
+		return healthFail("frontend", "oversized scaffold density detected")
 	}
 	if fileContains("web/src/component/l1/ThemeToggle.tsx", "aria-pressed") ||
 		fileContains("web/src/component/l1/ThemeToggle.tsx", `role="group"`) ||
 		fileContains("web/src/component/l1/ThemeToggle.tsx", `<select`) ||
 		fileContains("web/src/component/l1/ThemeToggle.tsx", `appearance-none`) {
-		return doctorFail("frontend", "non-icon theme toggle detected")
+		return healthFail("frontend", "non-icon theme toggle detected")
 	}
 	if !fileContains("web/package.json", `"react":`) ||
 		!fileContains("web/package.json", `"tailwindcss":`) ||
@@ -1226,12 +1212,12 @@ func doctorFrontendContract() doctorResult {
 		!fileContains("web/src/component/l2/Layouts.tsx", `px-3 py-4 sm:px-5 lg:py-5`) ||
 		!fileContains("web/src/component/l2/Layouts.tsx", `ui.scrollbar`) ||
 		!fileContains("web/src/main.tsx", "./component/l3") {
-		return doctorFail("frontend", "React/Bun/Tailwind contract drifted")
+		return healthFail("frontend", "React/Bun/Tailwind contract drifted")
 	}
-	return doctorOK("frontend", "Bun React Tailwind TypeScript")
+	return healthOK("frontend", "Bun React Tailwind TypeScript")
 }
 
-func doctorAPIContract() doctorResult {
+func healthAPIContract() healthResult {
 	requiredFiles := []string{
 		"api/Dockerfile",
 		"api/go.mod",
@@ -1241,10 +1227,10 @@ func doctorAPIContract() doctorResult {
 		"api/routes.go",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
-		return doctorFail("api", "missing "+strings.Join(missing, ", "))
+		return healthFail("api", "missing "+strings.Join(missing, ", "))
 	}
 	if fileContains("api/Dockerfile", "gcc") || fileContains("api/Dockerfile", "libpq-dev") || anyPathWithExtension("api", ".c", ".h") {
-		return doctorFail("api", "legacy C backend artifacts present")
+		return healthFail("api", "legacy C backend artifacts present")
 	}
 	required := map[string][]string{
 		"api/go.mod":     {"module carbideapp/api", "carbideapp/db", "replace carbideapp/db => ../db"},
@@ -1254,13 +1240,13 @@ func doctorAPIContract() doctorResult {
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
-			return doctorFail("api", path+" missing "+strings.Join(missing, ", "))
+			return healthFail("api", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
-	return doctorOK("api", "Go HTTP API")
+	return healthOK("api", "Go HTTP API")
 }
 
-func doctorDatabaseContract() doctorResult {
+func healthDatabaseContract() healthResult {
 	requiredFiles := []string{
 		"db/go.mod",
 		"db/go.sum",
@@ -1269,7 +1255,7 @@ func doctorDatabaseContract() doctorResult {
 		"db/migration/001_auth.sql",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
-		return doctorFail("database", "missing "+strings.Join(missing, ", "))
+		return healthFail("database", "missing "+strings.Join(missing, ", "))
 	}
 	required := map[string][]string{
 		"db/go.mod":                 {"module carbideapp/db", "github.com/jackc/pgx/v5"},
@@ -1279,52 +1265,53 @@ func doctorDatabaseContract() doctorResult {
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
-			return doctorFail("database", path+" missing "+strings.Join(missing, ", "))
+			return healthFail("database", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
-	return doctorOK("database", "Postgres users sessions")
+	return healthOK("database", "Postgres users sessions")
 }
 
-func doctorAgentsContract() doctorResult {
+func healthAgentsContract() healthResult {
 	requiredFiles := []string{
 		"AGENTS.md",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
-		return doctorFail("agents", "missing "+strings.Join(missing, ", "))
+		return healthFail("agents", "missing "+strings.Join(missing, ", "))
 	}
 	required := map[string][]string{
 		"AGENTS.md": {
 			"https://carbide.ryangerardwilson.com/for/agents",
 			"https://raw.githubusercontent.com/ryangerardwilson/carbide/main/docs/site/for/agents.md",
 			"carbide run dev",
-			"carbide doctor",
+			"carbide health",
 			"carbide status",
 			"intentionally does not include `agents.d/`",
-			"PROJECT.md",
+			"README.md",
 		},
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
-			return doctorFail("agents", path+" missing "+strings.Join(missing, ", "))
+			return healthFail("agents", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
-	return doctorOK("agents", "AGENTS.md /for/agents")
+	return healthOK("agents", "AGENTS.md /for/agents")
 }
 
-func doctorProductContextContract() doctorResult {
-	if !isFile("PROJECT.md") {
-		return doctorFail("product context", "missing PROJECT.md")
+func healthAppTruthContract() healthResult {
+	if !isFile("README.md") {
+		return healthFail("app truth", "missing README.md")
 	}
-	content := readFileString("PROJECT.md")
+	content := readFileString("README.md")
 	required := []string{
 		"# ",
 		"## Product Truth",
 		"## Users And Roles",
 		"## Business Rules",
 		"## Acceptance Criteria",
+		"## Upgrade Boundaries",
 	}
 	if missing := missingNeedles(content, required); len(missing) > 0 {
-		return doctorFail("product context", "PROJECT.md missing "+strings.Join(missing, ", "))
+		return healthFail("app truth", "README.md missing "+strings.Join(missing, ", "))
 	}
 	forbidden := []string{
 		"curl -fsSL",
@@ -1334,23 +1321,23 @@ func doctorProductContextContract() doctorResult {
 		"agents.d/",
 	}
 	if found := containedNeedles(content, forbidden); len(found) > 0 {
-		return doctorFail("product context", "PROJECT.md contains framework runbook text: "+strings.Join(found, ", "))
+		return healthFail("app truth", "README.md contains framework install text: "+strings.Join(found, ", "))
 	}
-	return doctorOK("product context", "PROJECT.md")
+	return healthOK("app truth", "README.md")
 }
 
-func doctorDocsProjectShape() doctorResult {
+func healthDocsProjectShape() healthResult {
 	requiredDirs := []string{"web", "api", "db"}
 	if missing := missingDirs(requiredDirs); len(missing) > 0 {
-		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
+		return healthFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
 
 	requiredFiles := []string{projectConfigPath, composeFilePath, "AGENTS.md"}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
-		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
+		return healthFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
 	if isFile("go.mod") || isFile("go.sum") || isFile("Dockerfile") {
-		return doctorFail("project shape", "root Go/Docker files are not allowed")
+		return healthFail("project shape", "root Go/Docker files are not allowed")
 	}
 
 	services := composeServiceNamesFromFile(composeFilePath)
@@ -1360,18 +1347,17 @@ func doctorDocsProjectShape() doctorResult {
 	}
 	extras := rootDirsOutsideContract(allowed)
 	if len(extras) > 0 {
-		return doctorFail("project shape", "non-service root dirs: "+strings.Join(extras, ", "))
+		return healthFail("project shape", "non-service root dirs: "+strings.Join(extras, ", "))
 	}
-	return doctorOK("project shape", "docs web api db")
+	return healthOK("project shape", "docs web api db")
 }
 
-func doctorDocsConfigContract() doctorResult {
+func healthDocsConfigContract() healthResult {
 	content := readFileString(projectConfigPath)
 	required := []string{
 		`name = "Carbide Docs"`,
 		`slug = "carbide-docs"`,
 		`profile = "docs"`,
-		"carbide_version = ",
 		"[dev]",
 		"default_port = 8080",
 		`database = "postgres"`,
@@ -1401,12 +1387,12 @@ func doctorDocsConfigContract() doctorResult {
 		`migration = "once"`,
 	}
 	if missing := missingNeedles(content, required); len(missing) > 0 {
-		return doctorFail("config", "missing "+strings.Join(missing, ", "))
+		return healthFail("config", "missing "+strings.Join(missing, ", "))
 	}
-	return doctorOK("config", "docs deploy target")
+	return healthOK("config", "docs deploy target")
 }
 
-func doctorDocsRuntimeBaselineContract() doctorResult {
+func healthDocsRuntimeBaselineContract() healthResult {
 	required := map[string][]string{
 		projectConfigPath: {
 			fmt.Sprintf("contract_version = %d", runtimeContractVersion),
@@ -1442,27 +1428,27 @@ func doctorDocsRuntimeBaselineContract() doctorResult {
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
-			return doctorFail("runtime baseline", path+" missing "+strings.Join(missing, ", "))
+			return healthFail("runtime baseline", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
 	if findings := floatingDockerReferences([]string{"api/Dockerfile", "web/Dockerfile", composeFilePath}); len(findings) > 0 {
-		return doctorFail("runtime baseline", "floating Docker refs: "+strings.Join(findings, ", "))
+		return healthFail("runtime baseline", "floating Docker refs: "+strings.Join(findings, ", "))
 	}
 	if findings := unsupportedGoDirectiveFindings([]string{"api/go.mod", "db/go.mod"}); len(findings) > 0 {
-		return doctorFail("runtime baseline", "Go directive drift: "+strings.Join(findings, ", "))
+		return healthFail("runtime baseline", "Go directive drift: "+strings.Join(findings, ", "))
 	}
 	if findings := packageVersionRangeFindings("web/package.json"); len(findings) > 0 {
-		return doctorFail("runtime baseline", "package ranges: "+strings.Join(findings, ", "))
+		return healthFail("runtime baseline", "package ranges: "+strings.Join(findings, ", "))
 	}
-	return doctorOK("runtime baseline", "docs pinned images")
+	return healthOK("runtime baseline", "docs pinned images")
 }
 
-func doctorDocsComposeContract() doctorResult {
+func healthDocsComposeContract() healthResult {
 	content := readFileString(composeFilePath)
 	services := composeServiceNamesFromFile(composeFilePath)
 	for _, service := range []string{"web", "api", "db"} {
 		if !containsString(services, service) {
-			return doctorFail("compose", "missing "+service+" service")
+			return healthFail("compose", "missing "+service+" service")
 		}
 	}
 	required := []string{
@@ -1485,12 +1471,12 @@ func doctorDocsComposeContract() doctorResult {
 		"path: ./db/migration",
 	}
 	if missing := missingNeedles(content, required); len(missing) > 0 {
-		return doctorFail("compose", "missing "+strings.Join(missing, ", "))
+		return healthFail("compose", "missing "+strings.Join(missing, ", "))
 	}
-	return doctorOK("compose", "docs web api db")
+	return healthOK("compose", "docs web api db")
 }
 
-func doctorDocsWebContract() doctorResult {
+func healthDocsWebContract() healthResult {
 	requiredFiles := []string{
 		"web/Dockerfile",
 		"web/package.json",
@@ -1515,14 +1501,14 @@ func doctorDocsWebContract() doctorResult {
 		"web/src/component/l3/index.ts",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
-		return doctorFail("web", "missing "+strings.Join(missing, ", "))
+		return healthFail("web", "missing "+strings.Join(missing, ", "))
 	}
 	requiredDirs := []string{"web/src/component/l1", "web/src/component/l2", "web/src/component/l3", "web/src/lib"}
 	if missing := missingDirs(requiredDirs); len(missing) > 0 {
-		return doctorFail("web", "missing "+strings.Join(missing, ", "))
+		return healthFail("web", "missing "+strings.Join(missing, ", "))
 	}
 	if anyPathWithExtension("web/src", ".jsx") || anyPathWithExtension("web/src", ".js") {
-		return doctorFail("web", "docs web source must use TypeScript")
+		return healthFail("web", "docs web source must use TypeScript")
 	}
 	required := map[string][]string{
 		"web/Dockerfile":                      {"COPY app/web/index.html ./", "COPY app/web/src ./src", "bun run typecheck", "bun run assets:build", `CMD ["bun", "run", "start"]`, "COPY site ./site"},
@@ -1540,13 +1526,13 @@ func doctorDocsWebContract() doctorResult {
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
-			return doctorFail("web", path+" missing "+strings.Join(missing, ", "))
+			return healthFail("web", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
 	if findings := docsTailwindInputFindings("web/src/styles.css"); len(findings) > 0 {
-		return doctorFail("web", "docs Tailwind input contract: "+strings.Join(findings, "; "))
+		return healthFail("web", "docs Tailwind input contract: "+strings.Join(findings, "; "))
 	}
-	return doctorOK("web", "Bun React Tailwind TypeScript docs")
+	return healthOK("web", "Bun React Tailwind TypeScript docs")
 }
 
 const scaffoldTailwindInputHeader = `@import "tailwindcss";
@@ -1643,7 +1629,7 @@ func docsGeneratedTailwindFindings(path string) []string {
 	return nil
 }
 
-func doctorDocsAPIContract() doctorResult {
+func healthDocsAPIContract() healthResult {
 	requiredFiles := []string{
 		"api/Dockerfile",
 		"api/go.mod",
@@ -1651,7 +1637,7 @@ func doctorDocsAPIContract() doctorResult {
 		"api/main.go",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
-		return doctorFail("api", "missing "+strings.Join(missing, ", "))
+		return healthFail("api", "missing "+strings.Join(missing, ", "))
 	}
 	required := map[string][]string{
 		"api/go.mod":  {"module carbidedocs/api", "github.com/jackc/pgx/v5"},
@@ -1659,38 +1645,38 @@ func doctorDocsAPIContract() doctorResult {
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
-			return doctorFail("api", path+" missing "+strings.Join(missing, ", "))
+			return healthFail("api", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
-	return doctorOK("api", "docs health API")
+	return healthOK("api", "docs health API")
 }
 
-func doctorDocsDatabaseContract() doctorResult {
+func healthDocsDatabaseContract() healthResult {
 	requiredFiles := []string{
 		"db/go.mod",
 		"db/migration/001_docs.sql",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
-		return doctorFail("database", "missing "+strings.Join(missing, ", "))
+		return healthFail("database", "missing "+strings.Join(missing, ", "))
 	}
 	if !fileContains("db/migration/001_docs.sql", "CREATE TABLE IF NOT EXISTS deploy_checks") {
-		return doctorFail("database", "missing deploy check migration")
+		return healthFail("database", "missing deploy check migration")
 	}
-	return doctorOK("database", "Postgres deploy checks")
+	return healthOK("database", "Postgres deploy checks")
 }
 
-func doctorDocsAgentsContract() doctorResult {
+func healthDocsAgentsContract() healthResult {
 	requiredFiles := []string{
 		"AGENTS.md",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
-		return doctorFail("agents", "missing "+strings.Join(missing, ", "))
+		return healthFail("agents", "missing "+strings.Join(missing, ", "))
 	}
 	required := map[string][]string{
 		"AGENTS.md": {
 			"https://carbide.ryangerardwilson.com/for/agents",
 			"../site/for/agents.md",
-			"carbide doctor",
+			"carbide health",
 			"CARBIDE_DOCS_DEPLOY_SSH",
 			"carbide deploy check prod",
 			"carbide deploy preview prod",
@@ -1700,13 +1686,13 @@ func doctorDocsAgentsContract() doctorResult {
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
-			return doctorFail("agents", path+" missing "+strings.Join(missing, ", "))
+			return healthFail("agents", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
-	return doctorOK("agents", "docs AGENTS.md /for/agents")
+	return healthOK("agents", "docs AGENTS.md /for/agents")
 }
 
-func doctorForbiddenRegressions(root string) doctorResult {
+func healthForbiddenRegressions(root string) healthResult {
 	forbidden := []string{
 		"Sea" + "lion",
 		"sea" + "lion",
@@ -1717,20 +1703,20 @@ func doctorForbiddenRegressions(root string) doctorResult {
 		"respond_view",
 	}
 	if hits := treeContainsAny(root, forbidden); len(hits) > 0 {
-		return doctorFail("regressions", strings.Join(hits, ", "))
+		return healthFail("regressions", strings.Join(hits, ", "))
 	}
-	return doctorOK("regressions", "no legacy markers")
+	return healthOK("regressions", "no legacy markers")
 }
 
-func (a app) runtimeDoctorResults() []doctorResult {
+func (a app) runtimeHealthResults() []healthResult {
 	if !isFile(projectConfigPath) {
-		return []doctorResult{doctorFail("runtime", "run this inside a Carbide project")}
+		return []healthResult{healthFail("runtime", "run this inside a Carbide project")}
 	}
 	profile := projectProfile()
 
 	compose, err := findCompose()
 	if err != nil {
-		return []doctorResult{doctorFail("runtime", err.Error())}
+		return []healthResult{healthFail("runtime", err.Error())}
 	}
 
 	env := setEnv(os.Environ(), "COMPOSE_MENU", "false")
@@ -1745,30 +1731,30 @@ func (a app) runtimeDoctorResults() []doctorResult {
 	} else {
 		selected, err := chooseDevPort(os.Getenv("CARBIDE_HTTP_PORT"))
 		if err != nil {
-			return []doctorResult{doctorFail("runtime", err.Error())}
+			return []healthResult{healthFail("runtime", err.Error())}
 		}
 		port = selected
 		env = setEnv(env, "CARBIDE_HTTP_PORT", strconv.Itoa(port))
 	}
 
-	results := []doctorResult{}
+	results := []healthResult{}
 	if _, err := runComposeCaptured(compose, env, "config"); err != nil {
-		return append(results, doctorFail("compose config", err.Error()))
+		return append(results, healthFail("compose config", err.Error()))
 	}
-	results = append(results, doctorOK("compose config", "valid"))
+	results = append(results, healthOK("compose config", "valid"))
 
-	startedByDoctor := !alreadyRunning
-	if startedByDoctor {
+	startedByHealth := !alreadyRunning
+	if startedByHealth {
 		if err := composeUpDetached(compose, env); err != nil {
-			results = append(results, doctorFail("stack start", err.Error()))
+			results = append(results, healthFail("stack start", err.Error()))
 			return results
 		}
-		results = append(results, doctorOK("stack start", fmt.Sprintf("localhost:%d", port)))
+		results = append(results, healthOK("stack start", fmt.Sprintf("localhost:%d", port)))
 	} else {
-		results = append(results, doctorOK("stack start", "already running"))
+		results = append(results, healthOK("stack start", "already running"))
 	}
 
-	cleanupNeeded := startedByDoctor
+	cleanupNeeded := startedByHealth
 	if cleanupNeeded {
 		defer func() {
 			if cleanupNeeded {
@@ -1779,24 +1765,24 @@ func (a app) runtimeDoctorResults() []doctorResult {
 
 	client := &http.Client{Timeout: 10 * time.Second}
 	if err := waitForHTTP(client, fmt.Sprintf("http://localhost:%d/health", port), 60*time.Second); err != nil {
-		results = append(results, doctorFail("health", err.Error()))
+		results = append(results, healthFail("health", err.Error()))
 		return results
 	}
-	results = append(results, doctorOK("health", "/health"))
+	results = append(results, healthOK("health", "/health"))
 
 	baseURL := fmt.Sprintf("http://localhost:%d", port)
 	if profile == "docs" {
 		if err := httpGetContains(client, baseURL+"/api/version", `"name":"Carbide Docs"`); err != nil {
-			results = append(results, doctorFail("version api", err.Error()))
+			results = append(results, healthFail("version api", err.Error()))
 			return results
 		}
-		results = append(results, doctorOK("version api", "/api/version"))
+		results = append(results, healthOK("version api", "/api/version"))
 
-		if startedByDoctor {
+		if startedByHealth {
 			if err := composeDown(compose, env); err != nil {
-				results = append(results, doctorWarn("cleanup", err.Error()))
+				results = append(results, healthWarn("cleanup", err.Error()))
 			} else {
-				results = append(results, doctorOK("cleanup", "stopped doctor stack"))
+				results = append(results, healthOK("cleanup", "stopped health stack"))
 			}
 			cleanupNeeded = false
 		}
@@ -1805,62 +1791,62 @@ func (a app) runtimeDoctorResults() []doctorResult {
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
-		results = append(results, doctorFail("auth flow", err.Error()))
+		results = append(results, healthFail("auth flow", err.Error()))
 		return results
 	}
 	client.Jar = jar
 	if err := httpGetContains(client, baseURL+"/api/me", `"authenticated":false`); err != nil {
-		results = append(results, doctorFail("anonymous", err.Error()))
+		results = append(results, healthFail("anonymous", err.Error()))
 		return results
 	}
-	results = append(results, doctorOK("anonymous", "/api/me"))
+	results = append(results, healthOK("anonymous", "/api/me"))
 
-	email := fmt.Sprintf("doctor-%d@carbide.local", time.Now().UnixNano())
+	email := fmt.Sprintf("health-%d@carbide.local", time.Now().UnixNano())
 	if err := httpPostFormContains(client, baseURL+"/api/register", url.Values{"email": {email}, "password": {"password"}}, `"ok":true`); err != nil {
-		results = append(results, doctorFail("register", err.Error()))
+		results = append(results, healthFail("register", err.Error()))
 		return results
 	}
-	results = append(results, doctorOK("register", "first-user flow"))
+	results = append(results, healthOK("register", "first-user flow"))
 
 	if err := httpGetContains(client, baseURL+"/api/dashboard", email); err != nil {
-		results = append(results, doctorFail("dashboard api", err.Error()))
+		results = append(results, healthFail("dashboard api", err.Error()))
 		return results
 	}
 	if err := httpGetContains(client, baseURL+"/dashboard", `<div id="root"></div>`); err != nil {
-		results = append(results, doctorFail("dashboard web", err.Error()))
+		results = append(results, healthFail("dashboard web", err.Error()))
 		return results
 	}
-	results = append(results, doctorOK("dashboard", "api and web shell"))
+	results = append(results, healthOK("dashboard", "api and web shell"))
 
 	if err := httpPostFormContains(client, baseURL+"/api/logout", nil, `"ok":true`); err != nil {
-		results = append(results, doctorFail("logout", err.Error()))
+		results = append(results, healthFail("logout", err.Error()))
 		return results
 	}
 	if err := httpGetContains(client, baseURL+"/api/me", `"authenticated":false`); err != nil {
-		results = append(results, doctorFail("logout", err.Error()))
+		results = append(results, healthFail("logout", err.Error()))
 		return results
 	}
-	results = append(results, doctorOK("logout", "session cleared"))
+	results = append(results, healthOK("logout", "session cleared"))
 
-	if startedByDoctor {
+	if startedByHealth {
 		if err := composeDown(compose, env); err != nil {
-			results = append(results, doctorWarn("cleanup", err.Error()))
+			results = append(results, healthWarn("cleanup", err.Error()))
 		} else {
-			results = append(results, doctorOK("cleanup", "stopped doctor stack"))
+			results = append(results, healthOK("cleanup", "stopped health stack"))
 		}
 		cleanupNeeded = false
 	}
 	return results
 }
 
-func (a app) frameworkDoctorResults() []doctorResult {
+func (a app) frameworkHealthResults() []healthResult {
 	root, err := resolveFrameworkRoot(a.home)
 	if err != nil {
-		return []doctorResult{doctorFail("framework", err.Error())}
+		return []healthResult{healthFail("framework", err.Error())}
 	}
-	env, cleanup, err := frameworkDoctorCommandEnv(root)
+	env, cleanup, err := frameworkHealthCommandEnv(root)
 	if err != nil {
-		return []doctorResult{doctorFail("framework", err.Error())}
+		return []healthResult{healthFail("framework", err.Error())}
 	}
 	defer cleanup()
 
@@ -1907,13 +1893,13 @@ func (a app) frameworkDoctorResults() []doctorResult {
 		}},
 	}
 
-	results := make([]doctorResult, 0, len(checks))
+	results := make([]healthResult, 0, len(checks))
 	for _, check := range checks {
 		if err := check.run(); err != nil {
-			results = append(results, doctorFail(check.name, firstLine(err.Error())))
+			results = append(results, healthFail(check.name, firstLine(err.Error())))
 			continue
 		}
-		results = append(results, doctorOK(check.name, "passed"))
+		results = append(results, healthOK(check.name, "passed"))
 	}
 	return results
 }
@@ -2405,7 +2391,7 @@ func runFrameworkGoTests(home string) error {
 	return err
 }
 
-func frameworkDoctorCommandEnv(home string) ([]string, func(), error) {
+func frameworkHealthCommandEnv(home string) ([]string, func(), error) {
 	env := setEnv(os.Environ(), "CARBIDE_HOME", home)
 	if _, err := exec.LookPath("go"); err == nil {
 		return env, func() {}, nil
@@ -2415,7 +2401,7 @@ func frameworkDoctorCommandEnv(home string) ([]string, func(), error) {
 		return nil, func() {}, errors.New("Go is not installed and Docker is unavailable for framework checks")
 	}
 
-	dir, err := os.MkdirTemp("", "carbide-doctor-go-")
+	dir, err := os.MkdirTemp("", "carbide-health-go-")
 	if err != nil {
 		return nil, func() {}, err
 	}
@@ -5394,8 +5380,9 @@ func projectSlug(input string) string {
 }
 
 type projectMetadata struct {
-	name string
-	slug string
+	name    string
+	slug    string
+	profile string
 }
 
 func projectProfile() string {
@@ -5461,6 +5448,8 @@ func readProjectMetadata(path string) (projectMetadata, error) {
 			metadata.name = parseTomlString(value)
 		case "slug":
 			metadata.slug = parseTomlString(value)
+		case "profile":
+			metadata.profile = parseTomlString(value)
 		}
 	}
 	if err := scanner.Err(); err != nil {
@@ -5498,12 +5487,12 @@ func isTemplatePlaceholder(value string) bool {
 	return strings.Contains(value, "__PROJECT_")
 }
 
-func projectMigrationBrief(projectPath string, name string, slug string, scaffoldPath string, home string) string {
-	versionRows := []string{
-		"# Carbide Project Migration",
+func projectAuditBrief(projectPath string, name string, slug string, scaffoldPath string, home string) string {
+	rows := []string{
+		"# Carbide Audit",
 		"",
-		"This workspace is generated by `carbide project migrate` for a manual framework upgrade.",
-		"It is intentionally not a deterministic code rewriter. Use the generated scaffold as the target contract, preserve app-specific behavior, and verify with `carbide doctor`.",
+		"This workspace is generated by `carbide audit`.",
+		"Carbide does not rewrite app code in an existing app. It creates a starter reference and an audit brief so Codex can compare, reason, and edit intentionally when the user asks for changes.",
 		"",
 		"## Project",
 		"",
@@ -5513,30 +5502,47 @@ func projectMigrationBrief(projectPath string, name string, slug string, scaffol
 		fmt.Sprintf("- Current profile: `%s`", projectProfile()),
 		fmt.Sprintf("- Carbide CLI version: `%s`", version),
 		fmt.Sprintf("- Carbide CLI commit: `%s`", displayCommit(home)),
-		fmt.Sprintf("- Latest scaffold: `%s`", scaffoldPath),
+		fmt.Sprintf("- Starter reference: `%s`", scaffoldPath),
+		"",
+		"## Laws",
+		"",
+		"- One app repo with root `web/`, `api/`, and `db/` service directories.",
+		"- Checked-in `carbide.toml`, `docker-compose.yml`, `README.md`, and `AGENTS.md`.",
+		"- Same-origin browser flow: `web -> /api -> api`.",
+		"- Postgres is the required durable database.",
+		"- Deploy stays preview-before-apply.",
+		"- `AGENTS.md` points agents to `/for/agents`.",
+		"- Secrets are never printed in Carbide output, logs, docs, or agent chatter.",
+		"",
+		"## Current Taste",
+		"",
+		"- The starter reference shows Carbide's current preferred stack, file layout details, UI defaults, runtime pins, and starter auth/dashboard shape.",
+		"- Taste can change over time. The laws above should not.",
+		"- The current app owns its own code immediately after scaffold. Carbide never treats existing app files as framework-managed.",
 		"",
 		"## What This Command Created",
 		"",
-		"- `latest-scaffold/`: the newest Carbide scaffold rendered with this app name and slug.",
-		"- `MIGRATION.md`: this migration brief and the expected verification loop.",
+		"- `starter-reference/`: the current Carbide starter rendered with this app name and slug.",
+		"- `AUDIT.md`: this audit brief and the expected comparison loop.",
 		"",
 		"## Agent Instructions",
 		"",
-		"1. Compare the current project to `latest-scaffold/`.",
-		"2. Port framework-owned contracts first: `web/package.json`, `web/Dockerfile`, `web/tsconfig.json`, `web/src/styles.css`, browser asset build scripts, Compose watch paths, runtime baseline, and the `AGENTS.md` pointer to `/for/agents`.",
-		"3. Preserve app-owned behavior: product screens, API routes, database migrations, deploy targets, secrets, data volumes, and externally visible behavior.",
-		"4. Expect manual judgment. This command does not rewrite the current app, move business logic, or merge conflicts for you.",
-		"5. Do not copy generated output such as `node_modules`, `web/public`, `web/src/tailwind.css`, `.carbide`, or local `.env` files.",
-		"6. Run `carbide doctor`, `carbide doctor runtime` when containers are available, and the app-specific build/test commands.",
+		"1. Run `carbide health` first. Fix law failures before adopting any starter taste.",
+		"2. Compare the current project to `starter-reference/`.",
+		"3. Carbide itself never rewrites app files. If the user wants changes, Codex may edit app code intentionally during the audit.",
+		"4. Preserve product truth in `README.md`, local behavior, deploy targets, secrets, and data unless the user explicitly asks to change them.",
+		"5. Expect manual judgment. This command does not merge conflicts, move business logic, or rewrite the current app for you.",
+		"6. Do not copy generated output such as `node_modules`, `web/public`, `web/src/tailwind.css`, `.carbide`, or local `.env` files.",
+		"7. Run `carbide health runtime` when runtime behavior, auth, or containers changed, plus the app-specific build/test commands.",
 		"",
 		"## Suggested Prompt For Codex",
 		"",
 		"```text",
-		"Use .carbide/migration/*/latest-scaffold as the target Carbide framework contract. Compare the current app to that scaffold, port framework-owned files manually, preserve app-specific API, database, deploy, docs, and product behavior, then run carbide doctor and the relevant build/tests.",
+		"Use .carbide/audit/*/starter-reference as the current Carbide starter reference, not as framework-managed truth. Fix any carbide health law failures first. Then compare the app to current Carbide taste, propose intentional changes, and edit app code only when the user wants those changes. Finish by running carbide health and the relevant build/tests.",
 		"```",
 		"",
 	}
-	return strings.Join(versionRows, "\n")
+	return strings.Join(rows, "\n")
 }
 
 func displayCommit(home string) string {

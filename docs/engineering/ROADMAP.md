@@ -6,9 +6,9 @@ evaluation and first use.
 ## Current Baseline
 
 - Source install from `cli/install.sh`.
-- Compiled Go CLI with `new`, `init`, `project migrate`, `run dev`, `status`,
-  `stop dev`, `follow logs`, `logs`, `doctor`, `doctor env`,
-  `doctor runtime`, `doctor framework`, `deploy preview`, and guarded
+- Compiled Go CLI with `new`, `init`, `audit`, `run dev`, `status`,
+  `stop dev`, `follow logs`, `logs`, `health`, `health env`,
+  `health runtime`, `health framework`, `deploy preview`, and guarded
   `deploy apply`.
 - Generated `web`, `api`, and `db` services with Docker Compose watch.
 - Bun/React/Tailwind browser app with register, login, logout, dashboard, and
@@ -17,7 +17,7 @@ evaluation and first use.
 - Environment/secrets contract in `carbide.toml`.
 - Generated `AGENTS.md` pointer to `/for/agents`.
 - Queryable structured dev logs in `.carbide/log/dev.jsonl`.
-- Fast project doctor and Docker-backed runtime doctor.
+- Fast project health and Docker-backed runtime health.
 - CI coverage for shell syntax, Go CLI tests, repo contract, scaffold checks,
   and generated Docker smoke flow.
 

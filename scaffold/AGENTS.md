@@ -17,20 +17,23 @@ local agent runbook that competes with `/for/agents`.
 
 ## App Truth
 
-- `PROJECT.md` owns app-specific product facts, user roles, business rules, and
-  acceptance criteria. Do not put framework setup instructions there.
-- `README.md` explains the local development loop.
-- `carbide.toml` owns app identity, default port, env contract, runtime
-  baseline, and deploy targets.
+- `README.md` owns app-specific product facts, user roles, business rules,
+  acceptance criteria, and app-specific decisions.
+- `carbide.toml` owns app identity, default port, env contract, current
+  starter runtime defaults, and deploy targets.
 - `docker-compose.yml` owns local service orchestration.
 - `web/`, `api/`, and `db/` are the root Docker service directories.
+
+Carbide itself never rewrites existing app code. If an audit leads to app-code
+changes, those are intentional Codex edits inside the app.
 
 ## Safe Commands
 
 ```sh
 carbide run dev
-carbide doctor
+carbide health
 carbide status
+carbide audit
 ```
 
 Run `carbide help` for the full CLI reference. Run `carbide upgrade` when the

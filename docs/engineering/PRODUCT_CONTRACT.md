@@ -41,7 +41,7 @@ Use direct product language. Prefer concrete nouns:
 - web/API/db containers
 - Postgres-only
 - infrastructure as code
-- `carbide doctor`
+- `carbide health`
 
 Avoid vague positioning like "Laravel-inspired" as the lead idea. Laravel can
 remain context in docs when useful, but it is not the current product thesis.

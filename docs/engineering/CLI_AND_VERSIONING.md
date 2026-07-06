@@ -31,7 +31,7 @@ Use subject/action/object style where possible:
 - `carbide run dev`
 - `carbide stop dev`
 - `carbide follow logs`
-- `carbide project migrate`
+- `carbide audit`
 
 Do not add user-facing dash-flag aliases for core actions. `help`, `version`,
 and `upgrade` are commands, not options.
@@ -41,10 +41,10 @@ Machine-readable output uses command-shaped JSON subcommands, not dash flags:
 ```sh
 carbide urls json
 carbide status json
-carbide doctor json
-carbide doctor env json
-carbide doctor runtime json
-carbide doctor framework json
+carbide health json
+carbide health env json
+carbide health runtime json
+carbide health framework json
 carbide deploy check prod json
 carbide deploy preview prod json
 ```

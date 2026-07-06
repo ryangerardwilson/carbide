@@ -11,6 +11,8 @@ Framework repo work uses this file plus the narrow engineering contract under
 operating guide.
 
 - Product promise and README boundary: `docs/engineering/PRODUCT_CONTRACT.md`
+- Eternal product laws: `docs/engineering/LAWS.md`
+- Current starter taste: `docs/engineering/TASTE_GUIDE.md`
 - Repo layout and ownership: `docs/engineering/REPO_STRUCTURE.md`
 - CLI and versioning rules: `docs/engineering/CLI_AND_VERSIONING.md`
 - Generated app contract: `docs/engineering/SCAFFOLD_CONTRACT.md`
@@ -29,7 +31,10 @@ Its checked-in source is `docs/site/for/agents.md`.
 
 Generated app `AGENTS.md` files should point to that route. The framework repo
 root `AGENTS.md` should not be replaced by, or reduced to, the generated-app
-agent startup guide.
+agent startup guide. In generated apps, `README.md` owns app-specific truth;
+`/for/agents` owns framework guidance. Carbide itself never rewrites existing
+app code; when an audit leads to app-code changes, those are Codex edits made
+intentionally inside the app, not framework-owned rewrites.
 
 ## Hard Rules
 
@@ -57,7 +62,7 @@ shipping contract changes:
 cd cli && go test ./...
 bash tests/contract/check_repo_contract.sh
 PATH=/home/ryan/.local/share/mise/installs/go/1.26.4/bin:$PATH bash tests/scaffold/cli_scaffold.sh
-carbide doctor framework
+carbide health framework
 ```
 
 For docs app changes:

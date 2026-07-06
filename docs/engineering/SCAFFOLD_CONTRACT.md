@@ -10,21 +10,27 @@ Generated app root:
 ```text
 .
 |-- AGENTS.md
-|-- PROJECT.md
+|-- README.md
 |-- api/
 |-- db/
 |-- web/
 |-- carbide.toml
 |-- docker-compose.yml
-`-- README.md
+`-- .env.example
 ```
 
 Every root directory is a standalone Docker service.
 
-`PROJECT.md` is the only generated home for app-specific product truth: domain
-facts, user roles, business rules, and acceptance criteria. It is not an agent
-runbook and must not duplicate `/for/agents`, install instructions, or
-framework setup rules.
+`README.md` is the generated home for app-specific product truth: domain facts,
+user roles, business rules, acceptance criteria, and app-specific decisions. It is
+not an agent runbook and must not duplicate `/for/agents`, install
+instructions, or framework setup rules.
+
+Generated `carbide.toml` records app identity, env contract, deploy targets,
+and current starter runtime defaults.
+
+After scaffold, the app owns its own code immediately. Carbide does not treat
+existing app files as framework-managed.
 
 ## Web Contract
 
@@ -46,7 +52,7 @@ framework setup rules.
   `styles.css`.
 - If a real app intentionally needs global product CSS, create
   `web/src/product.css`, import it explicitly, document the reason in
-  `PROJECT.md`, and update the doctor contract. Do not hide product CSS inside
+  `README.md`, and update the law contract. Do not hide product CSS inside
   `web/src/styles.css`.
 
 ## API And DB Contract

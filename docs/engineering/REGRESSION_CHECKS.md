@@ -14,7 +14,7 @@ PATH=/home/ryan/.local/share/mise/installs/go/1.26.4/bin:$PATH bash tests/scaffo
 ## Framework Check
 
 ```sh
-carbide doctor framework
+carbide health framework
 ```
 
 This runs shell syntax, Go CLI tests, repo contract, scaffold checks, and the
@@ -41,14 +41,14 @@ cd ../
 docker compose build web
 ```
 
-## Doctor Checks
+## Health Checks
 
 ```sh
-cd scaffold && carbide doctor
-cd docs/app && carbide doctor
+cd scaffold && carbide health
+cd docs/app && carbide health
 ```
 
-Run `carbide doctor runtime` when container behavior changed and Docker is
+Run `carbide health runtime` when container behavior changed and Docker is
 available.
 
 ## Docs Agent Route

@@ -97,16 +97,18 @@
           <ul>
             <li>No <code>latest</code>, semver ranges, or floating Docker image tags for framework-owned runtimes.</li>
             <li>Docker references include <code>@sha256:</code> digests.</li>
-            <li><code>carbide doctor</code> checks the local project baseline.</li>
+            <li><code>carbide health</code> checks the local app laws.</li>
             <li>The scheduled dependency audit reports drift but never edits files.</li>
             <li>Postgres major-version changes require migration notes and explicit operator action.</li>
+            <li>The generated <code>[runtime]</code> block records Carbide's current starter defaults, not framework ownership over the app after scaffold.</li>
           </ul>
         </section>
 
         <section id="upgrade-stance">
           <h2>Upgrade Stance</h2>
-          <p>Framework-owned upgrades should be explicit product decisions. A dependency bump must preserve the generated app contract, update the baseline, and pass doctor, scaffold, smoke, and docs regression checks.</p>
-          <p>After installing a newer CLI, run <code>carbide project migrate</code> inside an existing app to create a manual framework-upgrade workspace with the latest scaffold contract and a migration brief.</p>
+          <p>Framework-owned upgrades should be explicit product decisions. A dependency bump must preserve the generated app contract, update the baseline, and pass health checks, scaffold, smoke, and docs regression checks.</p>
+          <p>After installing a newer CLI, run <code>carbide audit</code> inside an existing app when you want to compare it against Carbide's current starter taste.</p>
+          <p>The command creates a starter reference and an audit brief. Carbide does not rewrite app code; an agent such as Codex may apply intentional app changes while preserving <code>README.md</code>, product behavior, data, deploy targets, and secrets unless the user asks otherwise.</p>
         </section>
       </main>
 

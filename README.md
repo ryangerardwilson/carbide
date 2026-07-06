@@ -27,10 +27,10 @@ app code.
   values, secrets policy, and deploy targets are checked in.
 - **Inspectable dev loop:** `carbide run dev`, `carbide status`,
   `carbide clean dev`, `carbide follow logs`, `carbide logs`, and
-  `carbide doctor` keep the local stack understandable.
-- **Explicit baselines:** runtime versions are recorded in `carbide.toml`;
-  `carbide doctor` rejects floating Docker images, `latest`, and framework-owned
-  semver ranges.
+  `carbide health` keep the local stack understandable.
+- **Starter defaults, not hidden ownership:** the scaffold ships with pinned
+  runtime choices, but generated app code belongs to the app immediately.
+  Carbide audits laws; Codex makes intentional app edits.
 
 ## Quick Start
 
@@ -62,10 +62,10 @@ Docker with Docker Compose is required to run generated apps.
 | `carbide stop dev` | Stop the local development stack. |
 | `carbide follow logs` | Stream live container logs. |
 | `carbide logs` | Query saved structured dev logs. |
-| `carbide doctor` | Check the generated project contract. |
-| `carbide doctor env` | Check env and secrets rules without printing secrets. |
-| `carbide doctor runtime` | Run the Docker-backed health and auth flow check. |
-| `carbide project migrate` | Prepare a manual framework-upgrade workspace. |
+| `carbide health` | Check the generated app laws. |
+| `carbide health env` | Check env and secrets rules without printing secrets. |
+| `carbide health runtime` | Run the Docker-backed health and auth flow check. |
+| `carbide audit` | Prepare a starter audit workspace. |
 | `carbide deploy check prod` | Classify a deploy target before preview/apply. |
 | `carbide deploy preview prod` | Preview a checked-in production deploy target. |
 | `carbide deploy apply prod` | Apply a checked-in single-VM production target. |
@@ -83,7 +83,6 @@ unclear and you want a fresh restart without deleting volumes.
 ```text
 my-carbide-app/
 |-- AGENTS.md
-|-- PROJECT.md
 |-- api/
 |-- db/
 |-- web/
@@ -93,10 +92,11 @@ my-carbide-app/
 ```
 
 `web/` is the Bun/React/Tailwind browser container. `api/` is the Go API
-container. `db/` owns Postgres schema and database helper code. `PROJECT.md`
+container. `db/` owns Postgres schema and database helper code. `README.md`
 owns app-specific product truth. `AGENTS.md` points agents to the central
 `/for/agents` guide. The root `carbide.toml` stores the app identity, port
-defaults, env contract, runtime baseline, and deploy targets.
+defaults, the env contract, current starter runtime defaults, and deploy
+targets.
 
 At the generated project root, every directory maps to a standalone Docker
 service. The root Compose file is the app orchestration file: it describes how
@@ -105,10 +105,20 @@ dependency files.
 
 ## Runtime And Deploy
 
-Carbide records explicit Carbide baselines in `carbide.toml`: Go module
+Carbide records current starter runtime defaults in `carbide.toml`: Go module
 directive, digest-pinned Go/Bun/Debian/Postgres images, exact React and
-Tailwind versions, and a runtime contract version. This keeps framework-owned
-dependencies boring and reviewable instead of silently floating.
+Tailwind versions, and a runtime contract version. Those are starter choices,
+not framework ownership over the app after scaffold.
+
+The ownership rule is simple:
+
+- `carbide new` and `carbide init` create the starter.
+- After scaffold, the app owns its own code immediately.
+- `carbide health` checks eternal laws only.
+- `carbide audit` creates a comparison workspace under `.carbide/audit/`; it
+  does not rewrite app code.
+- If app code changes during an audit, those changes are Codex edits made
+  intentionally inside the app.
 
 Deploy targets are environments, not just machines. A simple production target
 can be one host. A larger target can describe multiple hosts and roles so web,

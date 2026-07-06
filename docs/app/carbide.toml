@@ -1,7 +1,6 @@
 name = "Carbide Docs"
 slug = "carbide-docs"
 profile = "docs"
-carbide_version = "0.1.0"
 
 [dev]
 default_port = 8080

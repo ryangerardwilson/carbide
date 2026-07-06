@@ -102,7 +102,7 @@ directives, and the `data-theme` dark variant. It does not own global
 `tokens.ts` contains reusable Tailwind utility groups for the generated auth
 and dashboard UI, including starter light/dark visual choices and built-in
 scrollbar utilities. The scaffold does not add a parallel `theme.css` file.
-`carbide doctor` rejects global `html`/`body` sizing, custom class selectors,
+`carbide health` rejects global `html`/`body` sizing, custom class selectors,
 ID selectors, scrollbar pseudo-selectors, `--carbide-*` color variables,
 `@theme`, `@apply`, `@layer`, keyframes, media rules, and container rules in
 `styles.css`; those belong in Tailwind utility classes and component class
@@ -117,7 +117,7 @@ Use these sanctioned paths instead:
 - keep third-party CSS imports explicit and product-owned;
 - if a real product intentionally needs global CSS, create
   `web/src/product.css`, import it explicitly, document the reason in
-  `PROJECT.md`, and update the doctor contract.
+  `README.md`, and update the law contract.
 
 `typecheck` runs `tsc --noEmit`. Docker builds run typecheck before building
 browser assets, so broken component props, API response shapes, or Bun server

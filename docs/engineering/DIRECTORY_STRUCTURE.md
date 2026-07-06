@@ -8,7 +8,6 @@ app because that is the structure application teams live in.
 ```text
 my-carbide-app/
 |-- AGENTS.md
-|-- PROJECT.md
 |-- README.md
 |-- .env.example
 |-- .gitignore
@@ -69,12 +68,12 @@ The generated project root is intentionally small:
 
 - `web/`, `api/`, and `db/` map to standalone Docker services.
 - `docker-compose.yml` owns local runtime coordination across services.
-- `carbide.toml` owns the app name, slug, default dev port, runtime baseline,
-  environment contract, and deploy targets.
+- `carbide.toml` owns the app name, slug, default dev port, product contract
+  current starter runtime defaults, environment contract, and deploy targets.
 - `AGENTS.md` points agents to the central `/for/agents` guide and names the
   local files that own app truth.
-- `PROJECT.md` owns app-specific product facts, users, roles, business rules,
-  and acceptance criteria.
+- `README.md` owns app-specific product facts, users, roles, business rules,
+  acceptance criteria, and upgrade boundaries.
 - `.env.example` documents local development variables without storing real
   secrets.
 

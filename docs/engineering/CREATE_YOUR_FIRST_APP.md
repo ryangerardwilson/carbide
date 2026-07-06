@@ -14,7 +14,7 @@ carbide new demo
 cd demo
 carbide run dev
 carbide status
-carbide doctor
+carbide health
 carbide stop dev
 ```
 
@@ -56,16 +56,16 @@ from live log streaming and leaves the containers running. `carbide follow
 logs` attaches to live container logs again. `carbide status` prints the current
 service table.
 `carbide stop dev` stops the local development stack. `carbide urls`,
-`carbide status json`, and `carbide doctor json` provide machine-readable state
+`carbide status json`, and `carbide health json` provide machine-readable state
 for agents and CI. Web, API, db, and watch events appear in one timestamped,
 service-tagged stream and are mirrored to `.carbide/log/dev.jsonl`. `NO_COLOR`
 disables ANSI color without disabling the terminal startup or shutdown
 animation.
 
-`carbide doctor` runs the fast project contract check without starting
+`carbide health` runs the fast app-law check without starting
 containers. It verifies the generated root shape, `carbide.toml`, Compose
 services, env/secrets rules, frontend, API, DB, the `AGENTS.md` pointer, and
-legacy regression markers. `carbide doctor runtime` runs the heavier
+legacy regression markers. `carbide health runtime` runs the heavier
 Docker-backed health/auth/dashboard flow and stops containers it started.
 
 The generated app starts with no seeded users. The first browser visit opens the
@@ -100,14 +100,15 @@ Prints the command reference.
 
 Upgrades the installed CLI.
 
-### `carbide project migrate`
+### `carbide audit`
 
-Prepares a manual framework-upgrade workspace under
-`.carbide/migration/`. The command writes `latest-scaffold/` with the newest
-scaffold rendered for the current app and `MIGRATION.md` with the migration
-brief. It is a manual framework-upgrade aid: agents still need to port
-framework-owned files deliberately while preserving app-owned API, database,
-deploy, and product behavior.
+Prepares a manual audit workspace under `.carbide/audit/`. The command writes
+`starter-reference/` with the current Carbide starter rendered for the current
+app and `AUDIT.md` with the audit brief.
+
+Carbide itself does not rewrite app code. Agents still need to compare the
+current app to the starter reference and make intentional edits only when the
+user wants those changes.
 
 ### `carbide new <project-name>`
 
@@ -139,12 +140,12 @@ before running `carbide run dev` again.
 Prints a table of Compose services, container names, published host ports,
 internal container ports, and status.
 
-### `carbide doctor`
+### `carbide health`
 
-Runs the fast project contract check without starting containers. It reports
+Runs the fast app-law check without starting containers. It reports
 `ok`, `fail`, `warn`, and `skip` rows in a compact table.
 
-### `carbide doctor runtime`
+### `carbide health runtime`
 
 Runs Docker-backed checks: Compose config, stack start, `/health`, anonymous
 `/api/me`, registration, dashboard API/web shell, logout, and cleanup.
@@ -162,22 +163,23 @@ dev`. It supports simple word-based queries such as `carbide logs service api`,
 `carbide follow logs` attaches to live container logs again after detaching.
 
 Carbide uses command-shaped JSON output instead of `--json` flags. Use
-`carbide status json`, `carbide doctor json`, `carbide doctor runtime json`,
+`carbide status json`, `carbide health json`, `carbide health runtime json`,
 and `carbide deploy check prod json` when an agent or CI needs machine-readable
 state.
 
 ## Troubleshooting
 
-- If `carbide doctor` fails, fix the named contract before changing runtime
-  behavior. Use `carbide doctor json` or `carbide doctor env json` when an
+- If `carbide health` fails, fix the named contract before changing runtime
+  behavior. Use `carbide health json` or `carbide health env json` when an
   agent needs structured output.
 - If container state is unclear after `Ctrl+C`, run `carbide clean dev`, then
   `carbide run dev`.
 - If deploy fails around nginx or sudo, the remote user needs non-interactive
   sudo for Carbide-managed nginx, or the deploy target should set
   `nginx = false` and use user-managed ingress.
-- If framework versions drift, run `carbide version`, `carbide doctor
-  framework`, then `carbide project migrate`.
+- If the user wants to compare an app to current Carbide taste, run
+  `carbide audit`. `carbide health framework` is for the
+  Carbide source repo itself, not for generated apps.
 
 ## Product Principle
 
