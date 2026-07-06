@@ -552,6 +552,11 @@ grep -q 'pathname === "/"' docs/site/assets/intro.js
 grep -q 'pathname === "/index.html"' docs/site/assets/intro.js
 grep -q "intro=1" docs/site/assets/intro.js
 grep -q "prefers-reduced-motion" docs/site/assets/intro.js
+! grep -q "Carbide docs" docs/site/assets/intro.js
+! grep -q "Carbide Docs" docs/site/assets/intro.js
+! grep -q "chomper" docs/site/assets/intro.js
+! grep -q "pellets" docs/site/assets/intro.js
+! grep -q "clipPath" docs/site/assets/intro.js
 ! grep -q "sessionStorage" docs/site/assets/intro.js
 ! grep -q "storageKey" docs/site/assets/intro.js
 ! grep -q "docs-intro-skip" docs/site/assets/intro.js

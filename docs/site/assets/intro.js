@@ -101,35 +101,6 @@
       width: "min(920px, calc(100vw - 32px))"
     });
 
-    var track = setStyles(document.createElement("div"), {
-      height: "18px",
-      margin: "0 0 18px",
-      overflow: "hidden",
-      position: "relative"
-    });
-    track.setAttribute("aria-hidden", "true");
-
-    var pellets = setStyles(document.createElement("span"), {
-      backgroundImage: "radial-gradient(circle, rgb(250 204 21 / 0.7) 0 2px, transparent 2.5px)",
-      backgroundSize: "18px 2px",
-      height: "2px",
-      inset: "8px 0 auto",
-      opacity: "0.72",
-      position: "absolute"
-    });
-
-    var chomper = setStyles(document.createElement("span"), {
-      background: "#facc15",
-      borderRadius: "999px",
-      boxShadow: "0 0 18px rgb(250 204 21 / 0.48)",
-      clipPath: "polygon(0 0, 100% 0, 58% 50%, 100% 100%, 0 100%)",
-      height: "18px",
-      left: "0",
-      position: "absolute",
-      top: "0",
-      width: "18px"
-    });
-
     var logoNode = setStyles(document.createElement("pre"), {
       background: "transparent",
       border: "0",
@@ -149,53 +120,21 @@
     logoNode.setAttribute("aria-label", "Carbide ASCII logo");
     logoNode.appendChild(renderLogo());
 
-    var footer = setStyles(document.createElement("div"), {
-      alignItems: "center",
-      color: "#a3a3a3",
-      display: "flex",
-      fontSize: "0.78rem",
-      fontWeight: "700",
-      gap: "16px",
-      justifyContent: "center",
-      marginTop: "24px",
-      textTransform: "uppercase"
-    });
-    var footerText = document.createElement("span");
-    footerText.textContent = "Carbide docs";
-    footer.appendChild(footerText);
-
-    track.appendChild(pellets);
-    track.appendChild(chomper);
-    stage.appendChild(track);
     stage.appendChild(logoNode);
-    stage.appendChild(footer);
     intro.appendChild(stage);
 
     document.body.prepend(intro);
     document.body.style.overflow = "hidden";
 
-    stage.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "translateY(0)" }], {
+    stage.animate([{ opacity: 0, transform: "translateY(10px) scale(0.985)" }, { opacity: 1, transform: "translateY(0) scale(1)" }], {
       duration: 520,
       easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
       fill: "both"
     });
-    chomper.animate([{ transform: "translateX(-22px)" }, { transform: "translateX(calc(min(920px, calc(100vw - 32px)) - 18px))" }], {
-      duration: 1320,
-      easing: "cubic-bezier(0.55, 0, 0.1, 1)",
-      fill: "both"
-    });
-    chomper.animate([
-      { clipPath: "polygon(0 0, 100% 0, 58% 50%, 100% 100%, 0 100%)" },
-      { clipPath: "circle(50% at 50% 50%)" },
-      { clipPath: "polygon(0 0, 100% 0, 58% 50%, 100% 100%, 0 100%)" }
-    ], {
-      duration: 180,
-      easing: "steps(2, end)",
-      iterations: Infinity
-    });
     logoNode.querySelectorAll("span").forEach(function (span) {
+      var delay = 160 + (Number(span.dataset.charRow) * 48) + (Number(span.dataset.charColumn) * 4);
       span.animate([{ opacity: 0, transform: "translateY(8px) scale(0.98)" }, { opacity: 1, transform: "translateY(0) scale(1)" }], {
-        delay: 220 + (Number(span.dataset.charIndex) * 0.55),
+        delay: delay,
         duration: 440,
         easing: "cubic-bezier(0.2, 0.9, 0.2, 1)",
         fill: "both"
@@ -204,7 +143,7 @@
 
     window.setTimeout(function () {
       removeIntro(intro, previousOverflow);
-    }, 2450);
+    }, 1850);
   }
 
   if (document.readyState === "loading") {

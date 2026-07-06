@@ -16,7 +16,8 @@ The docs app must dogfood Carbide's frontend contract.
   Static docs classes from `docs/site/*.html` are mapped to Tailwind utility
   classes in `web/src/component/l2/DocsChrome.tsx`.
 - The opening animation owns its one-off presentation in
-  `docs/site/assets/intro.js`.
+  `docs/site/assets/intro.js`. Keep it logo-only: no "Carbide Docs" title
+  text, skip button, or Pacman-style track/chomper effect.
 - `web/src/component/l3/` owns docs-product composition and the runtime
   component contract used by the Bun server.
 - Keep Tailwind class ownership layered: structural classes in L1, reusable
