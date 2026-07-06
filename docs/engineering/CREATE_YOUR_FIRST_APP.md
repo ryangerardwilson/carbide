@@ -60,9 +60,9 @@ without disabling the terminal startup or shutdown animation.
 
 `carbide doctor` runs the fast project contract check without starting
 containers. It verifies the generated root shape, `carbide.toml`, Compose
-services, env/secrets rules, frontend, API, DB, agent docs, and legacy
-regression markers. `carbide doctor runtime` runs the heavier Docker-backed
-health/auth/dashboard flow and stops containers it started.
+services, env/secrets rules, frontend, API, DB, the `AGENTS.md` pointer, and
+legacy regression markers. `carbide doctor runtime` runs the heavier
+Docker-backed health/auth/dashboard flow and stops containers it started.
 
 The generated app starts with no seeded users. The first browser visit opens the
 account creation flow. Registration creates the first user and session; later

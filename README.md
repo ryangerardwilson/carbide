@@ -6,13 +6,13 @@ Go, Postgres, Bun, and Tailwind.
 It is built around one product repo with clear runtime containers, not a pile
 of premature microservices. A Carbide app starts with a Bun/React/Tailwind web
 container, a Go API container, and a mandatory Postgres db container. The
-infrastructure, environment contract, logs, deploy targets, and agent operating
-notes live beside the app code.
+infrastructure, environment contract, logs, and deploy targets live beside the
+app code.
 
 ## What You Get
 
 - **One app repo:** product code, generated Docker Compose setup, environment
-  rules, deploy targets, and agent notes stay together.
+  rules, and deploy targets stay together.
 - **Separate runtime boundaries:** `web`, `api`, and `db` run as separate
   containers with separate health checks, logs, and lifecycles.
 - **React frontend:** Bun, React, and Tailwind run inside the `web` container,
@@ -36,17 +36,22 @@ notes live beside the app code.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash
-carbide new "My Carbide App"
-cd my-carbide-app
+carbide new demo
+cd demo
 carbide run dev
+carbide doctor
+carbide status
 ```
 
-`carbide new "My Carbide App"` creates `my-carbide-app`, stores
-`name = "My Carbide App"`, and stores `slug = "my-carbide-app"`.
+The installer builds the Go CLI. Human app names are accepted:
+`carbide new "My Carbide App"` creates `my-carbide-app` while storing the
+display name as `My Carbide App`.
 
-The installer builds the `carbide` CLI with Go, so Go must be available on the
-host machine. Generated apps run Bun, the Go API build, and Postgres inside
-containers. Docker with Docker Compose is required to run generated apps.
+`carbide help` prints the command reference. `carbide upgrade` updates the
+installed CLI when a newer GitHub commit is available.
+
+Generated apps run Bun, the Go API build, and Postgres inside containers.
+Docker with Docker Compose is required to run generated apps.
 
 ## Core Commands
 
@@ -78,7 +83,6 @@ stop the stack.
 ```text
 my-carbide-app/
 |-- AGENTS.md
-|-- agents.d/
 |-- api/
 |-- db/
 |-- web/
@@ -88,15 +92,15 @@ my-carbide-app/
 ```
 
 `web/` is the Bun/React/Tailwind browser container. `api/` is the Go API
-container. `db/` owns Postgres schema and database helper code. `agents.d/`
-stores project operating notes for AI agents. The root `carbide.toml` stores
-the app identity, port defaults, env contract, runtime baseline, and deploy
-targets.
+container. `db/` owns Postgres schema and database helper code. `AGENTS.md`
+points agents to the central `/for/agents` guide. The root `carbide.toml`
+stores the app identity, port defaults, env contract, runtime baseline, and
+deploy targets.
 
-At the generated project root, every directory except `agents.d/` maps to a
-standalone Docker service. The root Compose file is the app orchestration file:
-it describes how those services run together while each service keeps its own
-Dockerfile and dependency files.
+At the generated project root, every directory maps to a standalone Docker
+service. The root Compose file is the app orchestration file: it describes how
+those services run together while each service keeps its own Dockerfile and
+dependency files.
 
 ## Runtime And Deploy
 
@@ -121,5 +125,5 @@ semantics.
 ## Learn More
 
 - Public docs: <https://carbide.ryangerardwilson.com>
+- Agent startup guide: <https://carbide.ryangerardwilson.com/for/agents>
 - Engineering docs: `docs/engineering/`
-- Framework agent guidance: `AGENTS.md` and `agents.d/`

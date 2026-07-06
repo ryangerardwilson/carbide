@@ -13,11 +13,6 @@ my-carbide-app/
 |-- .gitignore
 |-- carbide.toml
 |-- docker-compose.yml
-|-- agents.d/
-|   |-- BACKUP_RESTORE.md
-|   |-- DEPLOY.md
-|   |-- ENVIRONMENT.md
-|   `-- TAILWIND_COMPONENTS.md
 |-- api/
 |   |-- Dockerfile
 |   |-- auth.go
@@ -72,12 +67,11 @@ my-carbide-app/
 The generated project root is intentionally small:
 
 - `web/`, `api/`, and `db/` map to standalone Docker services.
-- `agents.d/` is the only non-container root directory; it stores local agent
-  operating context.
 - `docker-compose.yml` owns local runtime coordination across services.
 - `carbide.toml` owns the app name, slug, default dev port, runtime baseline,
   environment contract, and deploy targets.
-- `AGENTS.md` is the generated agent-facing entrypoint.
+- `AGENTS.md` points agents to the central `/for/agents` guide and names the
+  local files that own app truth.
 - `.env.example` documents local development variables without storing real
   secrets.
 
@@ -116,13 +110,12 @@ and `web/node_modules/` is ignored.
 
 ## Agent Context
 
-Generated apps include:
+Generated apps include `AGENTS.md`, but they do not include `agents.d/`.
+Agent startup guidance is centralized at:
 
-- `agents.d/ENVIRONMENT.md` for environment and secrets handling.
-- `agents.d/DEPLOY.md` for preview-before-apply deploy behavior.
-- `agents.d/BACKUP_RESTORE.md` for Postgres backup and restore context.
-- `agents.d/TAILWIND_COMPONENTS.md` for Tailwind component organization.
+```text
+https://carbide.ryangerardwilson.com/for/agents
+```
 
-These files are part of the app contract because Carbide is built for
-developer-and-agent workflows. They document how future changes should preserve
-the generated app's runtime and frontend boundaries.
+App-specific truth stays in `README.md`, `carbide.toml`,
+`docker-compose.yml`, and the `web/`, `api/`, and `db/` source trees.

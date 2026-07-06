@@ -7,13 +7,6 @@ required_files=(
   ".gitignore"
   "README.md"
   "AGENTS.md"
-  "agents.d/PRODUCT_CONTRACT.md"
-  "agents.d/REPO_STRUCTURE.md"
-  "agents.d/CLI_AND_VERSIONING.md"
-  "agents.d/SCAFFOLD_CONTRACT.md"
-  "agents.d/DOCS_APP.md"
-  "agents.d/REGRESSION_CHECKS.md"
-  "agents.d/ROADMAP.md"
   "cli/install.sh"
   "cli/go.mod"
   "cli/bin/carbide"
@@ -28,9 +21,17 @@ required_files=(
   "docs/engineering/DIRECTORY_STRUCTURE.md"
   "docs/engineering/CREATE_YOUR_FIRST_APP.md"
   "docs/engineering/VERSION_POLICY.md"
+  "docs/engineering/PRODUCT_CONTRACT.md"
+  "docs/engineering/REPO_STRUCTURE.md"
+  "docs/engineering/CLI_AND_VERSIONING.md"
+  "docs/engineering/SCAFFOLD_CONTRACT.md"
+  "docs/engineering/DOCS_APP.md"
+  "docs/engineering/REGRESSION_CHECKS.md"
+  "docs/engineering/ROADMAP.md"
+  "docs/app/AGENTS.md"
+  "docs/app/README.md"
   "docs/app/carbide.toml"
   "docs/app/docker-compose.yml"
-  "docs/app/agents.d/TAILWIND_COMPONENTS.md"
   "docs/app/web/Dockerfile"
   "docs/app/web/bun.lock"
   "docs/app/web/index.html"
@@ -70,10 +71,6 @@ required_files=(
   "scaffold/README.md"
   "scaffold/.env.example"
   "scaffold/.gitignore"
-  "scaffold/agents.d/BACKUP_RESTORE.md"
-  "scaffold/agents.d/DEPLOY.md"
-  "scaffold/agents.d/ENVIRONMENT.md"
-  "scaffold/agents.d/TAILWIND_COMPONENTS.md"
   "scaffold/docker-compose.yml"
   "scaffold/web/Dockerfile"
   "scaffold/web/index.html"
@@ -115,7 +112,6 @@ required_files=(
 )
 
 required_dirs=(
-  "agents.d"
   "cli"
   "cli/bin"
   "cli/cmd"
@@ -126,7 +122,6 @@ required_dirs=(
   "tests/scaffold"
   "tests/smoke"
   "scaffold"
-  "scaffold/agents.d"
   "scaffold/web"
   "scaffold/web/src"
   "scaffold/web/src/component"
@@ -162,8 +157,8 @@ grep -q "Infrastructure as code" README.md
 grep -q "generated Docker Compose setup" README.md
 grep -q "carbide new" README.md
 grep -F -q 'carbide new "My Carbide App"' README.md
-grep -q 'name = "My Carbide App"' README.md
-grep -q 'slug = "my-carbide-app"' README.md
+grep -q "display name as" README.md
+grep -q "https://carbide.ryangerardwilson.com/for/agents" README.md
 grep -q "carbide run dev" README.md
 grep -q "carbide status" README.md
 grep -q "carbide stop dev" README.md
@@ -181,11 +176,12 @@ grep -q "floating Docker images" README.md
 ! grep -q "## Roadmap" README.md
 ! grep -q "### Phase" README.md
 grep -q "Keep README human-first" AGENTS.md
-grep -q "Roadmap and future work" AGENTS.md
-grep -q "0.1.0" agents.d/CLI_AND_VERSIONING.md
-grep -q "Postgres-backed queues" agents.d/ROADMAP.md
-grep -q "Do not reintroduce generated" agents.d/SCAFFOLD_CONTRACT.md
-grep -F -q -- "--carbide-*" agents.d/SCAFFOLD_CONTRACT.md
+grep -q "https://carbide.ryangerardwilson.com/for/agents" AGENTS.md
+grep -q "Do not reintroduce .*\`agents.d\`" AGENTS.md
+grep -q "0.1.0" docs/engineering/CLI_AND_VERSIONING.md
+grep -q "Postgres-backed queues" docs/engineering/ROADMAP.md
+grep -q "Do not reintroduce generated" docs/engineering/SCAFFOLD_CONTRACT.md
+grep -F -q -- "--carbide-*" docs/engineering/SCAFFOLD_CONTRACT.md
 ! grep -q "command_format" cli/bin/carbide
 ! grep -q "carbide format" cli/bin/carbide
 grep -q "module github.com/ryangerardwilson/carbide/cli" cli/go.mod
@@ -194,7 +190,8 @@ grep -q ".cli/" .gitignore
 ! test -d src
 ! test -d examples
 ! test -d infra
-test "$(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.github' ! -name '.cli' ! -name '.bin' -printf '%f\n' | sort | tr '\n' ' ')" = "agents.d cli docs scaffold tests "
+test "$(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.github' ! -name '.cli' ! -name '.bin' -printf '%f\n' | sort | tr '\n' ' ')" = "cli docs scaffold tests "
+! test -d agents.d
 ! test -d include
 ! test -d templates
 ! test -d scaffold/config
@@ -206,7 +203,9 @@ test "$(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.github' 
 ! test -d scaffold/infra
 ! test -d scaffold/frontend
 ! test -d scaffold/doc
-test "$(find scaffold -mindepth 1 -maxdepth 1 -type d ! -name .carbide -printf '%f\n' | sort | tr '\n' ' ')" = "agents.d api db web "
+test "$(find scaffold -mindepth 1 -maxdepth 1 -type d ! -name .carbide -printf '%f\n' | sort | tr '\n' ' ')" = "api db web "
+! test -d scaffold/agents.d
+! test -d docs/app/agents.d
 ! test -f scaffold/Dockerfile
 ! test -f scaffold/go.mod
 ! test -f scaffold/go.sum
@@ -251,11 +250,13 @@ grep -q "web/node_modules/" scaffold/.gitignore
 grep -q "web/public/" scaffold/.gitignore
 grep -q "web/src/tailwind.css" scaffold/.gitignore
 grep -q "__PROJECT_NAME__ Agent Context" scaffold/AGENTS.md
-grep -q 'agents.d/ENVIRONMENT.md' scaffold/AGENTS.md
-grep -q 'agents.d/DEPLOY.md' scaffold/AGENTS.md
-grep -q 'agents.d/BACKUP_RESTORE.md' scaffold/AGENTS.md
-grep -q 'agents.d/TAILWIND_COMPONENTS.md' scaffold/AGENTS.md
+grep -q "https://carbide.ryangerardwilson.com/for/agents" scaffold/AGENTS.md
+grep -q "intentionally does not include .*\`agents.d/\`" scaffold/AGENTS.md
+grep -q "carbide run dev" scaffold/AGENTS.md
+grep -q "carbide doctor" scaffold/AGENTS.md
+grep -q "carbide status" scaffold/AGENTS.md
 grep -q "carbide.toml" scaffold/README.md
+grep -q "https://carbide.ryangerardwilson.com/for/agents" scaffold/README.md
 grep -q "carbide doctor" scaffold/README.md
 grep -q "carbide doctor env" scaffold/README.md
 grep -q "carbide doctor runtime" scaffold/README.md
@@ -264,17 +265,6 @@ grep -q "Postgres major-version baseline change" scaffold/README.md
 grep -q "carbide deploy preview prod" scaffold/README.md
 grep -q "carbide deploy apply prod" scaffold/README.md
 grep -q "POSTGRES_PASSWORD" scaffold/.env.example
-grep -q "separate secrets container" scaffold/agents.d/ENVIRONMENT.md
-grep -q "preview-before-apply" scaffold/agents.d/DEPLOY.md
-grep -q "Postgres owns durable application state" scaffold/agents.d/BACKUP_RESTORE.md
-grep -q "Tailwind Component Organization" scaffold/agents.d/TAILWIND_COMPONENTS.md
-grep -q "Use L1/L2/L3 in two related ways" scaffold/agents.d/TAILWIND_COMPONENTS.md
-grep -q "component/l1/" scaffold/agents.d/TAILWIND_COMPONENTS.md
-grep -q "component/l2/" scaffold/agents.d/TAILWIND_COMPONENTS.md
-grep -q "component/l3/" scaffold/agents.d/TAILWIND_COMPONENTS.md
-grep -q "web/src/lib/cx.ts" scaffold/agents.d/TAILWIND_COMPONENTS.md
-grep -q "visible focus styling" scaffold/agents.d/TAILWIND_COMPONENTS.md
-grep -q "Do not add a parallel .*theme.css" scaffold/agents.d/TAILWIND_COMPONENTS.md
 ! grep -q 'url = "http://localhost:8080"' scaffold/carbide.toml
 grep -q "web:" scaffold/docker-compose.yml
 grep -q "api:" scaffold/docker-compose.yml
@@ -661,14 +651,12 @@ grep -q "docsWebContract" docs/app/web/src/component/l3/DocsSite.tsx
 grep -q "rewriteDocsHtml" docs/app/web/src/component/l3/DocsSite.tsx
 grep -F -q "[scrollbar-width:thin]" docs/app/web/src/component/l3/DocsSite.tsx
 grep -q "fileLineCount" cli/internal/cli/cli.go
-grep -q "component/l1" docs/app/agents.d/TAILWIND_COMPONENTS.md
-grep -q "component/l2" docs/app/agents.d/TAILWIND_COMPONENTS.md
-grep -q "component/l3" docs/app/agents.d/TAILWIND_COMPONENTS.md
-grep -q "scrollbar-width" docs/app/agents.d/TAILWIND_COMPONENTS.md
-grep -q "generated scaffold contract" docs/app/agents.d/TAILWIND_COMPONENTS.md
-grep -q "bun run assets:build" docs/app/agents.d/TAILWIND_COMPONENTS.md
-grep -q "generated docs CSS contains custom" docs/app/agents.d/TAILWIND_COMPONENTS.md
-grep -q 'docs-\*' docs/app/agents.d/TAILWIND_COMPONENTS.md
+grep -q "https://carbide.ryangerardwilson.com/for/agents" docs/app/AGENTS.md
+grep -q "../site/for/agents.md" docs/app/AGENTS.md
+grep -q "intentionally does not include .*\`agents.d/\`" docs/app/AGENTS.md
+grep -q "carbide deploy preview de-sci" docs/app/AGENTS.md
+grep -q "carbide deploy apply de-sci" docs/app/AGENTS.md
+grep -q "https://carbide.ryangerardwilson.com/for/agents" docs/app/README.md
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
 grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
 grep -q "carbide doctor.*rejects global" docs/site/frontend-starter-contract.html

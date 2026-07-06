@@ -688,7 +688,7 @@ func (a app) projectDoctorResults() []doctorResult {
 }
 
 func doctorProjectShape() doctorResult {
-	requiredDirs := []string{"web", "api", "db", "agents.d"}
+	requiredDirs := []string{"web", "api", "db"}
 	if missing := missingDirs(requiredDirs); len(missing) > 0 {
 		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
@@ -707,7 +707,7 @@ func doctorProjectShape() doctorResult {
 	}
 
 	services := composeServiceNamesFromFile(composeFilePath)
-	allowed := map[string]bool{"agents.d": true}
+	allowed := map[string]bool{}
 	for _, service := range services {
 		allowed[service] = true
 	}
@@ -720,7 +720,7 @@ func doctorProjectShape() doctorResult {
 	if len(extras) > 0 {
 		return doctorFail("project shape", "non-service root dirs: "+strings.Join(extras, ", "))
 	}
-	return doctorOK("project shape", "web api db agents.d")
+	return doctorOK("project shape", "web api db")
 }
 
 func doctorConfigContract() doctorResult {
@@ -1056,31 +1056,29 @@ func doctorDatabaseContract() doctorResult {
 func doctorAgentsContract() doctorResult {
 	requiredFiles := []string{
 		"AGENTS.md",
-		"agents.d/ENVIRONMENT.md",
-		"agents.d/DEPLOY.md",
-		"agents.d/BACKUP_RESTORE.md",
-		"agents.d/TAILWIND_COMPONENTS.md",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
 		return doctorFail("agents", "missing "+strings.Join(missing, ", "))
 	}
 	required := map[string][]string{
-		"AGENTS.md":                       {"carbide run dev", "carbide status", "carbide doctor"},
-		"agents.d/ENVIRONMENT.md":         {"separate secrets container", "carbide doctor"},
-		"agents.d/DEPLOY.md":              {"preview-before-apply", "carbide deploy preview"},
-		"agents.d/BACKUP_RESTORE.md":      {"Postgres owns durable application state"},
-		"agents.d/TAILWIND_COMPONENTS.md": {"Tailwind Component Organization", "component/l1/", "component/l2/", "component/l3/"},
+		"AGENTS.md": {
+			"https://carbide.ryangerardwilson.com/for/agents",
+			"carbide run dev",
+			"carbide doctor",
+			"carbide status",
+			"intentionally does not include `agents.d/`",
+		},
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
 			return doctorFail("agents", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
-	return doctorOK("agents", "AGENTS.md agents.d")
+	return doctorOK("agents", "AGENTS.md /for/agents")
 }
 
 func doctorDocsProjectShape() doctorResult {
-	requiredDirs := []string{"web", "api", "db", "agents.d"}
+	requiredDirs := []string{"web", "api", "db"}
 	if missing := missingDirs(requiredDirs); len(missing) > 0 {
 		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
@@ -1094,7 +1092,7 @@ func doctorDocsProjectShape() doctorResult {
 	}
 
 	services := composeServiceNamesFromFile(composeFilePath)
-	allowed := map[string]bool{"agents.d": true}
+	allowed := map[string]bool{}
 	for _, service := range services {
 		allowed[service] = true
 	}
@@ -1422,27 +1420,26 @@ func doctorDocsDatabaseContract() doctorResult {
 func doctorDocsAgentsContract() doctorResult {
 	requiredFiles := []string{
 		"AGENTS.md",
-		"agents.d/ENVIRONMENT.md",
-		"agents.d/DEPLOY.md",
-		"agents.d/BACKUP_RESTORE.md",
-		"agents.d/TAILWIND_COMPONENTS.md",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
 		return doctorFail("agents", "missing "+strings.Join(missing, ", "))
 	}
 	required := map[string][]string{
-		"AGENTS.md":                       {"carbide doctor", "carbide deploy preview de-sci"},
-		"agents.d/ENVIRONMENT.md":         {"remote `.env`", "POSTGRES_PASSWORD"},
-		"agents.d/DEPLOY.md":              {"preview-before-apply", "ssh-compose"},
-		"agents.d/BACKUP_RESTORE.md":      {"Postgres", "carbide_docs_pgdata"},
-		"agents.d/TAILWIND_COMPONENTS.md": {"Tailwind", "component/l1", "component/l2", "component/l3"},
+		"AGENTS.md": {
+			"https://carbide.ryangerardwilson.com/for/agents",
+			"../site/for/agents.md",
+			"carbide doctor",
+			"carbide deploy preview de-sci",
+			"carbide deploy apply de-sci",
+			"intentionally does not include `agents.d/`",
+		},
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
 			return doctorFail("agents", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
-	return doctorOK("agents", "docs agents.d")
+	return doctorOK("agents", "docs AGENTS.md /for/agents")
 }
 
 func doctorForbiddenRegressions(root string) doctorResult {
@@ -4758,7 +4755,7 @@ func projectMigrationBrief(projectPath string, name string, slug string, scaffol
 		"## Agent Instructions",
 		"",
 		"1. Compare the current project to `latest-scaffold/`.",
-		"2. Port framework-owned contracts first: `web/package.json`, `web/Dockerfile`, `web/tsconfig.json`, `web/src/styles.css`, browser asset build scripts, Compose watch paths, runtime baseline, and `agents.d` rules.",
+		"2. Port framework-owned contracts first: `web/package.json`, `web/Dockerfile`, `web/tsconfig.json`, `web/src/styles.css`, browser asset build scripts, Compose watch paths, runtime baseline, and the `AGENTS.md` pointer to `/for/agents`.",
 		"3. Preserve app-owned behavior: product screens, API routes, database migrations, deploy targets, secrets, data volumes, and public domain behavior.",
 		"4. Do not copy generated output such as `node_modules`, `web/public`, `web/src/tailwind.css`, `.carbide`, or local `.env` files.",
 		"5. Run `carbide doctor`, `carbide doctor runtime` when containers are available, and the app-specific build/test commands.",

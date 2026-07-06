@@ -1,20 +1,29 @@
-# Carbide Docs App
+# Carbide Docs App Agent Context
+
+The central agent startup guide is:
+
+```text
+https://carbide.ryangerardwilson.com/for/agents
+```
+
+The checked-in source for that Markdown route is `../site/for/agents.md`.
+This docs app intentionally does not include `agents.d/`.
+
+## App Truth
 
 This directory is a Carbide application used to deploy the checked-in
 documentation website from `../site`.
 
-Use:
+- `web/` is the public entrypoint. It serves `../site`, rewrites docs HTML
+  through Tailwind/React component contracts, and proxies `/api` and `/health`.
+- `api/` exposes deploy health checks.
+- `db/` owns docs app Postgres migration state.
+- `carbide.toml` owns deploy targets and runtime/env contracts.
+
+## Safe Commands
 
 ```sh
 carbide doctor
 carbide deploy preview de-sci
 carbide deploy apply de-sci
 ```
-
-The web container is the public entrypoint. It serves `docs/site` and proxies
-`/api` and `/health` to the API container. Its source lives in `web/src`,
-uses Tailwind, and keeps UI implementation boundaries in `component/l1`,
-`component/l2`, and `component/l3`. Its `web/index.html`, `web/src/main.tsx`,
-`web/src/write-index.ts`, and browser asset scripts mirror the generated
-Carbide scaffold. The API container proves Postgres wiring and exposes deploy
-health checks.

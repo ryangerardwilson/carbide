@@ -135,10 +135,9 @@ Future checks:
   source, web package/config files, `api/`, `db/`, and
   `api/Dockerfile` changes;
 - generated apps include an env contract in `carbide.toml`, `.env.example`,
-  `AGENTS.md`, and `agents.d/` operating notes for env, deploy, backup, and
-  restore behavior;
-- generated agent context includes Tailwind component organization rules that
-  keep L1/L2/L3 as class-ownership layers reflected in component directories;
+  and an `AGENTS.md` pointer to `/for/agents`;
+- generated frontend structure keeps L1/L2/L3 as class-ownership layers
+  reflected in component directories;
 - generated apps include a Bun/React/Tailwind web container, Go API
   container, and Postgres db container;
 - Bun web service proxies `/api` and `/health` to the API service;
@@ -149,7 +148,7 @@ Future checks:
 - environment contract rejects missing required values;
 - secret values are never printed by `carbide doctor env`;
 - `carbide doctor` verifies generated project shape, env/secrets, Compose,
-  web/API/db contracts, agent docs, and legacy-regression markers without
+  web/API/db contracts, the `AGENTS.md` pointer, and legacy-regression markers without
   starting containers;
 - `carbide doctor runtime` runs the Docker-backed health/auth/dashboard flow
   and stops containers it started;

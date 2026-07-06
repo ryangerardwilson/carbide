@@ -1,35 +1,35 @@
 # Carbide Agent Guide
 
-This file is for agents and maintainers iterating on the Carbide framework
-repo. The public README is for humans evaluating and installing Carbide; do not
-turn it into a roadmap, scratchpad, or internal operating manual.
+The canonical agent startup guide is:
 
-## Source Of Truth
+```text
+https://carbide.ryangerardwilson.com/for/agents
+```
 
-- Product promise and README boundary: `agents.d/PRODUCT_CONTRACT.md`
-- Repo layout and ownership: `agents.d/REPO_STRUCTURE.md`
-- CLI and versioning rules: `agents.d/CLI_AND_VERSIONING.md`
-- Generated app contract: `agents.d/SCAFFOLD_CONTRACT.md`
-- Documentation app contract: `agents.d/DOCS_APP.md`
-- Regression checks: `agents.d/REGRESSION_CHECKS.md`
-- Roadmap and future work: `agents.d/ROADMAP.md`
+Its checked-in source is `docs/site/for/agents.md`. Do not create another
+agent runbook, local `agents.d/` tree, or competing install flow. If agent
+startup guidance changes, update `docs/site/for/agents.md`, the homepage
+summary, and the regression checks in the same change.
 
-Read the smallest relevant file before editing. Do not load every file by
-default.
+## Local Role
+
+This file is only the framework repo entrypoint. It exists to tell agents where
+the product truth lives and how to verify repo changes. Framework engineering
+contracts live under `docs/engineering/`; public user-facing guidance belongs
+in the README and docs site.
 
 ## Hard Rules
 
 - Keep Carbide monorepo-first. Containers define runtime boundaries; they do
   not justify default microservice sprawl.
-- Keep the generated app Docker-first: `web`, `api`, and `db` are separate
-  containers in one app repo.
+- Keep generated apps Docker-first with `web`, `api`, and `db` as the root
+  service directories.
+- Keep `/for/agents` as the central point of truth for agent startup.
 - Keep README human-first: what Carbide is, what the user gets, how to install,
   and where to read more.
-- Put agent iteration rules, roadmap phases, internal contracts, and regression
-  details in `AGENTS.md` or `agents.d/`.
-- Keep root directories intentional. The framework repo root should stay small:
-  `agents.d`, `cli`, `docs`, `scaffold`, and `tests`.
-- Do not add root-level generated app files. Generated-app examples belong in
+- Do not reintroduce `agents.d` in the framework root, generated scaffold, or
+  docs app.
+- Do not add root-level generated app files. Generated-app source belongs in
   `scaffold/`; docs-app runtime belongs in `docs/app/`.
 - Before changing scaffold output, update contract tests and run the scaffold
   checks.
@@ -58,4 +58,3 @@ For scaffold web changes:
 ```sh
 cd scaffold/web && bun install --frozen-lockfile && bun run typecheck && bun run assets:build
 ```
-

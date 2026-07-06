@@ -333,7 +333,7 @@ func TestDoctorPrintsProjectContract(t *testing.T) {
 			"frontend          ok      Bun React Tailwind TypeScript",
 			"api               ok      Go HTTP API",
 			"database          ok      Postgres users sessions",
-			"agents            ok      AGENTS.md agents.d",
+			"agents            ok      AGENTS.md /for/agents",
 			"regressions       ok      no legacy markers",
 			"runtime           skip    run carbide doctor runtime",
 		} {
@@ -886,7 +886,7 @@ func TestDoctorPrintsDocsProjectContract(t *testing.T) {
 			"web               ok      Bun React Tailwind TypeScript docs",
 			"api               ok      docs health API",
 			"database          ok      Postgres deploy checks",
-			"agents            ok      docs agents.d",
+			"agents            ok      docs AGENTS.md /for/agents",
 			"runtime           skip    run carbide doctor runtime",
 		} {
 			if !strings.Contains(got, want) {

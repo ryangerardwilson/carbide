@@ -29,7 +29,8 @@ The README must not become:
 - an agent instruction file,
 - a long-form architecture spec.
 
-Move that material into `agents.d/` or `docs/engineering/`.
+Move that material into `docs/engineering/`. Agent startup guidance belongs in
+`docs/site/for/agents.md` and is served at `/for/agents`.
 
 ## Product Tone
 
@@ -44,4 +45,3 @@ Use direct product language. Prefer concrete nouns:
 
 Avoid vague positioning like "Laravel-inspired" as the lead idea. Laravel can
 remain context in docs when useful, but it is not the current product thesis.
-

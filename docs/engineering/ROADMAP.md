@@ -1,7 +1,7 @@
 # Roadmap
 
-This roadmap is for agents and maintainers. Keep the public README focused on
-human evaluation and first use.
+This roadmap is for maintainers. Keep the public README focused on human
+evaluation and first use.
 
 ## Current Baseline
 
@@ -15,7 +15,7 @@ human evaluation and first use.
   left-sidebar app shell.
 - Go API backed by Postgres users and sessions.
 - Environment/secrets contract in `carbide.toml`.
-- Generated `AGENTS.md` and `agents.d` operating notes.
+- Generated `AGENTS.md` pointer to `/for/agents`.
 - Queryable structured dev logs in `.carbide/log/dev.jsonl`.
 - Fast project doctor and Docker-backed runtime doctor.
 - CI coverage for shell syntax, Go CLI tests, repo contract, scaffold checks,
@@ -101,4 +101,3 @@ human evaluation and first use.
 - Add first-party packages only where the core framework has repeated evidence.
 - Document compatibility rules.
 - Publish upgrade guides between framework versions.
-

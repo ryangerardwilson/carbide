@@ -10,7 +10,6 @@ Generated app root:
 ```text
 .
 |-- AGENTS.md
-|-- agents.d/
 |-- api/
 |-- db/
 |-- web/
@@ -19,7 +18,7 @@ Generated app root:
 `-- README.md
 ```
 
-Every root directory except `agents.d/` is a standalone Docker service.
+Every root directory is a standalone Docker service.
 
 ## Web Contract
 

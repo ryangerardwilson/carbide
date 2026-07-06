@@ -89,11 +89,6 @@
 |-- .gitignore
 |-- carbide.toml
 |-- docker-compose.yml
-|-- agents.d/
-|   |-- BACKUP_RESTORE.md
-|   |-- DEPLOY.md
-|   |-- ENVIRONMENT.md
-|   `-- TAILWIND_COMPONENTS.md
 |-- api/
 |   |-- Dockerfile
 |   |-- auth.go
@@ -147,10 +142,9 @@
           <h2>Root Contract</h2>
           <ul>
             <li><strong>web, api, db:</strong> each maps to a standalone Docker service.</li>
-            <li><strong>agents.d:</strong> the only non-container root directory; it stores local agent operating context.</li>
             <li><strong>docker-compose.yml:</strong> local runtime coordination across the three services.</li>
             <li><strong>carbide.toml:</strong> app name, slug, default dev port, runtime baseline, environment contract, and deploy targets.</li>
-            <li><strong>AGENTS.md:</strong> generated agent-facing entrypoint for runtime shape, operating context, and safe commands.</li>
+            <li><strong>AGENTS.md:</strong> points agents to the central <code>/for/agents</code> guide and names the local files that own app truth.</li>
             <li><strong>.env.example:</strong> local development variables without real secrets.</li>
           </ul>
           <p>Generated apps do not include root <code>src</code>, <code>frontend</code>, <code>backend</code>, <code>model</code>, <code>controller</code>, <code>view</code>, <code>infra</code>, or <code>doc</code> directories.</p>
@@ -181,13 +175,8 @@
 
         <section id="agent-context">
           <h2>Agent Context</h2>
-          <ul>
-            <li><strong>agents.d/ENVIRONMENT.md:</strong> environment and secrets handling.</li>
-            <li><strong>agents.d/DEPLOY.md:</strong> preview-before-apply deploy behavior.</li>
-            <li><strong>agents.d/BACKUP_RESTORE.md:</strong> Postgres backup and restore context.</li>
-            <li><strong>agents.d/TAILWIND_COMPONENTS.md:</strong> Tailwind component organization.</li>
-          </ul>
-          <p>These files are part of the generated app contract because Carbide is built for developer-and-agent workflows.</p>
+          <p>Generated apps include <code>AGENTS.md</code>, but they do not include <code>agents.d</code>. Agent startup guidance is centralized at <a href="/for/agents"><code>/for/agents</code></a>.</p>
+          <p>App-specific truth stays in <code>README.md</code>, <code>carbide.toml</code>, <code>docker-compose.yml</code>, and the <code>web</code>, <code>api</code>, and <code>db</code> source trees.</p>
         </section>
       </main>
 

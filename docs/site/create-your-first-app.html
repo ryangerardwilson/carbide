@@ -129,7 +129,7 @@ carbide stop dev</code></pre>
             <li><code>carbide init</code> initializes the current empty directory.</li>
             <li><code>carbide run dev</code> starts the Docker Compose dev stack, prints the app URL and API URL, then streams logs until <code>Ctrl+C</code> detaches.</li>
             <li><code>carbide status</code> prints services, containers, published ports, internal ports, and status.</li>
-            <li><code>carbide doctor</code> checks project shape, <code>carbide.toml</code>, Compose, env/secrets, web/API/db contracts, agent docs, and legacy-regression markers.</li>
+            <li><code>carbide doctor</code> checks project shape, <code>carbide.toml</code>, Compose, env/secrets, web/API/db contracts, the <code>AGENTS.md</code> pointer, and legacy-regression markers.</li>
             <li><code>carbide doctor runtime</code> starts the Docker stack if needed, verifies health, registration, dashboard, and logout, then stops containers it started.</li>
             <li><code>carbide stop dev</code> stops the Docker Compose dev stack.</li>
             <li><code>carbide logs</code> reads <code>.carbide/log/dev.jsonl</code> with service, text, limit, and JSON queries. <code>carbide follow logs</code> attaches to live container logs.</li>
