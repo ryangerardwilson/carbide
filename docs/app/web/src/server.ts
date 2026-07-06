@@ -150,6 +150,7 @@ function cacheBustHtml(html: string): string {
   let output = html;
   for (const [assetPath, versionedPath] of versionedAssetPaths) {
     output = output.replaceAll(`"${assetPath}"`, `"${versionedPath}"`);
+    output = output.replaceAll(`"/${assetPath}"`, `"/${versionedPath}"`);
   }
   return output;
 }
