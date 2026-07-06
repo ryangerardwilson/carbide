@@ -39,9 +39,12 @@ containers through Docker Compose.
 [deploy]
 preview_before_apply = true
 
+[deploy.hosts.prod]
+ssh = "${CARBIDE_DEPLOY_SSH}"
+
 [deploy.targets.prod]
 type = "ssh-compose"
-host = "app-prod"
+host = "prod"
 domain = "app.example.com"
 remote_path = "/opt/my-carbide-app"
 source_path = "."
@@ -53,9 +56,9 @@ nginx = true
 nginx_site = "my-carbide-app"
 ```
 
-`host` is the SSH destination used by `ssh` and `rsync`. It can be an SSH config
-alias such as `app-prod` or a direct destination such as
-`ubuntu@app.example.com`.
+`host` can be a direct SSH destination or the name of a checked-in
+`[deploy.hosts.*]` entry. Use the host table when the SSH destination should
+come from shell env or CI secrets instead of a repo-local alias.
 
 The remote VM needs Docker Compose available. If `nginx = true`, the remote user
 must be able to run `sudo`; Carbide writes an nginx site for `domain`, proxies
@@ -137,7 +140,8 @@ gates, load-balancer changes, and rollback behavior.
 
 - `type`: `ssh-compose` for one VM, `ssh-compose-environment` for multi-VM
   topology.
-- `host`: SSH destination for a single-VM `ssh-compose` target.
+- `host`: direct SSH destination for a single-VM `ssh-compose` target, or the
+  name of a matching `[deploy.hosts.*]` entry.
 - `domain`: public DNS name for the environment.
 - `remote_path`: absolute path on the remote host.
 - `source_path`: local path to sync before deploy.

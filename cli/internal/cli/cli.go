@@ -1378,17 +1378,17 @@ func doctorDocsConfigContract() doctorResult {
 		"contract_version = 1",
 		"[deploy]",
 		"preview_before_apply = true",
-		"[deploy.hosts.de-sci]",
-		`ssh = "de-sci"`,
-		"[deploy.targets.de-sci]",
+		"[deploy.hosts.prod]",
+		`ssh = "${CARBIDE_DOCS_DEPLOY_SSH}"`,
+		"[deploy.targets.prod]",
 		`type = "ssh-compose"`,
-		`host = "de-sci"`,
+		`host = "prod"`,
 		`remote_path = "/opt/carbide/docs"`,
-		"[deploy.targets.de-sci-environment]",
+		"[deploy.targets.prod-environment]",
 		`type = "ssh-compose-environment"`,
-		"[deploy.targets.de-sci-environment.roles.web]",
-		"[deploy.targets.de-sci-environment.roles.api]",
-		"[deploy.targets.de-sci-environment.roles.db]",
+		"[deploy.targets.prod-environment.roles.web]",
+		"[deploy.targets.prod-environment.roles.api]",
+		"[deploy.targets.prod-environment.roles.db]",
 		`migration = "once"`,
 	}
 	if missing := missingNeedles(content, required); len(missing) > 0 {
@@ -1682,9 +1682,10 @@ func doctorDocsAgentsContract() doctorResult {
 			"https://carbide.ryangerardwilson.com/for/agents",
 			"../site/for/agents.md",
 			"carbide doctor",
-			"carbide deploy check de-sci",
-			"carbide deploy preview de-sci",
-			"carbide deploy apply de-sci",
+			"CARBIDE_DOCS_DEPLOY_SSH",
+			"carbide deploy check prod",
+			"carbide deploy preview prod",
+			"carbide deploy apply prod",
 			"intentionally does not include `agents.d/`",
 		},
 	}
@@ -4365,6 +4366,29 @@ func parseTomlString(value string) string {
 	return unquoteEnvValue(strings.TrimSpace(value))
 }
 
+func deployEnvPlaceholder(value string) (string, bool) {
+	value = strings.TrimSpace(value)
+	if !strings.HasPrefix(value, "${") || !strings.HasSuffix(value, "}") {
+		return "", false
+	}
+	name := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(value, "${"), "}"))
+	if !regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`).MatchString(name) {
+		return "", false
+	}
+	return name, true
+}
+
+func resolveDeployString(value string) (string, error) {
+	if name, ok := deployEnvPlaceholder(value); ok {
+		resolved := strings.TrimSpace(os.Getenv(name))
+		if resolved == "" {
+			return "", fmt.Errorf("%s is required to resolve deploy config", name)
+		}
+		return resolved, nil
+	}
+	return value, nil
+}
+
 func parseTomlStringArray(value string) ([]string, error) {
 	value = strings.TrimSpace(value)
 	if !strings.HasPrefix(value, "[") || !strings.HasSuffix(value, "]") {
@@ -4658,6 +4682,16 @@ func validateSSHComposeTarget(target deployTarget) error {
 	if target.Host == "" {
 		return fmt.Errorf("deploy target %s is missing host", target.Name)
 	}
+	if host, ok := target.Hosts[target.Host]; ok {
+		if host.SSH == "" {
+			return fmt.Errorf("deploy host %s is missing ssh", host.Name)
+		}
+		if strings.ContainsAny(host.SSH, "\r\n") {
+			return fmt.Errorf("deploy host %s ssh is invalid", host.Name)
+		}
+	} else if strings.ContainsAny(target.Host, "\r\n") {
+		return fmt.Errorf("deploy target %s host is invalid", target.Name)
+	}
 	if target.RemotePath == "" || !strings.HasPrefix(target.RemotePath, "/") {
 		return fmt.Errorf("deploy target %s remote_path must be absolute", target.Name)
 	}
@@ -4746,6 +4780,13 @@ func validateSSHComposeEnvironmentTarget(target deployTarget) error {
 	return nil
 }
 
+func deploySSHDestination(target deployTarget) (string, error) {
+	if host, ok := target.Hosts[target.Host]; ok {
+		return resolveDeployString(host.SSH)
+	}
+	return resolveDeployString(target.Host)
+}
+
 func deployRoleByName(roles []deployRole, name string) (deployRole, bool) {
 	for _, role := range roles {
 		if role.Name == name {
@@ -4812,6 +4853,10 @@ func (a app) applySSHComposeDeploy(target deployTarget, r renderer) error {
 	if _, err := exec.LookPath("rsync"); err != nil {
 		return errors.New("rsync is required for ssh-compose deploys")
 	}
+	sshDest, err := deploySSHDestination(target)
+	if err != nil {
+		return err
+	}
 
 	source, err := filepath.Abs(target.SourcePath)
 	if err != nil {
@@ -4822,7 +4867,7 @@ func (a app) applySSHComposeDeploy(target deployTarget, r renderer) error {
 	}
 
 	r.Row(outputRow{"prepare", "remote directory"})
-	if _, err := runSSHScript(target.Host, fmt.Sprintf(
+	if _, err := runSSHScript(sshDest, fmt.Sprintf(
 		"set -euo pipefail\nsudo mkdir -p %s\nsudo chown \"$(id -u):$(id -g)\" %s\n",
 		shellQuote(target.RemotePath),
 		shellQuote(target.RemotePath),
@@ -4832,7 +4877,7 @@ func (a app) applySSHComposeDeploy(target deployTarget, r renderer) error {
 
 	r.Row(outputRow{"sync", source})
 	sourceWithSlash := source + string(os.PathSeparator)
-	remoteDest := target.Host + ":" + target.RemotePath + "/"
+	remoteDest := sshDest + ":" + target.RemotePath + "/"
 	if _, err := commandOutput("", "rsync",
 		"-az",
 		"--delete",
@@ -4851,7 +4896,7 @@ func (a app) applySSHComposeDeploy(target deployTarget, r renderer) error {
 	if err != nil {
 		return err
 	}
-	if _, err := runSSHScriptInput(target.Host, fmt.Sprintf(
+	if _, err := runSSHScriptInput(sshDest, fmt.Sprintf(
 		"set -euo pipefail\ncd %s\nif [ ! -f .env ]; then umask 077; cat > .env; else cat >/dev/null; fi\n",
 		shellQuote(target.RemotePath),
 	), envContent); err != nil {
@@ -4860,7 +4905,7 @@ func (a app) applySSHComposeDeploy(target deployTarget, r renderer) error {
 
 	compose := remoteComposeCommand(target)
 	r.Row(outputRow{"compose", "config"})
-	if _, err := runSSHScript(target.Host, fmt.Sprintf(
+	if _, err := runSSHScript(sshDest, fmt.Sprintf(
 		"set -euo pipefail\ncd %s\n%s config >/dev/null\n",
 		shellQuote(target.RemotePath),
 		compose,
@@ -4869,7 +4914,7 @@ func (a app) applySSHComposeDeploy(target deployTarget, r renderer) error {
 	}
 
 	r.Row(outputRow{"compose", "up -d --build"})
-	if _, err := runSSHScript(target.Host, fmt.Sprintf(
+	if _, err := runSSHScript(sshDest, fmt.Sprintf(
 		"set -euo pipefail\ncd %s\n%s up -d --build --remove-orphans\n",
 		shellQuote(target.RemotePath),
 		compose,
@@ -4886,7 +4931,7 @@ func (a app) applySSHComposeDeploy(target deployTarget, r renderer) error {
 
 	healthURL := fmt.Sprintf("http://127.0.0.1:%d%s", target.PublicPort, target.HealthPath)
 	r.Row(outputRow{"health", healthURL})
-	if _, err := runSSHScript(target.Host, fmt.Sprintf(
+	if _, err := runSSHScript(sshDest, fmt.Sprintf(
 		"set -euo pipefail\nfor i in $(seq 1 40); do curl -fsS --max-time 5 %s >/dev/null && exit 0; sleep 2; done\ncurl -fsS --max-time 10 %s >/dev/null\n",
 		shellQuote(healthURL),
 		shellQuote(healthURL),
@@ -4950,6 +4995,10 @@ func remoteComposeCommand(target deployTarget) string {
 }
 
 func installNginxSite(target deployTarget) error {
+	sshDest, err := deploySSHDestination(target)
+	if err != nil {
+		return err
+	}
 	name := target.NginxSite
 	if name == "" {
 		name = "carbide-" + target.Name
@@ -5000,7 +5049,7 @@ sudo systemctl reload nginx
 		shellQuote(available),
 		shellQuote(enabled),
 	)
-	_, err := runSSHScriptInput(target.Host, script, config)
+	_, err = runSSHScriptInput(sshDest, script, config)
 	return err
 }
 
@@ -5406,7 +5455,7 @@ func projectMigrationBrief(projectPath string, name string, slug string, scaffol
 		"",
 		"1. Compare the current project to `latest-scaffold/`.",
 		"2. Port framework-owned contracts first: `web/package.json`, `web/Dockerfile`, `web/tsconfig.json`, `web/src/styles.css`, browser asset build scripts, Compose watch paths, runtime baseline, and the `AGENTS.md` pointer to `/for/agents`.",
-		"3. Preserve app-owned behavior: product screens, API routes, database migrations, deploy targets, secrets, data volumes, and public domain behavior.",
+		"3. Preserve app-owned behavior: product screens, API routes, database migrations, deploy targets, secrets, data volumes, and externally visible behavior.",
 		"4. Do not copy generated output such as `node_modules`, `web/public`, `web/src/tailwind.css`, `.carbide`, or local `.env` files.",
 		"5. Run `carbide doctor`, `carbide doctor runtime` when containers are available, and the app-specific build/test commands.",
 		"",

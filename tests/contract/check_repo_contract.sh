@@ -691,11 +691,17 @@ grep -q "fileLineCount" cli/internal/cli/cli.go
 grep -q "https://carbide.ryangerardwilson.com/for/agents" docs/app/AGENTS.md
 grep -q "../site/for/agents.md" docs/app/AGENTS.md
 grep -q "intentionally does not include .*\`agents.d/\`" docs/app/AGENTS.md
-grep -q "carbide deploy check de-sci" docs/app/AGENTS.md
-grep -q "carbide deploy preview de-sci" docs/app/AGENTS.md
-grep -q "carbide deploy apply de-sci" docs/app/AGENTS.md
+grep -q "CARBIDE_DOCS_DEPLOY_SSH" docs/app/AGENTS.md
+grep -q "carbide deploy check prod" docs/app/AGENTS.md
+grep -q "carbide deploy preview prod" docs/app/AGENTS.md
+grep -q "carbide deploy apply prod" docs/app/AGENTS.md
 grep -q "https://carbide.ryangerardwilson.com/for/agents" docs/app/README.md
-grep -q "carbide deploy check de-sci" docs/app/README.md
+grep -q "CARBIDE_DOCS_DEPLOY_SSH" docs/app/README.md
+grep -q "carbide deploy check prod" docs/app/README.md
+grep -q 'ssh = "${CARBIDE_DOCS_DEPLOY_SSH}"' docs/app/carbide.toml
+grep -q 'host = "prod"' docs/app/carbide.toml
+grep -q '\[deploy.targets.prod-environment\]' docs/app/carbide.toml
+grep -q 'primary = "prod"' docs/app/carbide.toml
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
 grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
 grep -q "carbide doctor.*rejects global" docs/site/frontend-starter-contract.html
@@ -704,6 +710,7 @@ grep -q "custom selectors" docs/site/frontend-starter-contract.html
 grep -q "component styling belongs in Tailwind utility classes" docs/site/frontend-starter-contract.html
 grep -q "web/src/product.css" docs/site/frontend-starter-contract.html
 grep -q "PROJECT.md" docs/site/frontend-starter-contract.html
+! rg -n "de-sci|public domain behavior" docs/app docs/site cli/internal/cli/cli.go >/dev/null
 grep -q "scrollbar-width:thin" docs/site/assets/styles.css
 grep -q "scrollbar-color:#525252 transparent" docs/site/assets/styles.css
 grep -q "carbide follow logs" docs/site/create-your-first-app.html

@@ -679,9 +679,12 @@ contract_version = 1
 required = false
 local_default = "production"
 
-[deploy.targets.de-sci]
+[deploy.hosts.prod]
+ssh = "${CARBIDE_DOCS_DEPLOY_SSH}"
+
+[deploy.targets.prod]
 type = "ssh-compose"
-host = "de-sci"
+host = "prod"
 domain = "carbide.ryangerardwilson.com"
 remote_path = "/opt/carbide/docs"
 source_path = ".."
@@ -698,22 +701,22 @@ nginx_site = "carbide"
 
 		var out bytes.Buffer
 		a := app{stdout: &out}
-		if err := a.run([]string{"deploy", "preview", "de-sci"}); err != nil {
+		if err := a.run([]string{"deploy", "preview", "prod"}); err != nil {
 			t.Fatalf("preview returned %v", err)
 		}
 		got := out.String()
 		for _, want := range []string{
 			"Carbide deploy",
-			"preview de-sci",
-			"target   de-sci",
+			"preview prod",
+			"target   prod",
 			"type     ssh-compose",
-			"host     de-sci",
+			"host     prod",
 			"domain   carbide.ryangerardwilson.com",
 			"remote   /opt/carbide/docs",
 			"compose  app/docker-compose.yml",
 			"port     18081",
 			"mutates  no",
-			"apply    carbide deploy apply de-sci",
+			"apply    carbide deploy apply prod",
 		} {
 			if !strings.Contains(got, want) {
 				t.Fatalf("deploy preview output = %q, missing %q", got, want)
@@ -723,6 +726,26 @@ nginx_site = "carbide"
 			t.Fatalf("deploy preview output still shows disabled stub: %q", got)
 		}
 	})
+}
+
+func TestDeploySSHDestinationResolvesHostTableEnv(t *testing.T) {
+	t.Setenv("CARBIDE_DOCS_DEPLOY_SSH", "deploy@example-host")
+	target := deployTarget{
+		Host: "prod",
+		Hosts: map[string]deployHost{
+			"prod": {
+				Name: "prod",
+				SSH:  "${CARBIDE_DOCS_DEPLOY_SSH}",
+			},
+		},
+	}
+	got, err := deploySSHDestination(target)
+	if err != nil {
+		t.Fatalf("deploySSHDestination returned %v", err)
+	}
+	if got != "deploy@example-host" {
+		t.Fatalf("deploySSHDestination = %q", got)
+	}
 }
 
 func TestDeployEnvContentUsesProjectMetadata(t *testing.T) {
@@ -847,24 +870,24 @@ contract_version = 1
 required = false
 local_default = "production"
 
-[deploy.hosts.de-sci]
-ssh = "de-sci"
+[deploy.hosts.prod]
+ssh = "${CARBIDE_DOCS_DEPLOY_SSH}"
 
 [deploy.targets.prod]
 type = "ssh-compose-environment"
 domain = "carbide.example.com"
 
 [deploy.targets.prod.roles.web]
-hosts = ["de-sci"]
+hosts = ["prod"]
 public_port = 8080
 nginx = true
 
 [deploy.targets.prod.roles.api]
-hosts = ["de-sci"]
+hosts = ["prod"]
 
 [deploy.targets.prod.roles.db]
-hosts = ["de-sci"]
-primary = "de-sci"
+hosts = ["prod"]
+primary = "prod"
 migration = "once"
 `
 		if err := os.WriteFile("carbide.toml", []byte(config), 0644); err != nil {

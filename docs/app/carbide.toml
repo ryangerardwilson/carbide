@@ -71,13 +71,13 @@ description = "Postgres password used by the db container."
 [deploy]
 preview_before_apply = true
 
-[deploy.hosts.de-sci]
-ssh = "de-sci"
+[deploy.hosts.prod]
+ssh = "${CARBIDE_DOCS_DEPLOY_SSH}"
 description = "Host used for the public Carbide documentation app."
 
-[deploy.targets.de-sci]
+[deploy.targets.prod]
 type = "ssh-compose"
-host = "de-sci"
+host = "prod"
 domain = "carbide.ryangerardwilson.com"
 remote_path = "/opt/carbide/docs"
 source_path = ".."
@@ -88,7 +88,7 @@ health_path = "/health"
 nginx = true
 nginx_site = "carbide"
 
-[deploy.targets.de-sci-environment]
+[deploy.targets.prod-environment]
 type = "ssh-compose-environment"
 domain = "carbide.ryangerardwilson.com"
 remote_path = "/opt/carbide/docs"
@@ -98,15 +98,15 @@ project_directory = "app"
 health_path = "/health"
 strategy = "preview-only"
 
-[deploy.targets.de-sci-environment.roles.web]
-hosts = ["de-sci"]
+[deploy.targets.prod-environment.roles.web]
+hosts = ["prod"]
 public_port = 18081
 nginx = true
 
-[deploy.targets.de-sci-environment.roles.api]
-hosts = ["de-sci"]
+[deploy.targets.prod-environment.roles.api]
+hosts = ["prod"]
 
-[deploy.targets.de-sci-environment.roles.db]
-hosts = ["de-sci"]
-primary = "de-sci"
+[deploy.targets.prod-environment.roles.db]
+hosts = ["prod"]
+primary = "prod"
 migration = "once"

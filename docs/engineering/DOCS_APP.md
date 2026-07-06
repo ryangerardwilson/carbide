@@ -26,6 +26,6 @@ https://carbide.ryangerardwilson.com
   under `docs/site/` as appropriate.
 - Run `bun run assets:build` in `docs/app/web` after docs style changes so
   `docs/site/assets/styles.css` is regenerated.
-- Deploy with `carbide deploy apply de-sci` from `docs/app` only after local
+- Set `CARBIDE_DOCS_DEPLOY_SSH` from shell env or CI secrets.
+- Deploy with `carbide deploy apply prod` from `docs/app` only after local
   checks pass.
-

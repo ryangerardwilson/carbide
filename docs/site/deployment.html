@@ -97,9 +97,12 @@ carbide deploy preview prod json</code></pre>
           <pre><code>[deploy]
 preview_before_apply = true
 
+[deploy.hosts.prod]
+ssh = "${CARBIDE_DEPLOY_SSH}"
+
 [deploy.targets.prod]
 type = "ssh-compose"
-host = "app-prod"
+host = "prod"
 domain = "app.example.com"
 remote_path = "/opt/my-carbide-app"
 source_path = "."
@@ -109,7 +112,7 @@ public_port = 18080
 health_path = "/health"
 nginx = true
 nginx_site = "my-carbide-app"</code></pre>
-          <p><code>host</code> is the SSH destination used by <code>ssh</code> and <code>rsync</code>. It can be an SSH config alias such as <code>app-prod</code> or a direct destination such as <code>ubuntu@app.example.com</code>.</p>
+          <p><code>host</code> can be a direct SSH destination or the name of a checked-in <code>[deploy.hosts.*]</code> entry. Use the host table when the SSH destination should come from shell env or CI secrets instead of a repo-local alias.</p>
           <p>The VM needs Docker Compose available. If <code>nginx = true</code>, the remote user must be able to run <code>sudo</code>; Carbide writes an nginx site for <code>domain</code>, proxies to <code>public_port</code>, and uses Certbot when a certificate is not already present.</p>
         </section>
 
@@ -161,7 +164,7 @@ migration = "once"</code></pre>
           <h2>Field Reference</h2>
           <ul>
             <li><code>type</code>: <code>ssh-compose</code> for one VM, <code>ssh-compose-environment</code> for multi-VM topology.</li>
-            <li><code>host</code>: SSH destination for a single-VM target.</li>
+            <li><code>host</code>: direct SSH destination for a single-VM target, or the name of a matching <code>[deploy.hosts.*]</code> entry.</li>
             <li><code>domain</code>: public DNS name for the environment.</li>
             <li><code>remote_path</code>: absolute path on the remote host.</li>
             <li><code>source_path</code>: local path to sync before deploy.</li>
