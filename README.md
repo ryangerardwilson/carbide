@@ -36,22 +36,17 @@ app code.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash
-carbide new demo
-cd demo
+carbide new "My Carbide App"
+cd my-carbide-app
 carbide run dev
-carbide doctor
-carbide status
 ```
 
-The installer builds the Go CLI. Human app names are accepted:
-`carbide new "My Carbide App"` creates `my-carbide-app` while storing the
-display name as `My Carbide App`.
+`carbide new "My Carbide App"` creates `my-carbide-app`, stores
+`name = "My Carbide App"`, and stores `slug = "my-carbide-app"`.
 
-`carbide help` prints the command reference. `carbide upgrade` updates the
-installed CLI when a newer GitHub commit is available.
-
-Generated apps run Bun, the Go API build, and Postgres inside containers.
-Docker with Docker Compose is required to run generated apps.
+The installer builds the `carbide` CLI with Go, so Go must be available on the
+host machine. Generated apps run Bun, the Go API build, and Postgres inside
+containers. Docker with Docker Compose is required to run generated apps.
 
 ## Core Commands
 
@@ -125,5 +120,4 @@ semantics.
 ## Learn More
 
 - Public docs: <https://carbide.ryangerardwilson.com>
-- Agent startup guide: <https://carbide.ryangerardwilson.com/for/agents>
 - Engineering docs: `docs/engineering/`
