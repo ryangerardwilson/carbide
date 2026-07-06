@@ -21,6 +21,7 @@ const contentTypes: Record<string, string> = {
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".map": "application/json; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
   ".svg": "image/svg+xml",
   ".txt": "text/plain; charset=utf-8",
 };
@@ -42,6 +43,7 @@ function sitePath(pathname: string): string | null {
   } catch {
     return null;
   }
+  if (requestPath === "/for/agents") requestPath = "/for/agents.md";
   if (requestPath === "/") requestPath = "/index.html";
   if (!extname(requestPath)) requestPath = `${requestPath}.html`;
 
@@ -73,6 +75,9 @@ function canonicalDocsPath(pathname: string): string {
   }
   if (pathname === "/index" || pathname === "/index.html") {
     return "/";
+  }
+  if (pathname === "/for/agents.md") {
+    return "/for/agents";
   }
   if (pathname.endsWith(".html")) {
     return pathname.slice(0, -".html".length) || "/";

@@ -1,25 +1,22 @@
-# For Agents
+# Carbide for Agents
 
-This page is for AI coding agents helping a developer create, inspect, modify,
-or deploy a Carbide application.
+This page is for AI coding agents that are helping a developer start or work
+inside a Carbide application.
 
-## How To Proceed
+## How to Proceed
 
-- First, check whether the current directory contains a Carbide app by looking
-  for `carbide.toml`, `AGENTS.md`, and the `web/`, `api/`, and `db/`
-  directories.
-- If it does, do not create a new app. Read `AGENTS.md`, then the smallest
-  relevant files under `agents.d/`, and continue with the user's requested
+- First, check whether the current directory already contains a Carbide app.
+- A Carbide app has `carbide.toml`, `AGENTS.md`, and `web/`, `api/`, and
+  `db/` directories.
+- If it does, skip installation and move straight to the user's requested
   task.
-- If it does not, verify that Docker, Docker Compose, Git, curl, and Go are
-  available.
-- If the Carbide CLI is missing, install it from the public repository.
-- Prefer Carbide defaults unless the user explicitly asks for a different app
-  name, port, deploy target, or architecture.
+- If it does not, verify that Docker, Docker Compose, Git, curl, Go, and the
+  Carbide CLI are available.
+- If the Carbide CLI is missing, install it from GitHub.
 
 ## Prerequisites
 
-Run quick checks:
+Run quick version checks:
 
 ```shell
 docker --version
@@ -33,21 +30,22 @@ carbide version
 Host Bun, Node, React, Go API setup, and Postgres setup are not prerequisites
 for a generated Carbide app. They run inside Docker containers.
 
-If Docker or Docker Compose is missing, stop and ask the user to install them.
+If Docker or Docker Compose is missing, tell the user that Docker is required
+before continuing.
+
 If Go is missing, install Go or ask the user to install it before building the
 CLI.
 
-## Install The CLI
+## Install the CLI
 
 ```shell
 curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash
 carbide version
 ```
 
-## Create The Application
+## Create the Application
 
-Use a human app name when the user gives one. Carbide stores the display name
-and creates a slug for the directory.
+Create the new application with Carbide defaults.
 
 ```shell
 carbide new "My Carbide App"
@@ -61,7 +59,7 @@ the app created in place.
 
 ## Existing Apps
 
-When working inside an existing app:
+When the current directory is already a Carbide app:
 
 - Read `AGENTS.md` first.
 - Read only the relevant files under `agents.d/`.
@@ -69,7 +67,7 @@ When working inside an existing app:
 - Keep the app as one coherent repository with `web`, `api`, and `db`
   containers.
 - Do not introduce service sprawl unless the user explicitly asks for it and
-  the deploy target already supports the role split.
+  the deploy target already supports that topology.
 - Use `carbide project migrate` when the app needs to be moved toward a newer
   scaffold contract.
 
@@ -104,13 +102,12 @@ roles. Read `carbide.toml` before assuming topology.
 ## Guidance
 
 - Ask only for decisions that materially affect the app.
-- Prefer the generated app contract when the user has not specified a
-  different approach.
+- Prefer Carbide defaults when the user has not specified a preference.
 - Keep secrets out of Git. Use the env contract in `carbide.toml` and local
   `.env` files.
-- Use `carbide doctor` as the first regression gate and `carbide doctor
-  runtime` when runtime behavior matters.
-- Keep answers brief and include the exact commands the user can run next.
+- Use `carbide doctor` as the first regression gate.
+- Use `carbide doctor runtime` when runtime behavior matters.
+- Keep answers brief and include exact commands the user can run next.
 
 ## Example Outcome
 

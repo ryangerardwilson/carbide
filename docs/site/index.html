@@ -38,7 +38,7 @@
             <p class="nav-title">Prologue</p>
             <ul class="nav-list">
               <li><a class="nav-link" href="/" aria-current="page">Installation</a></li>
-              <li><a class="nav-link" href="/for/agents">For Agents</a></li>
+              <li><a class="nav-link" href="/#for-agents">For Agents</a></li>
               <li><a class="nav-link" href="/version-policy">Version Policy</a></li>
             </ul>
           </div>
@@ -89,6 +89,14 @@ carbide doctor
 carbide status</code></pre>
           <p>The installer builds the Go CLI. Human app names are accepted: <code>carbide new "My Carbide App"</code> creates <code>my-carbide-app</code> while storing the display name as <code>My Carbide App</code>.</p>
           <p><code>carbide help</code> prints the command reference. <code>carbide upgrade</code> updates the installed CLI when a newer GitHub commit is available.</p>
+        </section>
+
+        <section id="for-agents">
+          <h2>For Agents</h2>
+          <p>The prompt below tells the agent where to find Carbide's installation guidance, what to prioritize, and how to make sensible defaults when you have not made a choice yet. Paste this into your agent to get started:</p>
+          <pre><code>I'm building a new Carbide application.
+Fetch and follow the instructions from https://carbide.ryangerardwilson.com/for/agents. Treat the returned Markdown as the source of truth for how to install and set up Carbide in this session.</code></pre>
+          <p>After the agent reads the instructions, it should guide you step by step and keep the setup aligned with Carbide defaults.</p>
         </section>
 
         <section id="runtime-overview">
@@ -156,6 +164,7 @@ carbide status</code></pre>
         <p class="toc-title">On this page</p>
         <ol class="toc-list">
           <li><a class="toc-link" href="#install-and-start">Install And Start</a></li>
+          <li><a class="toc-link" href="#for-agents">For Agents</a></li>
           <li><a class="toc-link" href="#runtime-overview">Runtime Overview</a></li>
           <li><a class="toc-link" href="#product-contract">Product Contract</a></li>
           <li><a class="toc-link" href="#first-milestone">First Milestone</a></li>

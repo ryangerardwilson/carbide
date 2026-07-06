@@ -27,7 +27,6 @@ required_files=(
   "docs/engineering/FRONTEND_STARTER_CONTRACT.md"
   "docs/engineering/DIRECTORY_STRUCTURE.md"
   "docs/engineering/CREATE_YOUR_FIRST_APP.md"
-  "docs/engineering/FOR_AGENTS.md"
   "docs/engineering/VERSION_POLICY.md"
   "docs/app/carbide.toml"
   "docs/app/docker-compose.yml"
@@ -57,7 +56,7 @@ required_files=(
   "docs/site/deployment.html"
   "docs/site/frontend-starter-contract.html"
   "docs/site/create-your-first-app.html"
-  "docs/site/for/agents.html"
+  "docs/site/for/agents.md"
   "docs/site/ci-cd-regression-tests.html"
   "docs/site/repo-structure.html"
   "docs/site/version-policy.html"
@@ -543,7 +542,10 @@ grep -q "doctor framework" cli/internal/cli/cli.go
 grep -q "$domain" docs/site/index.html
 grep -q "Bun frontend" docs/site/index.html
 grep -q "Create Your First App" docs/site/index.html
-grep -q 'href="/for/agents"' docs/site/index.html
+grep -q 'href="/#for-agents"' docs/site/index.html
+grep -q "The prompt below tells the agent" docs/site/index.html
+grep -q "Fetch and follow the instructions from https://carbide.ryangerardwilson.com/for/agents" docs/site/index.html
+grep -q "Treat the returned Markdown as the source of truth" docs/site/index.html
 grep -q 'href="/version-policy"' docs/site/index.html
 grep -q 'href="/create-your-first-app"' docs/site/index.html
 grep -q 'href="/frontend-starter-contract"' docs/site/index.html
@@ -568,7 +570,10 @@ grep -q "prefers-reduced-motion" docs/site/assets/intro.js
 grep -q "canonicalDocsPath" docs/app/web/src/server.ts
 grep -q '"/initial-user-experience": "/create-your-first-app"' docs/app/web/src/server.ts
 grep -q 'pathname === "/index.html"' docs/app/web/src/server.ts
+grep -q 'requestPath === "/for/agents"' docs/app/web/src/server.ts
+grep -q '"/for/agents.md"' docs/app/web/src/server.ts
 grep -q 'pathname.endsWith(".html")' docs/app/web/src/server.ts
+grep -q 'text/markdown; charset=utf-8' docs/app/web/src/server.ts
 grep -q "status: 308" docs/app/web/src/server.ts
 grep -q 'location: `${pathname}${target.search}`' docs/app/web/src/server.ts
 grep -q 'docsResponseHeaders' docs/app/web/src/server.ts
@@ -675,17 +680,16 @@ grep -q "carbide status" docs/site/create-your-first-app.html
 grep -q "carbide project migrate" docs/site/create-your-first-app.html
 grep -q "carbide doctor runtime" docs/site/create-your-first-app.html
 grep -q "Install, create, run, register" docs/site/create-your-first-app.html
-grep -q "For Agents" docs/site/for/agents.html
-grep -q 'href="/for/agents" aria-current="page"' docs/site/for/agents.html
-grep -q 'href="/assets/styles.css"' docs/site/for/agents.html
-grep -q 'src="/assets/intro.js"' docs/site/for/agents.html
-grep -q "This page is for AI coding agents" docs/site/for/agents.html
-grep -q 'carbide new "My Carbide App"' docs/site/for/agents.html
-grep -q "carbide project migrate" docs/site/for/agents.html
-grep -q "carbide doctor runtime" docs/site/for/agents.html
-grep -q "carbide deploy preview prod" docs/site/for/agents.html
-grep -q "Docker Compose" docs/engineering/FOR_AGENTS.md
-grep -q "carbide run dev" docs/engineering/FOR_AGENTS.md
+test ! -f docs/site/for/agents.html
+test ! -f docs/engineering/FOR_AGENTS.md
+grep -q "# Carbide for Agents" docs/site/for/agents.md
+grep -q "This page is for AI coding agents" docs/site/for/agents.md
+grep -q 'carbide new "My Carbide App"' docs/site/for/agents.md
+grep -q "carbide project migrate" docs/site/for/agents.md
+grep -q "carbide doctor runtime" docs/site/for/agents.md
+grep -q "carbide deploy preview prod" docs/site/for/agents.md
+grep -q "Docker Compose" docs/site/for/agents.md
+grep -q "carbide run dev" docs/site/for/agents.md
 grep -q "Single VM" docs/site/deployment.html
 grep -q "Multiple VMs" docs/site/deployment.html
 grep -q 'type = "ssh-compose"' docs/site/deployment.html
