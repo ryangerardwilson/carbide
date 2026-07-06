@@ -4,6 +4,11 @@ export const docsClassLayers = {
     l2: "text-sm leading-6",
     l3: "bg-neutral-950 text-neutral-100",
   },
+  scrollbar: {
+    l1: "[scrollbar-width:thin]",
+    l2: "[scrollbar-color:rgb(82_82_82)_transparent]",
+    l3: "hover:[scrollbar-color:rgb(250_204_21)_transparent]",
+  },
   link: {
     l1: "inline-flex items-center",
     l2: "text-sm underline-offset-4",

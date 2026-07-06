@@ -59,7 +59,7 @@ const dashboardClassLayers = {
   nav: {
     l1: 'flex overflow-x-auto lg:grid lg:overflow-visible',
     l2: 'mt-3 gap-1 pb-1 lg:pb-0',
-    l3: ''
+    l3: ui.scrollbar
   },
   navButton: {
     l1: 'shrink-0',

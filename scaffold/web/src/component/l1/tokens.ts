@@ -1,3 +1,5 @@
+const scrollbar = '[scrollbar-width:thin] [scrollbar-color:rgb(163_163_163)_transparent] hover:[scrollbar-color:rgb(115_115_115)_transparent] dark:[scrollbar-color:rgb(82_82_82)_transparent] dark:hover:[scrollbar-color:rgb(115_115_115)_transparent]';
+
 export const ui = {
   accent: 'text-neutral-950 dark:text-neutral-50',
   action: 'bg-neutral-950 text-white hover:bg-neutral-800 focus-visible:ring-4 focus-visible:ring-neutral-300 dark:bg-neutral-50 dark:text-black dark:hover:bg-neutral-200 dark:focus-visible:ring-neutral-700',
@@ -18,7 +20,8 @@ export const ui = {
   input: 'bg-white border-neutral-300 text-neutral-950 focus:border-neutral-950 focus:ring-4 focus:ring-neutral-200 dark:bg-black dark:border-neutral-700 dark:text-neutral-50 dark:focus:border-neutral-50 dark:focus:ring-neutral-800',
   muted: 'text-neutral-600 dark:text-neutral-400',
   neutralBadge: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300',
-  page: 'bg-white text-neutral-950 font-sans dark:bg-black dark:text-neutral-50',
+  page: `bg-white text-neutral-950 font-sans dark:bg-black dark:text-neutral-50 ${scrollbar}`,
+  scrollbar,
   secondaryAction: 'bg-white border-neutral-200 text-neutral-950 hover:border-neutral-400 focus-visible:ring-4 focus-visible:ring-neutral-300 dark:bg-black dark:border-neutral-800 dark:text-neutral-50 dark:hover:border-neutral-600 dark:focus-visible:ring-neutral-700',
   selection: 'bg-white border-neutral-200 text-neutral-950 dark:bg-black dark:border-neutral-800 dark:text-neutral-50',
   selectionActive: 'bg-neutral-950 border-neutral-950 text-white dark:bg-neutral-50 dark:border-neutral-50 dark:text-black',

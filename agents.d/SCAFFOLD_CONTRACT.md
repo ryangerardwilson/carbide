@@ -34,6 +34,9 @@ Every root directory except `agents.d/` is a standalone Docker service.
   classes and component tokens.
 - Generated colors and light/dark variants belong in component Tailwind
   classes, especially `web/src/component/l1/tokens.ts`.
+- Built-in scrollbar styling belongs in Tailwind tokens/classes using
+  `scrollbar-width` and `scrollbar-color`, with light/dark variants. Do not add
+  scrollbar pseudo-selector CSS to `styles.css`.
 - Do not reintroduce generated `--carbide-*` color variables or `@theme` into
   `styles.css`.
 

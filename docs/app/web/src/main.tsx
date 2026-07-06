@@ -4,7 +4,7 @@ import './tailwind.css';
 
 function DocsRuntime() {
   return (
-    <main className="min-h-screen bg-white text-neutral-950 dark:bg-black dark:text-neutral-50">
+    <main className="min-h-screen bg-white text-neutral-950 [scrollbar-width:thin] [scrollbar-color:rgb(163_163_163)_transparent] hover:[scrollbar-color:rgb(115_115_115)_transparent] dark:bg-black dark:text-neutral-50 dark:[scrollbar-color:rgb(82_82_82)_transparent] dark:hover:[scrollbar-color:rgb(115_115_115)_transparent]">
       <section className="mx-auto grid min-h-screen max-w-3xl place-items-center px-4 py-10 text-center">
         <div className="grid gap-3">
           <p className="text-xs font-semibold uppercase tracking-normal text-neutral-600 dark:text-neutral-400">

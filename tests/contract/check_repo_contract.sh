@@ -368,9 +368,15 @@ grep -q "\\[data-theme=\"dark\"\\]" scaffold/web/src/styles.css
 ! grep -q "min-width:" scaffold/web/src/styles.css
 ! grep -q "margin:" scaffold/web/src/styles.css
 ! grep -q "padding:" scaffold/web/src/styles.css
+! grep -q "::-webkit-scrollbar" scaffold/web/src/styles.css
+! grep -q "scrollbar-color:" scaffold/web/src/styles.css
+! grep -q "scrollbar-width:" scaffold/web/src/styles.css
 ! grep -q "@theme" scaffold/web/src/styles.css
 ! grep -q -- "--carbide-" scaffold/web/src/styles.css
 ! grep -q "carbide-" scaffold/web/src/component/l1/tokens.ts
+grep -q "const scrollbar =" scaffold/web/src/component/l1/tokens.ts
+grep -F -q "[scrollbar-width:thin]" scaffold/web/src/component/l1/tokens.ts
+grep -F -q "dark:[scrollbar-color:rgb(82_82_82)_transparent]" scaffold/web/src/component/l1/tokens.ts
 grep -q "bg-white text-neutral-950 dark:bg-black dark:text-neutral-50" scaffold/web/src/component/l1/tokens.ts
 ! grep -Eq "#0f766e|#115e59|#2dd4bf|#5eead4|#16433c|#0f302c|#16211b|#edf5ef|#ecfdf5|#166534" scaffold/web/src/styles.css
 ! grep -q "from-carbide-action via-carbide-hero-via" scaffold/web/src/component/l1/tokens.ts
@@ -387,6 +393,7 @@ grep -F -q "gap-3 border-l px-4 py-5" scaffold/web/src/component/l2/AuthForm.tsx
 grep -F -q "w-full max-w-sm justify-self-center gap-3" scaffold/web/src/component/l2/AuthForm.tsx
 grep -F -q "lg:grid-cols-[216px_minmax(0,1fr)]" scaffold/web/src/component/l2/Layouts.tsx
 grep -F -q "px-3 py-4 sm:px-5 lg:py-5" scaffold/web/src/component/l2/Layouts.tsx
+grep -q "ui.scrollbar" scaffold/web/src/component/l2/Layouts.tsx
 ! grep -R -E "text-7xl|text-5xl|py-24|lg:py-12|min-h-12 rounded-md border|min-h-10 rounded-md border|lg:grid-cols-\[280px|lg:grid-cols-\[240px|gap-6|p-6|font-extrabold" scaffold/web/src/component >/dev/null
 grep -q '/api/${mode}' scaffold/web/src/main.tsx
 grep -q "carbide.theme" scaffold/web/src/main.tsx
@@ -581,6 +588,9 @@ grep -q "@custom-variant dark" docs/app/web/src/styles.css
 ! grep -q "min-width:" docs/app/web/src/styles.css
 ! grep -q "margin:" docs/app/web/src/styles.css
 ! grep -q "padding:" docs/app/web/src/styles.css
+! grep -q "::-webkit-scrollbar" docs/app/web/src/styles.css
+! grep -q "scrollbar-color:" docs/app/web/src/styles.css
+! grep -q "scrollbar-width:" docs/app/web/src/styles.css
 ! grep -q "@theme" docs/app/web/src/styles.css
 ! grep -q -- "--carbide-" docs/app/web/src/styles.css
 cmp -s scaffold/web/src/styles.css docs/app/web/src/styles.css
@@ -614,21 +624,31 @@ grep -q "bun run assets:build" docs/app/web/Dockerfile
 grep -q "COPY app/web/index.html" docs/app/web/Dockerfile
 grep -q "Carbide Docs | Carbide" docs/app/web/index.html
 grep -q "carbide.theme" docs/app/web/index.html
+grep -F -q "[scrollbar-width:thin]" docs/app/web/index.html
+grep -F -q "[scrollbar-color:rgb(82_82_82)_transparent]" docs/app/web/index.html
 grep -q "createRoot" docs/app/web/src/main.tsx
 grep -q "DocsRuntime" docs/app/web/src/main.tsx
+grep -F -q "dark:[scrollbar-color:rgb(82_82_82)_transparent]" docs/app/web/src/main.tsx
 grep -q "asset-manifest.json" docs/app/web/src/write-index.ts
 grep -q "docsClassLayers" docs/app/web/src/component/l1/tokens.ts
+grep -q "scrollbar" docs/app/web/src/component/l1/tokens.ts
+grep -F -q "[scrollbar-width:thin]" docs/app/web/src/component/l1/tokens.ts
+grep -F -q "[scrollbar-color:rgb(82_82_82)_transparent]" docs/app/web/src/component/l1/tokens.ts
+grep -q "docsScrollbarClass" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "docsStaticClassMap" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "rewriteDocsClasses" docs/app/web/src/component/l2/DocsChrome.tsx
+grep -F -q "[&_pre]:[scrollbar-width:thin]" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -F -q "[&_pre+p]:mt-[18px]" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -F -q "max-[860px]:mt-[34px]" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "docsChromeClassLayers" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "docsWebContract" docs/app/web/src/component/l3/DocsSite.tsx
 grep -q "rewriteDocsHtml" docs/app/web/src/component/l3/DocsSite.tsx
+grep -F -q "[scrollbar-width:thin]" docs/app/web/src/component/l3/DocsSite.tsx
 grep -q "fileLineCount" cli/internal/cli/cli.go
 grep -q "component/l1" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "component/l2" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "component/l3" docs/app/agents.d/TAILWIND_COMPONENTS.md
+grep -q "scrollbar-width" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "generated scaffold contract" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "bun run assets:build" docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "generated docs CSS contains custom" docs/app/agents.d/TAILWIND_COMPONENTS.md
@@ -636,8 +656,11 @@ grep -q 'docs-\*' docs/app/agents.d/TAILWIND_COMPONENTS.md
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
 grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
 grep -q "carbide doctor.*rejects global" docs/site/frontend-starter-contract.html
+grep -q "built-in scrollbar styling" docs/site/frontend-starter-contract.html
 grep -q "custom selectors" docs/site/frontend-starter-contract.html
 grep -q "component styling belongs in Tailwind utility classes" docs/site/frontend-starter-contract.html
+grep -q "scrollbar-width:thin" docs/site/assets/styles.css
+grep -q "scrollbar-color:#525252 transparent" docs/site/assets/styles.css
 grep -q "carbide follow logs" docs/site/create-your-first-app.html
 grep -q "carbide status" docs/site/create-your-first-app.html
 grep -q "carbide project migrate" docs/site/create-your-first-app.html
@@ -659,6 +682,7 @@ grep -q "my-carbide-app/" docs/site/repo-structure.html
 grep -q "web/src/component/l1" docs/site/repo-structure.html
 grep -q "web/src/component/l2" docs/site/repo-structure.html
 grep -q "web/src/component/l3" docs/site/repo-structure.html
+grep -q "scrollbar utility group" docs/site/repo-structure.html
 grep -q "Global .*html.*body.* sizing" docs/site/repo-structure.html
 grep -q "web, api, db" docs/site/repo-structure.html
 grep -q "Generated apps do not include root" docs/site/repo-structure.html

@@ -98,7 +98,8 @@ There is no root `src/`, `frontend/`, `backend/`, `model/`, `controller/`,
 
 The generated web app uses Tailwind and keeps component tiers explicit:
 
-- `web/src/component/l1/`: primitives and Tailwind utility tokens.
+- `web/src/component/l1/`: primitives and Tailwind utility tokens, including
+  the built-in light/dark scrollbar utility group.
 - `web/src/component/l2/`: reusable composed patterns such as forms and
   layouts.
 - `web/src/component/l3/`: product screens such as auth, dashboard, and loading

@@ -1,9 +1,16 @@
 import { docsClassLayers } from "../l1";
 
+const docsScrollbarClass = [
+  docsClassLayers.scrollbar.l1,
+  docsClassLayers.scrollbar.l2,
+  docsClassLayers.scrollbar.l3,
+].join(" ");
+
 const docsHtmlClass = [
   "scroll-smooth",
   "bg-neutral-950",
   "[color-scheme:dark]",
+  docsScrollbarClass,
   "motion-reduce:scroll-auto",
 ].join(" ");
 
@@ -16,6 +23,7 @@ const docsBodyClass = [
   "text-neutral-100",
   "selection:bg-yellow-400/30",
   "selection:text-neutral-100",
+  docsScrollbarClass,
 ].join(" ");
 
 export const docsStaticClassMap: Record<string, string> = {
@@ -167,6 +175,7 @@ export const docsStaticClassMap: Record<string, string> = {
     "max-h-[calc(100svh-4rem-48px)]",
     "self-start",
     "overflow-auto",
+    docsScrollbarClass,
     "border-r",
     "border-neutral-800",
     "pr-[22px]",
@@ -202,6 +211,7 @@ export const docsStaticClassMap: Record<string, string> = {
     "max-h-[calc(100svh-4rem-48px)]",
     "self-start",
     "overflow-auto",
+    docsScrollbarClass,
     "border-l",
     "border-neutral-800",
     "pl-5",
@@ -251,6 +261,8 @@ export const docsStaticClassMap: Record<string, string> = {
     "[&_p]:text-neutral-300",
     "[&_pre]:mt-[18px]",
     "[&_pre]:overflow-x-auto",
+    "[&_pre]:[scrollbar-width:thin]",
+    "[&_pre]:[scrollbar-color:rgb(82_82_82)_transparent]",
     "[&_pre]:rounded-lg",
     "[&_pre]:border",
     "[&_pre]:border-neutral-700",

@@ -4,7 +4,7 @@ export const docsSiteClassLayers = {
   shell: {
     l1: "grid min-h-screen",
     l2: "grid-cols-1 lg:grid-cols-[270px_minmax(0,1fr)_224px]",
-    l3: "bg-neutral-950 text-neutral-100",
+    l3: "bg-neutral-950 text-neutral-100 [scrollbar-width:thin] [scrollbar-color:rgb(82_82_82)_transparent] hover:[scrollbar-color:rgb(250_204_21)_transparent]",
   },
   article: {
     l1: "min-w-0",

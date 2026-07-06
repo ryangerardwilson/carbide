@@ -100,12 +100,13 @@ Bun lockfile.
 directives, and the `data-theme` dark variant. It does not own global
 `html`/`body` sizing, layout defaults, or a generated color-variable palette.
 `tokens.ts` contains reusable Tailwind utility groups for the generated auth
-and dashboard UI, including starter light/dark visual choices. The scaffold
-does not add a parallel `theme.css` file. `carbide doctor` rejects global
-`html`/`body` sizing, custom class selectors, ID selectors, `--carbide-*` color
-variables, `@theme`, `@apply`, `@layer`, keyframes, media rules, and container
-rules in `styles.css`; those belong in Tailwind utility classes and component
-class layers.
+and dashboard UI, including starter light/dark visual choices and built-in
+scrollbar utilities. The scaffold does not add a parallel `theme.css` file.
+`carbide doctor` rejects global `html`/`body` sizing, custom class selectors,
+ID selectors, scrollbar pseudo-selectors, `--carbide-*` color variables,
+`@theme`, `@apply`, `@layer`, keyframes, media rules, and container rules in
+`styles.css`; those belong in Tailwind utility classes and component class
+layers.
 
 `typecheck` runs `tsc --noEmit`. Docker builds run typecheck before building
 browser assets, so broken component props, API response shapes, or Bun server

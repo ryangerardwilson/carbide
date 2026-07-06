@@ -92,6 +92,8 @@ currently refuses to mutate anything.
   `data-theme` dark variant. Starter density, colors, and spacing live in
   Tailwind utility tokens, not global CSS or a generated CSS variable palette.
   `web/index.html` applies the stored theme before the React app paints.
+- Scrollbar styling is built in through Tailwind utility tokens and follows
+  light/dark mode without adding custom CSS to `web/src/styles.css`.
 - `api/` owns the Go HTTP/API server, auth, sessions, routing, and JSON
   responses, its Go module, and its Dockerfile.
 - `db/` owns Postgres-backed data access, its Go module, and migration

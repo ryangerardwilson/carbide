@@ -971,6 +971,8 @@ func doctorFrontendContract() doctorResult {
 		!fileContains("web/src/styles.css", `@source "./main.tsx";`) ||
 		!fileContains("web/src/styles.css", `@source "./server.ts";`) ||
 		!fileContains("web/src/styles.css", `@custom-variant dark`) ||
+		!fileContains("web/index.html", `[scrollbar-width:thin]`) ||
+		!fileContains("web/index.html", `dark:[scrollbar-color:rgb(82_82_82)_transparent]`) ||
 		!fileContains("web/index.html", `prefers-color-scheme: dark`) ||
 		!fileContains("web/src/main.tsx", `carbide.theme`) ||
 		!fileContains("web/src/component/l1/ThemeToggle.tsx", `SunIcon`) ||
@@ -980,6 +982,9 @@ func doctorFrontendContract() doctorResult {
 		!fileContains("web/src/component/l1/ThemeToggle.tsx", `size-8 rounded-full border`) ||
 		!fileContains("web/src/component/l1/ThemeToggle.tsx", `data-theme-mode`) ||
 		!fileContains("web/src/component/l1/tokens.ts", `bg-white text-neutral-950 dark:bg-black dark:text-neutral-50`) ||
+		!fileContains("web/src/component/l1/tokens.ts", `const scrollbar =`) ||
+		!fileContains("web/src/component/l1/tokens.ts", `[scrollbar-width:thin]`) ||
+		!fileContains("web/src/component/l1/tokens.ts", `dark:[scrollbar-color:rgb(82_82_82)_transparent]`) ||
 		!fileContains("web/src/component/l1/Text.tsx", `text-2xl/8 sm:text-3xl/9`) ||
 		!fileContains("web/src/component/l1/Field.tsx", `min-h-8 rounded-md border px-2 py-1 text-sm/6`) ||
 		!fileContains("web/src/component/l1/Button.tsx", `md: 'min-h-8 px-3 text-xs'`) ||
@@ -987,6 +992,7 @@ func doctorFrontendContract() doctorResult {
 		!fileContains("web/src/component/l2/AuthForm.tsx", `w-full max-w-sm justify-self-center gap-3`) ||
 		!fileContains("web/src/component/l2/Layouts.tsx", `lg:grid-cols-[216px_minmax(0,1fr)]`) ||
 		!fileContains("web/src/component/l2/Layouts.tsx", `px-3 py-4 sm:px-5 lg:py-5`) ||
+		!fileContains("web/src/component/l2/Layouts.tsx", `ui.scrollbar`) ||
 		!fileContains("web/src/main.tsx", "./component/l3") {
 		return doctorFail("frontend", "React/Bun/Tailwind contract drifted")
 	}
@@ -1263,14 +1269,14 @@ func doctorDocsWebContract() doctorResult {
 		"web/package.json":                    {`"build"`, `"assets:build"`, `"docs:styles"`, `"tailwind:build"`, `"typecheck": "tsc --noEmit"`, `"@tailwindcss/cli":`, `"react":`, `"react-dom":`, `"tailwindcss":`, `"typescript": "6.0.3"`, `"@types/bun": "1.3.14"`, `"@types/react": "19.2.17"`, `"@types/react-dom": "19.2.3"`, `--entry-naming='assets/[name]-[hash].[ext]'`},
 		"web/tsconfig.json":                   {`"strict": true`, `"jsx": "react-jsx"`, `"types": ["bun-types"]`},
 		"web/src/build-styles.ts":             {"tailwindcss", "./src/styles.css", "styles.css"},
-		"web/src/main.tsx":                    {"createRoot", "DocsRuntime", "./tailwind.css"},
+		"web/src/main.tsx":                    {"createRoot", "DocsRuntime", "./tailwind.css", `[scrollbar-width:thin]`, `dark:[scrollbar-color:rgb(82_82_82)_transparent]`},
 		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.tsx";`, `@source "./lib/**/*.ts";`, `@source "./main.tsx";`, `@source "./server.ts";`, `@custom-variant dark`},
 		"web/src/write-index.ts":              {"asset-manifest.json", `/assets/${scripts[0]}`},
-		"web/index.html":                      {"carbide.theme", "./src/main.tsx", "Carbide Docs"},
+		"web/index.html":                      {"carbide.theme", "./src/main.tsx", "Carbide Docs", `[scrollbar-width:thin]`, `[scrollbar-color:rgb(82_82_82)_transparent]`},
 		"web/src/server.ts":                   {"serveStatic", "servePublicFile", "publicRoot", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3`, "docsResponseHeaders", "rewriteDocsHtml", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`, "Cache-Control", "public, max-age=31536000, immutable", `return "no-store"`},
-		"web/src/component/l1/tokens.ts":      {"docsClassLayers", "l1:", "l2:", "l3:"},
-		"web/src/component/l2/DocsChrome.tsx": {"docsChromeClassLayers", "docsStaticClassMap", "rewriteDocsClasses", "docsStaticHeaders"},
-		"web/src/component/l3/DocsSite.tsx":   {"docsSiteClassLayers", "docsWebContract", "rewriteDocsHtml", "docsResponseHeaders"},
+		"web/src/component/l1/tokens.ts":      {"docsClassLayers", "scrollbar", `[scrollbar-width:thin]`, `[scrollbar-color:rgb(82_82_82)_transparent]`, "l1:", "l2:", "l3:"},
+		"web/src/component/l2/DocsChrome.tsx": {"docsScrollbarClass", "docsChromeClassLayers", "docsStaticClassMap", "rewriteDocsClasses", "docsStaticHeaders", `[&_pre]:[scrollbar-width:thin]`},
+		"web/src/component/l3/DocsSite.tsx":   {"docsSiteClassLayers", "docsWebContract", "rewriteDocsHtml", "docsResponseHeaders", `[scrollbar-width:thin]`},
 	}
 	for path, needles := range required {
 		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
@@ -1328,6 +1334,9 @@ func scaffoldTailwindInputFindings(path string) []string {
 		"@theme",
 		"--carbide-",
 		"<style",
+		"::-webkit-scrollbar",
+		"scrollbar-color:",
+		"scrollbar-width:",
 		"html {",
 		"body {",
 		"font-size:",
@@ -1584,10 +1593,11 @@ func (a app) runtimeDoctorResults() []doctorResult {
 }
 
 func (a app) frameworkDoctorResults() []doctorResult {
-	if !isFile(filepath.Join(a.home, "cli", "go.mod")) || !isDir(filepath.Join(a.home, "tests")) {
-		return []doctorResult{doctorFail("framework", "run from a Carbide source checkout")}
+	root, err := resolveFrameworkRoot(a.home)
+	if err != nil {
+		return []doctorResult{doctorFail("framework", err.Error())}
 	}
-	env, cleanup, err := frameworkDoctorCommandEnv(a.home)
+	env, cleanup, err := frameworkDoctorCommandEnv(root)
 	if err != nil {
 		return []doctorResult{doctorFail("framework", err.Error())}
 	}
@@ -1602,7 +1612,7 @@ func (a app) frameworkDoctorResults() []doctorResult {
 			name: "shell syntax",
 			run: func() error {
 				_, err := commandOutputEnv(
-					a.home,
+					root,
 					env,
 					"bash",
 					"-n",
@@ -1616,17 +1626,17 @@ func (a app) frameworkDoctorResults() []doctorResult {
 				return err
 			},
 		},
-		{name: "Go CLI tests", run: func() error { return runFrameworkGoTests(a.home) }},
+		{name: "Go CLI tests", run: func() error { return runFrameworkGoTests(root) }},
 		{name: "repo contract", run: func() error {
-			_, err := commandOutputEnv(a.home, env, "bash", "tests/contract/check_repo_contract.sh")
+			_, err := commandOutputEnv(root, env, "bash", "tests/contract/check_repo_contract.sh")
 			return err
 		}},
 		{name: "CLI scaffold", run: func() error {
-			_, err := commandOutputEnv(a.home, env, "bash", "tests/scaffold/cli_scaffold.sh")
+			_, err := commandOutputEnv(root, env, "bash", "tests/scaffold/cli_scaffold.sh")
 			return err
 		}},
 		{name: "Docker smoke", run: func() error {
-			_, err := commandOutputEnv(a.home, env, "bash", "tests/smoke/starter_docker_flow.sh")
+			_, err := commandOutputEnv(root, env, "bash", "tests/smoke/starter_docker_flow.sh")
 			return err
 		}},
 	}
@@ -1640,6 +1650,44 @@ func (a app) frameworkDoctorResults() []doctorResult {
 		results = append(results, doctorOK(check.name, "passed"))
 	}
 	return results
+}
+
+func resolveFrameworkRoot(home string) (string, error) {
+	starts := []string{}
+	if cwd, err := os.Getwd(); err == nil {
+		starts = append(starts, cwd)
+	}
+	if home != "" {
+		starts = append(starts, home)
+	}
+
+	seen := map[string]bool{}
+	for _, start := range starts {
+		root, err := filepath.Abs(start)
+		if err != nil {
+			continue
+		}
+		for {
+			if !seen[root] {
+				seen[root] = true
+				if isFrameworkSourceRoot(root) {
+					return root, nil
+				}
+			}
+			parent := filepath.Dir(root)
+			if parent == root {
+				break
+			}
+			root = parent
+		}
+	}
+	return "", errors.New("run from a Carbide source checkout")
+}
+
+func isFrameworkSourceRoot(root string) bool {
+	return isFile(filepath.Join(root, "cli", "go.mod")) &&
+		isDir(filepath.Join(root, "tests")) &&
+		isFile(filepath.Join(root, "scaffold", "carbide.toml"))
 }
 
 func missingFiles(paths []string) []string {

@@ -18,6 +18,10 @@ variable palette for colors that can live as ordinary Tailwind classes.
   dashboard copy, and route-level product facts.
 - `web/src/component/l1/tokens.ts` owns stable names for shared Tailwind
   utility groups, including the starter light/dark visual choices.
+- `web/src/component/l1/tokens.ts` also owns the built-in scrollbar utility
+  group. Use standards-based `scrollbar-width` and `scrollbar-color` utilities
+  with light/dark variants; do not add `::-webkit-scrollbar` or other
+  scrollbar pseudo-selector CSS to `web/src/styles.css`.
 - `web/src/styles.css` owns only the Tailwind import, TypeScript-aware
   `@source` directives, and the `data-theme` dark variant.
 - Do not put global `html`/`body` font-size, width, line-height, layout, color,
