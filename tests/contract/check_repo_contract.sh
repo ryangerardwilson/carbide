@@ -15,6 +15,7 @@ required_files=(
   "cli/internal/cli/cli_test.go"
   ".github/workflows/ci.yml"
   ".github/workflows/dependency-audit.yml"
+  ".github/workflows/release.yml"
   "docs/engineering/CI_CD_REGRESSION_TESTS.md"
   "docs/engineering/DEPLOYMENT.md"
   "docs/engineering/FRONTEND_STARTER_CONTRACT.md"
@@ -66,8 +67,10 @@ required_files=(
   "tests/contract/check_repo_contract.sh"
   "tests/scaffold/cli_scaffold.sh"
   "tests/smoke/starter_docker_flow.sh"
+  "tests/smoke/docs_for_agents_http.sh"
   "scaffold/api/Dockerfile"
   "scaffold/AGENTS.md"
+  "scaffold/PROJECT.md"
   "scaffold/README.md"
   "scaffold/.env.example"
   "scaffold/.gitignore"
@@ -162,6 +165,7 @@ grep -q 'slug = "my-carbide-app"' README.md
 ! grep -q "https://carbide.ryangerardwilson.com/for/agents" README.md
 grep -q "carbide run dev" README.md
 grep -q "carbide status" README.md
+grep -q "carbide urls" README.md
 grep -q "carbide stop dev" README.md
 grep -q "carbide follow logs" README.md
 grep -q "carbide logs" README.md
@@ -169,8 +173,11 @@ grep -q "carbide doctor" README.md
 grep -q "carbide doctor env" README.md
 grep -q "carbide doctor runtime" README.md
 grep -q "carbide project migrate" README.md
+grep -q "carbide deploy check" README.md
 grep -q "carbide deploy preview" README.md
 grep -q "carbide deploy apply" README.md
+grep -q "release binary" README.md
+grep -q "source-build fallback" README.md
 grep -q "explicit Carbide baselines" README.md
 grep -q "floating Docker images" README.md
 ! grep -q "Postgres-backed queues" README.md
@@ -225,14 +232,20 @@ grep -q "commandDoctorRuntime" cli/internal/cli/cli.go
 grep -q "commandDoctorFramework" cli/internal/cli/cli.go
 grep -q "projectDoctorResults" cli/internal/cli/cli.go
 grep -q "commandDeployPreview" cli/internal/cli/cli.go
+grep -q "commandDeployCheck" cli/internal/cli/cli.go
 grep -q "commandDeployApply" cli/internal/cli/cli.go
+grep -q "commandStatusJSON" cli/internal/cli/cli.go
+grep -q "commandURLs" cli/internal/cli/cli.go
 grep -q "projectDisplayName" cli/internal/cli/cli.go
 ! git grep -n -e 'S[e]alion' -e 's[e]alion' -e 'S[E]ALION' -- .
 grep -q "composeUpDetached" cli/internal/cli/cli.go
 grep -q "runDevStreams" cli/internal/cli/cli.go
 grep -q -- "--quiet-build" cli/internal/cli/cli.go
 grep -q "Carbide dev" cli/internal/cli/cli.go
-grep -q "Go is required to build the Carbide CLI" cli/install.sh
+grep -q "release binary unavailable and Go is required for source build fallback" cli/install.sh
+grep -q "CARBIDE_VERSION" cli/install.sh
+grep -q "CARBIDE_CHANNEL" cli/install.sh
+grep -q "carbide_\${platform}.tar.gz" cli/install.sh
 grep -q ".cli/bin/carbide" cli/install.sh
 grep -q "default_port = 8080" scaffold/carbide.toml
 grep -q 'carbide_version = "0.1.0"' scaffold/carbide.toml
@@ -258,10 +271,18 @@ grep -q "web/public/" scaffold/.gitignore
 grep -q "web/src/tailwind.css" scaffold/.gitignore
 grep -q "__PROJECT_NAME__ Agent Context" scaffold/AGENTS.md
 grep -q "https://carbide.ryangerardwilson.com/for/agents" scaffold/AGENTS.md
+grep -q "https://raw.githubusercontent.com/ryangerardwilson/carbide/main/docs/site/for/agents.md" scaffold/AGENTS.md
 grep -q "intentionally does not include .*\`agents.d/\`" scaffold/AGENTS.md
+grep -q "PROJECT.md" scaffold/AGENTS.md
 grep -q "carbide run dev" scaffold/AGENTS.md
 grep -q "carbide doctor" scaffold/AGENTS.md
 grep -q "carbide status" scaffold/AGENTS.md
+grep -q "## Product Truth" scaffold/PROJECT.md
+grep -q "## Users And Roles" scaffold/PROJECT.md
+grep -q "## Business Rules" scaffold/PROJECT.md
+grep -q "## Acceptance Criteria" scaffold/PROJECT.md
+! grep -q "curl -fsSL" scaffold/PROJECT.md
+! grep -q "carbide new" scaffold/PROJECT.md
 grep -q "carbide.toml" scaffold/README.md
 grep -q "https://carbide.ryangerardwilson.com/for/agents" scaffold/README.md
 grep -q "carbide doctor" scaffold/README.md
@@ -269,8 +290,12 @@ grep -q "carbide doctor env" scaffold/README.md
 grep -q "carbide doctor runtime" scaffold/README.md
 grep -q "explicit runtime baseline" scaffold/README.md
 grep -q "Postgres major-version baseline change" scaffold/README.md
+grep -q "carbide deploy check prod" scaffold/README.md
 grep -q "carbide deploy preview prod" scaffold/README.md
 grep -q "carbide deploy apply prod" scaffold/README.md
+grep -q "carbide status json" scaffold/README.md
+grep -q "carbide urls json" scaffold/README.md
+grep -q "PROJECT.md" scaffold/README.md
 grep -q "POSTGRES_PASSWORD" scaffold/.env.example
 ! grep -q 'url = "http://localhost:8080"' scaffold/carbide.toml
 grep -q "web:" scaffold/docker-compose.yml
@@ -666,15 +691,19 @@ grep -q "fileLineCount" cli/internal/cli/cli.go
 grep -q "https://carbide.ryangerardwilson.com/for/agents" docs/app/AGENTS.md
 grep -q "../site/for/agents.md" docs/app/AGENTS.md
 grep -q "intentionally does not include .*\`agents.d/\`" docs/app/AGENTS.md
+grep -q "carbide deploy check de-sci" docs/app/AGENTS.md
 grep -q "carbide deploy preview de-sci" docs/app/AGENTS.md
 grep -q "carbide deploy apply de-sci" docs/app/AGENTS.md
 grep -q "https://carbide.ryangerardwilson.com/for/agents" docs/app/README.md
+grep -q "carbide deploy check de-sci" docs/app/README.md
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
 grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
 grep -q "carbide doctor.*rejects global" docs/site/frontend-starter-contract.html
 grep -q "built-in scrollbar styling" docs/site/frontend-starter-contract.html
 grep -q "custom selectors" docs/site/frontend-starter-contract.html
 grep -q "component styling belongs in Tailwind utility classes" docs/site/frontend-starter-contract.html
+grep -q "web/src/product.css" docs/site/frontend-starter-contract.html
+grep -q "PROJECT.md" docs/site/frontend-starter-contract.html
 grep -q "scrollbar-width:thin" docs/site/assets/styles.css
 grep -q "scrollbar-color:#525252 transparent" docs/site/assets/styles.css
 grep -q "carbide follow logs" docs/site/create-your-first-app.html
@@ -686,6 +715,8 @@ test ! -f docs/site/for/agents.html
 test ! -f docs/engineering/FOR_AGENTS.md
 grep -q "# Carbide for Agents" docs/site/for/agents.md
 grep -q "source of truth for AI agents" docs/site/for/agents.md
+grep -q "https://raw.githubusercontent.com/ryangerardwilson/carbide/main/docs/site/for/agents.md" docs/site/for/agents.md
+grep -q "## Source Precedence" docs/site/for/agents.md
 grep -q "## Identify The Current State" docs/site/for/agents.md
 grep -q "## Prerequisites" docs/site/for/agents.md
 grep -q "## Create A New App" docs/site/for/agents.md
@@ -696,7 +727,9 @@ grep -q "## Environment And Secrets" docs/site/for/agents.md
 grep -q "## Deployment" docs/site/for/agents.md
 grep -q "## Migration And Upgrades" docs/site/for/agents.md
 grep -q "## Verification" docs/site/for/agents.md
+grep -q "## Recovery" docs/site/for/agents.md
 grep -q "## Agent Behavior" docs/site/for/agents.md
+grep -q "PROJECT.md" docs/site/for/agents.md
 grep -q "carbide.toml" docs/site/for/agents.md
 grep -q "docker-compose.yml" docs/site/for/agents.md
 grep -q "web/" docs/site/for/agents.md
@@ -709,13 +742,21 @@ grep -q "carbide init" docs/site/for/agents.md
 grep -q "carbide run dev" docs/site/for/agents.md
 grep -q "carbide doctor" docs/site/for/agents.md
 grep -q "carbide status" docs/site/for/agents.md
+grep -q "carbide urls json" docs/site/for/agents.md
+grep -q "carbide status json" docs/site/for/agents.md
+grep -q "carbide doctor json" docs/site/for/agents.md
 grep -q "carbide follow logs" docs/site/for/agents.md
 grep -q "carbide doctor env" docs/site/for/agents.md
+grep -q "carbide doctor env json" docs/site/for/agents.md
 grep -q "carbide doctor runtime" docs/site/for/agents.md
+grep -q "carbide doctor runtime json" docs/site/for/agents.md
 grep -q "carbide stop dev" docs/site/for/agents.md
 grep -q "carbide help" docs/site/for/agents.md
 grep -q "carbide upgrade" docs/site/for/agents.md
+grep -q "carbide deploy check prod" docs/site/for/agents.md
+grep -q "carbide deploy check prod json" docs/site/for/agents.md
 grep -q "carbide deploy preview prod" docs/site/for/agents.md
+grep -q "carbide deploy preview prod json" docs/site/for/agents.md
 grep -q "carbide deploy apply prod" docs/site/for/agents.md
 grep -q "carbide project migrate" docs/site/for/agents.md
 grep -q "Generated apps do not include .*\`agents.d/\`" docs/site/for/agents.md
@@ -728,6 +769,8 @@ grep -q "Single VM" docs/site/deployment.html
 grep -q "Multiple VMs" docs/site/deployment.html
 grep -q 'type = "ssh-compose"' docs/site/deployment.html
 grep -q 'type = "ssh-compose-environment"' docs/site/deployment.html
+grep -q "carbide deploy check prod" docs/site/deployment.html
+grep -q "missing, preview-only, invalid, or apply-supported" docs/site/deployment.html
 grep -q "clustered orchestration is implemented" docs/site/deployment.html
 grep -q "CI/CD regression plan" docs/site/ci-cd-regression-tests.html
 grep -q "carbide doctor framework" docs/site/ci-cd-regression-tests.html
@@ -737,6 +780,8 @@ grep -q "Directory Structure" docs/site/repo-structure.html
 grep -q "Generated App Layout" docs/site/repo-structure.html
 grep -q 'carbide new "My Carbide App"' docs/site/repo-structure.html
 grep -q "my-carbide-app/" docs/site/repo-structure.html
+grep -q "PROJECT.md" docs/site/repo-structure.html
+grep -q "App-specific product truth" docs/site/repo-structure.html
 grep -q "web/src/component/l1" docs/site/repo-structure.html
 grep -q "web/src/component/l2" docs/site/repo-structure.html
 grep -q "web/src/component/l3" docs/site/repo-structure.html

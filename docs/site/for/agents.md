@@ -7,6 +7,25 @@ If a user asks you to build a new Carbide app, follow this page before making
 local choices. If the current directory already contains a Carbide app, do not
 create another one.
 
+Fallback raw source if this route is unavailable:
+
+```text
+https://raw.githubusercontent.com/ryangerardwilson/carbide/main/docs/site/for/agents.md
+```
+
+## Source Precedence
+
+When instructions conflict, use this order:
+
+1. The user's latest explicit instruction.
+2. The local generated app `AGENTS.md`.
+3. Local `carbide.toml` and `docker-compose.yml`.
+4. This `/for/agents` guide.
+5. The local generated app `README.md`.
+6. Public Carbide documentation pages.
+7. Carbide framework repo engineering docs, only when working on Carbide
+   itself.
+
 ## Identify The Current State
 
 A directory is a Carbide app when it has:
@@ -14,6 +33,7 @@ A directory is a Carbide app when it has:
 - `carbide.toml`
 - `docker-compose.yml`
 - `AGENTS.md`
+- `PROJECT.md`
 - `web/`
 - `api/`
 - `db/`
@@ -25,15 +45,15 @@ carbide doctor
 carbide status
 ```
 
-Read `AGENTS.md`, `README.md`, `carbide.toml`, and the files directly related
-to the user's task. Do not run `carbide new` or `carbide init` inside an
-existing app.
+Read `AGENTS.md`, `PROJECT.md`, `README.md`, `carbide.toml`, and the files
+directly related to the user's task. Do not run `carbide new` or `carbide init`
+inside an existing app.
 
 ## Prerequisites
 
 Carbide generated apps run Bun, React, Tailwind, Go API builds, and Postgres
-inside Docker containers. The host needs Docker, Docker Compose, Git, curl, and
-Go for the CLI installer.
+inside Docker containers. The host needs Docker, Docker Compose, Git, and curl.
+Current source installs also need Go until release binaries are available.
 
 Use quick checks when setup is uncertain:
 
@@ -42,13 +62,12 @@ docker --version
 docker compose version
 git --version
 curl --version
-go version
 carbide version
 ```
 
 If Docker or Docker Compose is missing, stop and tell the user Docker is
-required. If Go is missing, install Go or ask the user to install it before
-building the CLI.
+required. If the installer reports that Go is missing, install Go or ask the
+user to install it before using the source-build fallback.
 
 ## Create A New App
 
@@ -95,8 +114,18 @@ carbide stop dev
 ready. `Ctrl+C` detaches from log streaming and leaves containers running. Use
 `carbide follow logs` to attach again and `carbide stop dev` to stop the stack.
 
+For machine-readable state, use JSON subcommands:
+
+```shell
+carbide urls json
+carbide status json
+carbide doctor json
+carbide doctor env json
+carbide doctor runtime json
+```
+
 Use `carbide help` for the command reference. Use `carbide upgrade` to update
-the installed CLI when a newer GitHub commit is available.
+the installed CLI.
 
 ## Generated App Contract
 
@@ -109,6 +138,8 @@ Generated apps are Docker-first monorepos:
 - `carbide.toml` owns app identity, default port, runtime baselines, env
   contract, and deploy targets.
 - `AGENTS.md` points agents back to this `/for/agents` guide.
+- `PROJECT.md` owns app-specific product truth: domain facts, users, roles,
+  business rules, and acceptance criteria.
 
 Generated apps do not include `agents.d/`. Do not create a local agent runbook
 that competes with this source of truth.
@@ -132,6 +163,15 @@ The starter uses `web/src/component/l1`, `l2`, and `l3` as Tailwind component
 organization. Work with that structure unless the user explicitly asks to
 replace it.
 
+Use these escape hatches instead of expanding global CSS:
+
+- Put reusable class groups in `web/src/component/l1/tokens.ts`.
+- Compose variants inside components with TypeScript helpers.
+- Keep third-party CSS explicit and product-owned.
+- If a product intentionally needs global CSS, create `web/src/product.css`,
+  import it explicitly, document the reason in `PROJECT.md`, and update the
+  Carbide doctor contract instead of hiding it in `styles.css`.
+
 ## Environment And Secrets
 
 Local development uses Docker Compose defaults and `.env.example` for optional
@@ -153,13 +193,23 @@ asks for a new architecture and accepts the operational cost.
 Deployment targets live in `carbide.toml`. Preview before applying:
 
 ```shell
+carbide deploy check prod
 carbide deploy preview prod
 carbide deploy apply prod
 ```
 
-A target is an environment. It may be a single VM or a set of hosts and roles.
+Carbide supports `ssh-compose` apply for a checked-in single-VM target. New
+apps ship with no deploy target, so `carbide deploy apply prod` refuses until a
+target exists. `ssh-compose-environment` validates and previews multi-VM
+topology, but apply is guarded until clustered orchestration is implemented.
+
 Read `carbide.toml` before assuming topology. Do not mutate infrastructure
-without a preview.
+without a preview. Use JSON when an agent or CI needs stable state:
+
+```shell
+carbide deploy check prod json
+carbide deploy preview prod json
+```
 
 ## Migration And Upgrades
 
@@ -174,23 +224,45 @@ carbide project migrate
 
 Treat the generated migration workspace as an AI-assisted comparison target,
 not as a deterministic code rewrite. Preserve app-specific behavior, data,
-deploy targets, secrets, and public domain behavior.
+deploy targets, secrets, and externally visible behavior.
 
 ## Verification
 
 Use the smallest check that proves the change, then widen before finishing.
 
-Common checks:
+Fast first-run verification:
 
 ```shell
 carbide doctor
+carbide status
+```
+
+Full runtime verification when Docker is available or the task changed
+container, API, auth, or cache behavior:
+
+```shell
 carbide doctor runtime
+```
+
+Common app checks:
+
+```shell
 cd web && bun run typecheck && bun run assets:build
 cd ../api && go test ./...
 ```
 
 If the change affects containers, also run a Docker build or the relevant
 runtime flow. Report which checks passed and which checks could not be run.
+
+## Recovery
+
+- If `carbide run dev` was interrupted, assume containers are still running.
+  Run `carbide status`, then `carbide follow logs` or `carbide stop dev`.
+- If ports are unclear, run `carbide urls` or `carbide urls json`.
+- If deploy is unclear, run `carbide deploy check prod`.
+- If a doctor check fails, fix the named contract before adding new behavior.
+- If a task needs product facts that are not in source, update `PROJECT.md`
+  after the user confirms them.
 
 ## Agent Behavior
 

@@ -219,6 +219,94 @@ type deployRole struct {
 	Migration        string
 }
 
+type jsonCommandReport struct {
+	OK       bool                `json:"ok"`
+	Command  string              `json:"command"`
+	Version  string              `json:"version"`
+	Commit   string              `json:"commit,omitempty"`
+	Project  *projectJSONReport  `json:"project,omitempty"`
+	URLs     *urlsJSONReport     `json:"urls,omitempty"`
+	Env      *envJSONReport      `json:"env,omitempty"`
+	Deploy   *deployJSONReport   `json:"deploy,omitempty"`
+	Checks   []doctorJSONCheck   `json:"checks,omitempty"`
+	Services []serviceJSONReport `json:"services,omitempty"`
+	Errors   []string            `json:"errors,omitempty"`
+	Next     []string            `json:"next,omitempty"`
+}
+
+type projectJSONReport struct {
+	Name    string `json:"name,omitempty"`
+	Slug    string `json:"slug,omitempty"`
+	Profile string `json:"profile,omitempty"`
+}
+
+type urlsJSONReport struct {
+	App    string `json:"app"`
+	API    string `json:"api"`
+	Source string `json:"source"`
+}
+
+type envJSONReport struct {
+	FileFound       bool     `json:"file_found"`
+	Status          string   `json:"status"`
+	MissingRequired []string `json:"missing_required"`
+	Warnings        []string `json:"warnings"`
+	Secrets         int      `json:"secrets"`
+	BrowserExposed  int      `json:"browser_exposed"`
+	FrameworkOwned  int      `json:"framework_owned"`
+}
+
+type doctorJSONCheck struct {
+	Check  string `json:"check"`
+	Status string `json:"status"`
+	Detail string `json:"detail"`
+}
+
+type serviceJSONReport struct {
+	Service        string   `json:"service"`
+	Container      string   `json:"container"`
+	PublishedPorts []string `json:"published_ports"`
+	InternalPorts  []string `json:"internal_ports"`
+	State          string   `json:"state"`
+	Health         string   `json:"health,omitempty"`
+	Status         string   `json:"status"`
+}
+
+type deployJSONReport struct {
+	Target           string                 `json:"target"`
+	Classification   string                 `json:"classification"`
+	Detail           string                 `json:"detail"`
+	PreviewSupported bool                   `json:"preview_supported"`
+	ApplySupported   bool                   `json:"apply_supported"`
+	Mutates          bool                   `json:"mutates"`
+	EnvStatus        string                 `json:"env_status,omitempty"`
+	Type             string                 `json:"type,omitempty"`
+	Host             string                 `json:"host,omitempty"`
+	Domain           string                 `json:"domain,omitempty"`
+	Source           string                 `json:"source,omitempty"`
+	Remote           string                 `json:"remote,omitempty"`
+	Compose          string                 `json:"compose,omitempty"`
+	Port             int                    `json:"port,omitempty"`
+	Hosts            []deployHostJSONReport `json:"hosts,omitempty"`
+	Roles            []deployRoleJSONReport `json:"roles,omitempty"`
+}
+
+type deployHostJSONReport struct {
+	Name        string `json:"name"`
+	SSH         string `json:"ssh"`
+	Address     string `json:"address,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+type deployRoleJSONReport struct {
+	Name      string   `json:"name"`
+	Hosts     []string `json:"hosts"`
+	Port      int      `json:"port,omitempty"`
+	Nginx     bool     `json:"nginx,omitempty"`
+	Primary   string   `json:"primary,omitempty"`
+	Migration string   `json:"migration,omitempty"`
+}
+
 func SetCommit(value string) {
 	if value != "" {
 		commit = value
@@ -281,29 +369,50 @@ func (a app) run(args []string) error {
 		if len(args) == 1 {
 			return a.commandDoctor()
 		}
+		if len(args) == 2 && args[1] == "json" {
+			return a.commandDoctorJSON()
+		}
 		if len(args) == 2 && args[1] == "env" {
 			return a.commandDoctorEnv()
+		}
+		if len(args) == 3 && args[1] == "env" && args[2] == "json" {
+			return a.commandDoctorEnvJSON()
 		}
 		if len(args) == 2 && args[1] == "runtime" {
 			return a.commandDoctorRuntime()
 		}
+		if len(args) == 3 && args[1] == "runtime" && args[2] == "json" {
+			return a.commandDoctorRuntimeJSON()
+		}
 		if len(args) == 2 && args[1] == "framework" {
 			return a.commandDoctorFramework()
 		}
-		return errors.New("usage: carbide doctor [env|runtime|framework]")
+		if len(args) == 3 && args[1] == "framework" && args[2] == "json" {
+			return a.commandDoctorFrameworkJSON()
+		}
+		return errors.New("usage: carbide doctor [json|env [json]|runtime [json]|framework [json]]")
 	case "project":
 		if len(args) == 2 && args[1] == "migrate" {
 			return a.commandProjectMigrate()
 		}
 		return errors.New("usage: carbide project migrate")
 	case "deploy":
+		if len(args) == 3 && args[1] == "check" {
+			return a.commandDeployCheck(args[2], false)
+		}
+		if len(args) == 4 && args[1] == "check" && args[3] == "json" {
+			return a.commandDeployCheck(args[2], true)
+		}
 		if len(args) == 3 && args[1] == "preview" {
-			return a.commandDeployPreview(args[2])
+			return a.commandDeployPreview(args[2], false)
+		}
+		if len(args) == 4 && args[1] == "preview" && args[3] == "json" {
+			return a.commandDeployPreview(args[2], true)
 		}
 		if len(args) == 3 && args[1] == "apply" {
 			return a.commandDeployApply(args[2])
 		}
-		return errors.New("usage: carbide deploy preview prod | carbide deploy apply prod")
+		return errors.New("usage: carbide deploy check prod [json] | carbide deploy preview prod [json] | carbide deploy apply prod")
 	case "run":
 		if len(args) == 2 && args[1] == "dev" {
 			return a.commandRunDev()
@@ -313,7 +422,18 @@ func (a app) run(args []string) error {
 		if len(args) == 1 {
 			return a.commandStatus()
 		}
-		return errors.New("usage: carbide status")
+		if len(args) == 2 && args[1] == "json" {
+			return a.commandStatusJSON()
+		}
+		return errors.New("usage: carbide status [json]")
+	case "urls":
+		if len(args) == 1 {
+			return a.commandURLs(false)
+		}
+		if len(args) == 2 && args[1] == "json" {
+			return a.commandURLs(true)
+		}
+		return errors.New("usage: carbide urls [json]")
 	case "stop":
 		if len(args) == 2 && args[1] == "dev" {
 			return a.commandStopDev()
@@ -353,9 +473,14 @@ func (a app) printHelp() {
 		{
 			rows: []outputRow{
 				{"deploy apply prod", "apply production deploy"},
+				{"deploy check prod", "classify deploy target state"},
+				{"deploy check prod json", "classify deploy target as JSON"},
 				{"deploy preview prod", "preview production deploy"},
+				{"deploy preview prod json", "preview production deploy as JSON"},
 				{"doctor", "check project contract"},
+				{"doctor json", "check project contract as JSON"},
 				{"doctor env", "validate env contract"},
+				{"doctor env json", "validate env contract as JSON"},
 				{"doctor framework", "run framework regressions"},
 				{"doctor runtime", "run Docker runtime checks"},
 				{"help", "show this help"},
@@ -364,7 +489,10 @@ func (a app) printHelp() {
 				{"new <project-name>", "create project directory"},
 				{"project migrate", "prepare agent-assisted framework migration"},
 				{"status", "show containers and ports"},
+				{"status json", "show containers and ports as JSON"},
 				{"upgrade", "upgrade CLI from GitHub"},
+				{"urls", "print local app and API URLs"},
+				{"urls json", "print local app and API URLs as JSON"},
 				{"version", "print installed version"},
 			},
 		},
@@ -551,6 +679,12 @@ func (a app) commandDoctor() error {
 	return a.renderDoctorResults("project contract", results)
 }
 
+func (a app) commandDoctorJSON() error {
+	results := a.projectDoctorResults()
+	results = append(results, doctorResult{"runtime", "skip", "run carbide doctor runtime"})
+	return a.renderDoctorResultsJSON("doctor", results, []string{"carbide doctor runtime"})
+}
+
 func (a app) commandDoctorEnv() error {
 	if !isFile("carbide.toml") {
 		return errors.New("run this inside a Carbide project")
@@ -593,6 +727,33 @@ func (a app) commandDoctorEnv() error {
 	return nil
 }
 
+func (a app) commandDoctorEnvJSON() error {
+	if !isFile("carbide.toml") {
+		return errors.New("run this inside a Carbide project")
+	}
+
+	report, err := inspectEnvContract()
+	if err != nil {
+		return err
+	}
+	env := envJSONFromReport(report)
+	ok := len(report.missingRequired) == 0 && len(report.warnings) == 0
+	out := a.baseJSONReport("doctor env")
+	out.OK = ok
+	out.Env = &env
+	if !ok {
+		out.Errors = append(out.Errors, envProblemDetails(report)...)
+		out.Next = []string{"set missing required values in .env or the deployment secret layer", "carbide doctor env"}
+	}
+	if err := a.writeJSON(out); err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("environment contract has %d missing required value(s)", len(report.missingRequired))
+	}
+	return nil
+}
+
 func (a app) commandDoctorRuntime() error {
 	results := a.projectDoctorResults()
 	if doctorFailures(results) > 0 {
@@ -605,9 +766,25 @@ func (a app) commandDoctorRuntime() error {
 	return a.renderDoctorResults("runtime contract", results)
 }
 
+func (a app) commandDoctorRuntimeJSON() error {
+	results := a.projectDoctorResults()
+	if doctorFailures(results) > 0 {
+		results = append(results, doctorResult{"runtime", "skip", "fix project contract first"})
+		return a.renderDoctorResultsJSON("doctor runtime", results, []string{"fix project contract first", "carbide doctor runtime"})
+	}
+
+	results = append(results, a.runtimeDoctorResults()...)
+	return a.renderDoctorResultsJSON("doctor runtime", results, nil)
+}
+
 func (a app) commandDoctorFramework() error {
 	results := a.frameworkDoctorResults()
 	return a.renderDoctorResults("framework regressions", results)
+}
+
+func (a app) commandDoctorFrameworkJSON() error {
+	results := a.frameworkDoctorResults()
+	return a.renderDoctorResultsJSON("doctor framework", results, nil)
 }
 
 func (a app) renderDoctorResults(subtitle string, results []doctorResult) error {
@@ -625,6 +802,51 @@ func (a app) renderDoctorResults(subtitle string, results []doctorResult) error 
 		return fmt.Errorf("doctor found %d failing check(s)", failures)
 	}
 	return nil
+}
+
+func (a app) renderDoctorResultsJSON(command string, results []doctorResult, next []string) error {
+	failures := doctorFailures(results)
+	report := a.baseJSONReport(command)
+	report.OK = failures == 0
+	report.Checks = doctorJSONChecks(results)
+	report.Errors = doctorFailureDetails(results)
+	report.Next = next
+	if failures > 0 && len(report.Next) == 0 {
+		report.Next = []string{"fix failing checks", commandWithoutJSON(command)}
+	}
+	if err := a.writeJSON(report); err != nil {
+		return err
+	}
+	if failures > 0 {
+		return fmt.Errorf("doctor found %d failing check(s)", failures)
+	}
+	return nil
+}
+
+func doctorJSONChecks(results []doctorResult) []doctorJSONCheck {
+	checks := make([]doctorJSONCheck, 0, len(results))
+	for _, result := range results {
+		checks = append(checks, doctorJSONCheck{
+			Check:  result.check,
+			Status: result.status,
+			Detail: result.detail,
+		})
+	}
+	return checks
+}
+
+func doctorFailureDetails(results []doctorResult) []string {
+	var errors []string
+	for _, result := range results {
+		if result.status == "fail" {
+			errors = append(errors, result.check+": "+result.detail)
+		}
+	}
+	return errors
+}
+
+func commandWithoutJSON(command string) string {
+	return "carbide " + command
 }
 
 func doctorFailures(results []doctorResult) int {
@@ -683,6 +905,7 @@ func (a app) projectDoctorResults() []doctorResult {
 		doctorAPIContract(),
 		doctorDatabaseContract(),
 		doctorAgentsContract(),
+		doctorProductContextContract(),
 		doctorForbiddenRegressions("."),
 	}
 }
@@ -693,7 +916,7 @@ func doctorProjectShape() doctorResult {
 		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
 
-	requiredFiles := []string{projectConfigPath, composeFilePath, "AGENTS.md"}
+	requiredFiles := []string{projectConfigPath, composeFilePath, "AGENTS.md", "PROJECT.md"}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
 		return doctorFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
@@ -1063,10 +1286,12 @@ func doctorAgentsContract() doctorResult {
 	required := map[string][]string{
 		"AGENTS.md": {
 			"https://carbide.ryangerardwilson.com/for/agents",
+			"https://raw.githubusercontent.com/ryangerardwilson/carbide/main/docs/site/for/agents.md",
 			"carbide run dev",
 			"carbide doctor",
 			"carbide status",
 			"intentionally does not include `agents.d/`",
+			"PROJECT.md",
 		},
 	}
 	for path, needles := range required {
@@ -1075,6 +1300,34 @@ func doctorAgentsContract() doctorResult {
 		}
 	}
 	return doctorOK("agents", "AGENTS.md /for/agents")
+}
+
+func doctorProductContextContract() doctorResult {
+	if !isFile("PROJECT.md") {
+		return doctorFail("product context", "missing PROJECT.md")
+	}
+	content := readFileString("PROJECT.md")
+	required := []string{
+		"# ",
+		"## Product Truth",
+		"## Users And Roles",
+		"## Business Rules",
+		"## Acceptance Criteria",
+	}
+	if missing := missingNeedles(content, required); len(missing) > 0 {
+		return doctorFail("product context", "PROJECT.md missing "+strings.Join(missing, ", "))
+	}
+	forbidden := []string{
+		"curl -fsSL",
+		"carbide new",
+		"carbide init",
+		"source of truth for Carbide setup",
+		"agents.d/",
+	}
+	if found := containedNeedles(content, forbidden); len(found) > 0 {
+		return doctorFail("product context", "PROJECT.md contains framework runbook text: "+strings.Join(found, ", "))
+	}
+	return doctorOK("product context", "PROJECT.md")
 }
 
 func doctorDocsProjectShape() doctorResult {
@@ -1429,6 +1682,7 @@ func doctorDocsAgentsContract() doctorResult {
 			"https://carbide.ryangerardwilson.com/for/agents",
 			"../site/for/agents.md",
 			"carbide doctor",
+			"carbide deploy check de-sci",
 			"carbide deploy preview de-sci",
 			"carbide deploy apply de-sci",
 			"intentionally does not include `agents.d/`",
@@ -1617,6 +1871,7 @@ func (a app) frameworkDoctorResults() []doctorResult {
 					"tests/contract/check_repo_contract.sh",
 					"tests/scaffold/cli_scaffold.sh",
 					"tests/smoke/starter_docker_flow.sh",
+					"tests/smoke/docs_for_agents_http.sh",
 					"cli/bin/carbide",
 					"cli/install.sh",
 				)
@@ -1634,6 +1889,10 @@ func (a app) frameworkDoctorResults() []doctorResult {
 		}},
 		{name: "Docker smoke", run: func() error {
 			_, err := commandOutputEnv(root, env, "bash", "tests/smoke/starter_docker_flow.sh")
+			return err
+		}},
+		{name: "agent guide HTTP smoke", run: func() error {
+			_, err := commandOutputEnv(root, env, "bash", "tests/smoke/docs_for_agents_http.sh")
 			return err
 		}},
 	}
@@ -2186,75 +2445,257 @@ func firstLine(value string) string {
 	return value
 }
 
-func (a app) commandDeployPreview(target string) error {
+func (a app) commandDeployCheck(target string, asJSON bool) error {
 	if !isFile("carbide.toml") {
 		return errors.New("run this inside a Carbide project")
 	}
 	if err := ensureDeployTarget(target); err != nil {
 		return err
 	}
-	deploy, found, err := loadDeployTarget(target)
+
+	report, err := a.inspectDeploy(target, false)
 	if err != nil {
 		return err
 	}
+	if asJSON {
+		out := a.baseJSONReport("deploy check")
+		out.OK = report.Classification != "invalid-config"
+		out.Deploy = &report
+		if !out.OK {
+			out.Errors = []string{report.Detail}
+		}
+		return a.writeJSON(out)
+	}
 
-	report, err := inspectEnvContract()
-	if err != nil {
+	r := newRenderer(a.stdout)
+	r.Title("Carbide deploy", fmt.Sprintf("check %s", target))
+	r.Rows(
+		outputRow{"target", report.Target},
+		outputRow{"state", report.Classification},
+		outputRow{"detail", report.Detail},
+		outputRow{"preview", boolText(report.PreviewSupported)},
+		outputRow{"apply", boolText(report.ApplySupported)},
+	)
+	if report.Type != "" {
+		r.Row(outputRow{"type", report.Type})
+	}
+	if report.EnvStatus != "" {
+		r.Row(outputRow{"env", report.EnvStatus})
+	}
+	return nil
+}
+
+func (a app) commandDeployPreview(target string, asJSON bool) error {
+	if !isFile("carbide.toml") {
+		return errors.New("run this inside a Carbide project")
+	}
+	if err := ensureDeployTarget(target); err != nil {
 		return err
 	}
 
-	envStatus := "ok"
-	if len(report.missingRequired) > 0 || len(report.warnings) > 0 {
-		envStatus = "needs attention"
+	report, err := a.inspectDeploy(target, false)
+	if err != nil {
+		return err
+	}
+	if asJSON {
+		out := a.baseJSONReport("deploy preview")
+		out.OK = report.Classification != "invalid-config"
+		out.Deploy = &report
+		if !out.OK {
+			out.Errors = []string{report.Detail}
+		}
+		return a.writeJSON(out)
 	}
 
 	r := newRenderer(a.stdout)
 	r.Title("Carbide deploy", fmt.Sprintf("preview %s", target))
-	if found {
-		if err := validateDeployTarget(deploy); err != nil {
-			return err
-		}
-		source, err := filepath.Abs(deploy.SourcePath)
-		if err != nil {
-			return err
-		}
-		if deploy.Type == "ssh-compose-environment" {
-			r.Rows(
-				outputRow{"target", deploy.Name},
-				outputRow{"type", deploy.Type},
-				outputRow{"domain", deploy.Domain},
-				outputRow{"source", source},
-				outputRow{"mutates", "no"},
-				outputRow{"env", envStatus},
-				outputRow{"hosts", strings.Join(deployHostRows(deploy), "\n")},
-				outputRow{"roles", strings.Join(deployRoleRows(deploy), "\n")},
-				outputRow{"apply", "disabled until clustered orchestration is implemented"},
-			)
-			return nil
-		}
+	switch report.Classification {
+	case "apply-supported":
 		r.Rows(
-			outputRow{"target", deploy.Name},
-			outputRow{"type", deploy.Type},
-			outputRow{"host", deploy.Host},
-			outputRow{"domain", deploy.Domain},
-			outputRow{"source", source},
-			outputRow{"remote", deploy.RemotePath},
-			outputRow{"compose", deploy.ComposeFile},
-			outputRow{"port", strconv.Itoa(deploy.PublicPort)},
+			outputRow{"target", report.Target},
+			outputRow{"type", report.Type},
+			outputRow{"host", report.Host},
+			outputRow{"domain", report.Domain},
+			outputRow{"source", report.Source},
+			outputRow{"remote", report.Remote},
+			outputRow{"compose", report.Compose},
+			outputRow{"port", strconv.Itoa(report.Port)},
 			outputRow{"mutates", "no"},
-			outputRow{"env", envStatus},
-			outputRow{"apply", fmt.Sprintf("carbide deploy apply %s", deploy.Name)},
+			outputRow{"env", report.EnvStatus},
+			outputRow{"apply", fmt.Sprintf("carbide deploy apply %s", report.Target)},
+		)
+		return nil
+	case "preview-only":
+		r.Rows(
+			outputRow{"target", report.Target},
+			outputRow{"type", report.Type},
+			outputRow{"domain", report.Domain},
+			outputRow{"source", report.Source},
+			outputRow{"mutates", "no"},
+			outputRow{"env", report.EnvStatus},
+			outputRow{"hosts", strings.Join(deployHostJSONRows(report.Hosts), "\n")},
+			outputRow{"roles", strings.Join(deployRoleJSONRows(report.Roles), "\n")},
+			outputRow{"apply", "disabled until clustered orchestration is implemented"},
+		)
+		return nil
+	case "missing-target":
+		r.Rows(
+			outputRow{"target", target},
+			outputRow{"state", report.Classification},
+			outputRow{"mutates", "no"},
+			outputRow{"env", report.EnvStatus},
+			outputRow{"plan", "add a checked-in deploy target to carbide.toml\nsingle-VM ssh-compose targets can apply\nmulti-VM ssh-compose-environment targets preview only"},
+		)
+		return nil
+	default:
+		r.Rows(
+			outputRow{"target", target},
+			outputRow{"state", report.Classification},
+			outputRow{"detail", report.Detail},
 		)
 		return nil
 	}
+}
 
-	r.Rows(
-		outputRow{"target", target},
-		outputRow{"mutates", "no"},
-		outputRow{"env", envStatus},
-		outputRow{"plan", "validate env contract\nuse checked-in deploy target when one exists\nrefuse apply until target is implemented"},
-	)
-	return nil
+func (a app) inspectDeploy(target string, mutates bool) (deployJSONReport, error) {
+	deploy, found, err := loadDeployTarget(target)
+	if err != nil {
+		return deployJSONReport{}, err
+	}
+	envStatus := "ok"
+	if report, err := inspectEnvContract(); err != nil {
+		envStatus = "unknown"
+	} else if len(report.missingRequired) > 0 || len(report.warnings) > 0 {
+		envStatus = "needs attention"
+	}
+
+	out := deployJSONReport{
+		Target:           target,
+		Classification:   "missing-target",
+		Detail:           "no checked-in deploy target named " + target,
+		PreviewSupported: true,
+		ApplySupported:   false,
+		Mutates:          mutates,
+		EnvStatus:        envStatus,
+	}
+	if !found {
+		return out, nil
+	}
+
+	out.Target = deploy.Name
+	out.Type = deploy.Type
+	out.Host = deploy.Host
+	out.Domain = deploy.Domain
+	out.Remote = deploy.RemotePath
+	out.Compose = deploy.ComposeFile
+	out.Port = deploy.PublicPort
+	out.Hosts = deployHostJSONReports(deploy)
+	out.Roles = deployRoleJSONReports(deploy)
+	source, err := filepath.Abs(deploy.SourcePath)
+	if err != nil {
+		return out, err
+	}
+	out.Source = source
+
+	if err := validateDeployTarget(deploy); err != nil {
+		out.Classification = "invalid-config"
+		out.Detail = err.Error()
+		out.PreviewSupported = false
+		out.ApplySupported = false
+		return out, nil
+	}
+	if deploy.Type == "ssh-compose-environment" || deploy.Strategy == "preview-only" {
+		out.Classification = "preview-only"
+		out.Detail = "multi-VM environment targets validate and preview only"
+		out.PreviewSupported = true
+		out.ApplySupported = false
+		return out, nil
+	}
+	out.Classification = "apply-supported"
+	out.Detail = "single-VM ssh-compose target can preview and apply"
+	out.PreviewSupported = true
+	out.ApplySupported = true
+	return out, nil
+}
+
+func deployHostJSONReports(target deployTarget) []deployHostJSONReport {
+	names := sortedDeployHostNames(target.Hosts)
+	hosts := make([]deployHostJSONReport, 0, len(names))
+	for _, name := range names {
+		host := target.Hosts[name]
+		hosts = append(hosts, deployHostJSONReport{
+			Name:        name,
+			SSH:         host.SSH,
+			Address:     host.Address,
+			Description: host.Description,
+		})
+	}
+	return hosts
+}
+
+func deployRoleJSONReports(target deployTarget) []deployRoleJSONReport {
+	roles := append([]deployRole(nil), target.Roles...)
+	sort.Slice(roles, func(i int, j int) bool {
+		return roles[i].Name < roles[j].Name
+	})
+	out := make([]deployRoleJSONReport, 0, len(roles))
+	for _, role := range roles {
+		out = append(out, deployRoleJSONReport{
+			Name:      role.Name,
+			Hosts:     append([]string(nil), role.Hosts...),
+			Port:      role.PublicPort,
+			Nginx:     role.Nginx,
+			Primary:   role.Primary,
+			Migration: role.Migration,
+		})
+	}
+	return out
+}
+
+func deployHostJSONRows(hosts []deployHostJSONReport) []string {
+	if len(hosts) == 0 {
+		return nil
+	}
+	rows := make([]string, 0, len(hosts))
+	for _, host := range hosts {
+		value := host.Name + " -> " + host.SSH
+		if host.Address != "" {
+			value += " (" + host.Address + ")"
+		}
+		rows = append(rows, value)
+	}
+	return rows
+}
+
+func deployRoleJSONRows(roles []deployRoleJSONReport) []string {
+	if len(roles) == 0 {
+		return nil
+	}
+	rows := make([]string, 0, len(roles))
+	for _, role := range roles {
+		parts := []string{role.Name + ": " + strings.Join(role.Hosts, ", ")}
+		if role.Port > 0 {
+			parts = append(parts, "port "+strconv.Itoa(role.Port))
+		}
+		if role.Nginx {
+			parts = append(parts, "nginx")
+		}
+		if role.Primary != "" {
+			parts = append(parts, "primary "+role.Primary)
+		}
+		if role.Migration != "" {
+			parts = append(parts, "migrate "+role.Migration)
+		}
+		rows = append(rows, strings.Join(parts, " "))
+	}
+	return rows
+}
+
+func boolText(value bool) string {
+	if value {
+		return "yes"
+	}
+	return "no"
 }
 
 func (a app) commandDeployApply(target string) error {
@@ -2308,10 +2749,11 @@ func (a app) commandDeployApply(target string) error {
 	r.Rows(
 		outputRow{"target", target},
 		outputRow{"status", "disabled"},
-		outputRow{"reason", "no deploy target is implemented yet"},
+		outputRow{"reason", "no checked-in deploy target exists"},
+		outputRow{"check", fmt.Sprintf("carbide deploy check %s", target)},
 		outputRow{"preview", fmt.Sprintf("carbide deploy preview %s", target)},
 	)
-	return fmt.Errorf("deploy apply %s is disabled until a deploy target exists", target)
+	return fmt.Errorf("deploy apply %s is disabled until a checked-in deploy target exists", target)
 }
 
 func (a app) commandUpgrade() error {
@@ -2515,6 +2957,59 @@ func (a app) commandStatus() error {
 	return nil
 }
 
+func (a app) commandStatusJSON() error {
+	if !isFile("carbide.toml") {
+		return errors.New("run this inside a Carbide project")
+	}
+
+	compose, err := findCompose()
+	if err != nil {
+		return err
+	}
+
+	env := setEnv(os.Environ(), "COMPOSE_MENU", "false")
+	env = composeEnv(env)
+	services := composeServices(compose, env)
+	snapshots, err := composeServiceSnapshots(compose, env)
+	if err != nil {
+		return err
+	}
+
+	report := a.baseJSONReport("status")
+	report.OK = true
+	report.Services = serviceJSONReports(services, snapshots)
+	if urls, err := localURLsFromCompose(compose, env); err == nil {
+		report.URLs = &urls
+	}
+	return a.writeJSON(report)
+}
+
+func (a app) commandURLs(asJSON bool) error {
+	if !isFile("carbide.toml") {
+		return errors.New("run this inside a Carbide project")
+	}
+
+	urls, err := localURLs()
+	if err != nil {
+		return err
+	}
+	if asJSON {
+		report := a.baseJSONReport("urls")
+		report.OK = true
+		report.URLs = &urls
+		return a.writeJSON(report)
+	}
+
+	r := newRenderer(a.stdout)
+	r.Title("Carbide urls", "local stack")
+	r.Rows(
+		outputRow{"app", urls.App},
+		outputRow{"api", urls.API},
+		outputRow{"source", urls.Source},
+	)
+	return nil
+}
+
 func (a app) printDevHeader(r renderer, port int) {
 	r.Title("Carbide dev", "local stack")
 	r.Rows(
@@ -2593,10 +3088,11 @@ func (a app) runDevStreams(compose composeCommand, env []string, watch bool, log
 	if interrupted {
 		r := newRenderer(a.stdout)
 		r.Blank()
-		r.Rows(
-			outputRow{"logs", "detached"},
-			outputRow{"dev", "running"},
-			outputRow{"follow", "carbide follow logs"},
+		r.Message(
+			"Carbide dev",
+			"detached from logs; containers are still running",
+			outputRow{"status", "carbide status"},
+			outputRow{"logs", "carbide follow logs"},
 			outputRow{"stop", "carbide stop dev"},
 		)
 		return nil
@@ -2605,6 +3101,155 @@ func (a app) runDevStreams(compose composeCommand, env []string, watch bool, log
 		return fmt.Errorf("Docker Compose %s failed: %w", first.name, first.err)
 	}
 	return nil
+}
+
+func serviceJSONReports(services []string, snapshots map[string]composeServiceSnapshot) []serviceJSONReport {
+	seen := map[string]bool{}
+	reports := make([]serviceJSONReport, 0, len(services)+len(snapshots))
+	for _, service := range services {
+		snapshot, ok := snapshots[service]
+		if !ok {
+			reports = append(reports, serviceJSONReport{
+				Service:        service,
+				Container:      "-",
+				PublishedPorts: nil,
+				InternalPorts:  nil,
+				State:          "not running",
+				Status:         "not running",
+			})
+			continue
+		}
+		seen[service] = true
+		reports = append(reports, serviceJSONReportFromSnapshot(snapshot))
+	}
+	for service, snapshot := range snapshots {
+		if !seen[service] {
+			reports = append(reports, serviceJSONReportFromSnapshot(snapshot))
+		}
+	}
+	return reports
+}
+
+func serviceJSONReportFromSnapshot(snapshot composeServiceSnapshot) serviceJSONReport {
+	return serviceJSONReport{
+		Service:        snapshot.Service,
+		Container:      statusValue(snapshot.Name),
+		PublishedPorts: composePublishedPortValues(snapshot),
+		InternalPorts:  composeInternalPortValues(snapshot),
+		State:          statusValue(snapshot.State),
+		Health:         strings.TrimSpace(snapshot.Health),
+		Status:         composeServiceStatusText(snapshot),
+	}
+}
+
+func localURLs() (urlsJSONReport, error) {
+	compose, err := findCompose()
+	if err == nil {
+		env := setEnv(os.Environ(), "COMPOSE_MENU", "false")
+		env = composeEnv(env)
+		if urls, err := localURLsFromCompose(compose, env); err == nil {
+			return urls, nil
+		}
+	}
+	port := runtimePortFromEnv()
+	return urlsJSONReport{
+		App:    fmt.Sprintf("http://localhost:%d", port),
+		API:    fmt.Sprintf("http://localhost:%d/api", port),
+		Source: "CARBIDE_HTTP_PORT or default dev port",
+	}, nil
+}
+
+func localURLsFromCompose(compose composeCommand, env []string) (urlsJSONReport, error) {
+	port := 0
+	if snapshots, err := composeServiceSnapshots(compose, env); err == nil {
+		if web, ok := snapshots["web"]; ok {
+			port = publishedPortFromSnapshot(web)
+		}
+	}
+	source := "running containers"
+	if port == 0 {
+		port = runtimePortFromEnv()
+		source = "CARBIDE_HTTP_PORT or default dev port"
+	}
+	return urlsJSONReport{
+		App:    fmt.Sprintf("http://localhost:%d", port),
+		API:    fmt.Sprintf("http://localhost:%d/api", port),
+		Source: source,
+	}, nil
+}
+
+func publishedPortFromSnapshot(snapshot composeServiceSnapshot) int {
+	for _, publisher := range snapshot.Publishers {
+		if publisher.PublishedPort > 0 && publisher.TargetPort == 8080 {
+			return publisher.PublishedPort
+		}
+	}
+	for _, publisher := range snapshot.Publishers {
+		if publisher.PublishedPort > 0 {
+			return publisher.PublishedPort
+		}
+	}
+	return 0
+}
+
+func (a app) baseJSONReport(command string) jsonCommandReport {
+	return jsonCommandReport{
+		OK:      true,
+		Command: command,
+		Version: version,
+		Commit:  displayCommit(a.home),
+		Project: currentProjectJSON(),
+	}
+}
+
+func (a app) writeJSON(report jsonCommandReport) error {
+	encoder := json.NewEncoder(a.stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(report)
+}
+
+func currentProjectJSON() *projectJSONReport {
+	if !isFile(projectConfigPath) {
+		return nil
+	}
+	metadata, err := readProjectMetadata(projectConfigPath)
+	if err != nil {
+		return nil
+	}
+	project := projectJSONReport{
+		Name:    strings.TrimSpace(metadata.name),
+		Slug:    strings.TrimSpace(metadata.slug),
+		Profile: projectProfile(),
+	}
+	if project.Name == "" && project.Slug == "" && project.Profile == "" {
+		return nil
+	}
+	return &project
+}
+
+func envJSONFromReport(report envContractReport) envJSONReport {
+	status := "ok"
+	if len(report.missingRequired) > 0 || len(report.warnings) > 0 {
+		status = "needs attention"
+	}
+	return envJSONReport{
+		FileFound:       report.envFileFound,
+		Status:          status,
+		MissingRequired: append([]string(nil), report.missingRequired...),
+		Warnings:        append([]string(nil), report.warnings...),
+		Secrets:         report.secretCount,
+		BrowserExposed:  report.browserCount,
+		FrameworkOwned:  report.frameworkCount,
+	}
+}
+
+func envProblemDetails(report envContractReport) []string {
+	var details []string
+	for _, name := range report.missingRequired {
+		details = append(details, "missing required env value: "+name)
+	}
+	details = append(details, report.warnings...)
+	return details
 }
 
 func (a app) startComposeStream(
@@ -4111,11 +4756,7 @@ func deployRoleByName(roles []deployRole, name string) (deployRole, bool) {
 }
 
 func deployHostRows(target deployTarget) []string {
-	names := make([]string, 0, len(target.Hosts))
-	for name := range target.Hosts {
-		names = append(names, name)
-	}
-	sort.Strings(names)
+	names := sortedDeployHostNames(target.Hosts)
 
 	rows := make([]string, 0, len(names))
 	for _, name := range names {
@@ -4127,6 +4768,15 @@ func deployHostRows(target deployTarget) []string {
 		rows = append(rows, fmt.Sprintf("%s -> %s", name, value))
 	}
 	return rows
+}
+
+func sortedDeployHostNames(hosts map[string]deployHost) []string {
+	names := make([]string, 0, len(hosts))
+	for name := range hosts {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
 }
 
 func deployRoleRows(target deployTarget) []string {
@@ -5027,6 +5677,14 @@ func statusValue(value string) string {
 }
 
 func composePublishedPorts(snapshot composeServiceSnapshot) string {
+	ports := composePublishedPortValues(snapshot)
+	if len(ports) == 0 {
+		return "-"
+	}
+	return strings.Join(ports, ", ")
+}
+
+func composePublishedPortValues(snapshot composeServiceSnapshot) []string {
 	seen := map[string]bool{}
 	var ports []string
 	for _, publisher := range snapshot.Publishers {
@@ -5043,13 +5701,21 @@ func composePublishedPorts(snapshot composeServiceSnapshot) string {
 			ports = append(ports, value)
 		}
 	}
+	return ports
+}
+
+func composeInternalPorts(snapshot composeServiceSnapshot) string {
+	ports := composeInternalPortValues(snapshot)
+	if len(ports) == 0 && strings.TrimSpace(snapshot.Ports) != "" {
+		return strings.TrimSpace(snapshot.Ports)
+	}
 	if len(ports) == 0 {
 		return "-"
 	}
 	return strings.Join(ports, ", ")
 }
 
-func composeInternalPorts(snapshot composeServiceSnapshot) string {
+func composeInternalPortValues(snapshot composeServiceSnapshot) []string {
 	seen := map[string]bool{}
 	var ports []string
 	for _, publisher := range snapshot.Publishers {
@@ -5066,13 +5732,13 @@ func composeInternalPorts(snapshot composeServiceSnapshot) string {
 			ports = append(ports, value)
 		}
 	}
-	if len(ports) == 0 && strings.TrimSpace(snapshot.Ports) != "" {
-		return strings.TrimSpace(snapshot.Ports)
-	}
 	if len(ports) == 0 {
-		return "-"
+		raw := strings.TrimSpace(snapshot.Ports)
+		if raw != "" {
+			return []string{raw}
+		}
 	}
-	return strings.Join(ports, ", ")
+	return ports
 }
 
 func composeServiceStatusText(snapshot composeServiceSnapshot) string {

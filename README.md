@@ -44,9 +44,10 @@ carbide run dev
 `carbide new "My Carbide App"` creates `my-carbide-app`, stores
 `name = "My Carbide App"`, and stores `slug = "my-carbide-app"`.
 
-The installer builds the `carbide` CLI with Go, so Go must be available on the
-host machine. Generated apps run Bun, the Go API build, and Postgres inside
-containers. Docker with Docker Compose is required to run generated apps.
+The installer uses a release binary when one is available and falls back to a
+source build when needed. Go is required only for that source-build fallback.
+Generated apps run Bun, the Go API build, and Postgres inside containers.
+Docker with Docker Compose is required to run generated apps.
 
 ## Core Commands
 
@@ -56,6 +57,7 @@ containers. Docker with Docker Compose is required to run generated apps.
 | `carbide init` | Initialize the current empty directory. |
 | `carbide run dev` | Start the local web, API, and Postgres containers. |
 | `carbide status` | Show services, containers, ports, and health. |
+| `carbide urls` | Show the local app and API URLs. |
 | `carbide stop dev` | Stop the local development stack. |
 | `carbide follow logs` | Stream live container logs. |
 | `carbide logs` | Query saved structured dev logs. |
@@ -63,8 +65,9 @@ containers. Docker with Docker Compose is required to run generated apps.
 | `carbide doctor env` | Check env and secrets rules without printing secrets. |
 | `carbide doctor runtime` | Run the Docker-backed health and auth flow check. |
 | `carbide project migrate` | Prepare an AI-assisted framework migration workspace. |
+| `carbide deploy check prod` | Classify a deploy target before preview/apply. |
 | `carbide deploy preview prod` | Preview a checked-in production deploy target. |
-| `carbide deploy apply prod` | Apply a checked-in production deploy target when implemented. |
+| `carbide deploy apply prod` | Apply a checked-in single-VM production target. |
 | `carbide help` | Print the command reference. |
 | `carbide version` | Print the installed CLI version and commit. |
 | `carbide upgrade` | Upgrade the installed CLI from GitHub. |
@@ -78,6 +81,7 @@ stop the stack.
 ```text
 my-carbide-app/
 |-- AGENTS.md
+|-- PROJECT.md
 |-- api/
 |-- db/
 |-- web/
@@ -87,10 +91,10 @@ my-carbide-app/
 ```
 
 `web/` is the Bun/React/Tailwind browser container. `api/` is the Go API
-container. `db/` owns Postgres schema and database helper code. `AGENTS.md`
-points agents to the central `/for/agents` guide. The root `carbide.toml`
-stores the app identity, port defaults, env contract, runtime baseline, and
-deploy targets.
+container. `db/` owns Postgres schema and database helper code. `PROJECT.md`
+owns app-specific product truth. `AGENTS.md` points agents to the central
+`/for/agents` guide. The root `carbide.toml` stores the app identity, port
+defaults, env contract, runtime baseline, and deploy targets.
 
 At the generated project root, every directory maps to a standalone Docker
 service. The root Compose file is the app orchestration file: it describes how
@@ -109,13 +113,16 @@ can be one host. A larger target can describe multiple hosts and roles so web,
 API, and db can be planned separately.
 
 ```sh
+carbide deploy check prod
 carbide deploy preview prod
 carbide deploy apply prod
 ```
 
-`preview` is non-mutating. `apply` is the only command allowed to change remote
-infrastructure, and it stays guarded until the target has implemented apply
-semantics.
+`check` classifies the target as missing, preview-only, invalid, or
+apply-supported. `preview` is non-mutating. `apply` is the only command allowed
+to change remote infrastructure. Carbide supports `ssh-compose` apply for a
+checked-in single-VM target; multi-VM `ssh-compose-environment` targets are
+preview-only until clustered orchestration is implemented.
 
 ## Learn More
 

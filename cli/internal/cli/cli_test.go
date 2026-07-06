@@ -246,9 +246,14 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"  carbide <command> [arguments]",
 		"Available commands:",
 		"  deploy apply prod",
+		"  deploy check prod",
+		"  deploy check prod json",
 		"  deploy preview prod",
+		"  deploy preview prod json",
 		"  doctor",
+		"  doctor json",
 		"  doctor env",
+		"  doctor env json",
 		"  doctor framework",
 		"  doctor runtime",
 		"  help",
@@ -257,7 +262,10 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"  new <project-name>",
 		"  project migrate",
 		"  status",
+		"  status json",
 		"  upgrade",
+		"  urls",
+		"  urls json",
 		"  version",
 		"follow\n",
 		"  follow logs",
@@ -273,15 +281,23 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"Usage:",
 		"Available commands:",
 		"new <project-name>",
+		"deploy check prod",
+		"deploy check prod json",
 		"deploy preview prod",
+		"deploy preview prod json",
 		"deploy apply prod",
 		"doctor",
+		"doctor json",
 		"doctor env",
+		"doctor env json",
 		"doctor runtime",
 		"doctor framework",
 		"project migrate",
 		"run dev",
+		"status json",
 		"stop dev",
+		"urls",
+		"urls json",
 		"follow logs",
 		"logs containing \"/api/login\" json",
 		"upgrade",
@@ -334,6 +350,7 @@ func TestDoctorPrintsProjectContract(t *testing.T) {
 			"api               ok      Go HTTP API",
 			"database          ok      Postgres users sessions",
 			"agents            ok      AGENTS.md /for/agents",
+			"product context   ok      PROJECT.md",
 			"regressions       ok      no legacy markers",
 			"runtime           skip    run carbide doctor runtime",
 		} {
@@ -607,12 +624,29 @@ local_default = "development"
 			"Carbide deploy",
 			"preview prod",
 			"target   prod",
+			"state    missing-target",
 			"mutates  no",
-			"plan     validate env contract",
-			"refuse apply until target is implemented",
+			"plan     add a checked-in deploy target to carbide.toml",
+			"single-VM ssh-compose targets can apply",
 		} {
 			if !strings.Contains(got, want) {
 				t.Fatalf("deploy preview output = %q, missing %q", got, want)
+			}
+		}
+
+		out.Reset()
+		if err := a.run([]string{"deploy", "check", "prod", "json"}); err != nil {
+			t.Fatalf("deploy check json returned %v", err)
+		}
+		got = out.String()
+		for _, want := range []string{
+			`"command": "deploy check"`,
+			`"classification": "missing-target"`,
+			`"preview_supported": true`,
+			`"apply_supported": false`,
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("deploy check json = %q, missing %q", got, want)
 			}
 		}
 
@@ -621,10 +655,13 @@ local_default = "development"
 		if err == nil {
 			t.Fatalf("deploy apply should be disabled")
 		}
-		if !strings.Contains(err.Error(), "disabled until a deploy target exists") {
+		if !strings.Contains(err.Error(), "disabled until a checked-in deploy target exists") {
 			t.Fatalf("deploy apply error = %v", err)
 		}
 		if !strings.Contains(out.String(), "status   disabled") {
+			t.Fatalf("deploy apply output = %q", out.String())
+		}
+		if !strings.Contains(out.String(), "no checked-in deploy target exists") {
 			t.Fatalf("deploy apply output = %q", out.String())
 		}
 	})

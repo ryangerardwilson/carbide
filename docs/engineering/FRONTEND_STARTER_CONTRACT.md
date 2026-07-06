@@ -108,6 +108,17 @@ ID selectors, scrollbar pseudo-selectors, `--carbide-*` color variables,
 `styles.css`; those belong in Tailwind utility classes and component class
 layers.
 
+Use these sanctioned paths instead:
+
+- put reusable class groups in `web/src/component/l1/tokens.ts`;
+- compose component variants in TypeScript with `cx()`;
+- keep responsive layout, typography, spacing, color, and scrollbars in
+  Tailwind utilities;
+- keep third-party CSS imports explicit and product-owned;
+- if a real product intentionally needs global CSS, create
+  `web/src/product.css`, import it explicitly, document the reason in
+  `PROJECT.md`, and update the doctor contract.
+
 `typecheck` runs `tsc --noEmit`. Docker builds run typecheck before building
 browser assets, so broken component props, API response shapes, or Bun server
 types fail before the container starts.

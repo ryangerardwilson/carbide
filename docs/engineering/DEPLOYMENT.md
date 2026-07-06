@@ -5,17 +5,30 @@ environment, not just a machine. The simplest environment is one VM running
 Docker Compose. Larger environments declare hosts and roles so the topology is
 reviewable before anything mutates.
 
-Always preview first:
+Check first, then preview, then apply:
 
 ```sh
+carbide deploy check prod
 carbide deploy preview prod
+carbide deploy apply prod
 ```
 
-`prod` is the canonical production target name. `carbide deploy apply prod`
-mutates infrastructure only when `prod` is a checked-in target with implemented
-apply semantics. Today, `ssh-compose` applies to one VM.
-`ssh-compose-environment` validates and previews multi-VM topology, but apply is
-guarded until clustered orchestration is implemented.
+`prod` is the canonical production target name. `carbide deploy check prod`
+classifies the target as `missing-target`, `preview-only`, `invalid-config`, or
+`apply-supported`. `carbide deploy apply prod` mutates infrastructure only when
+`prod` is a checked-in target with implemented apply semantics.
+
+Carbide supports `ssh-compose` apply for a checked-in single-VM target. New
+generated apps ship with no deploy target, so `apply prod` refuses until one
+exists. `ssh-compose-environment` validates and previews multi-VM topology, but
+apply is guarded until clustered orchestration is implemented.
+
+Agents and CI should use:
+
+```sh
+carbide deploy check prod json
+carbide deploy preview prod json
+```
 
 ## Single VM
 
@@ -51,6 +64,7 @@ to `public_port`, and uses Certbot when a certificate is not already present.
 Deploy with:
 
 ```sh
+carbide deploy check prod
 carbide deploy preview prod
 carbide deploy apply prod
 ```
@@ -107,6 +121,7 @@ migration = "once"
 Preview with:
 
 ```sh
+carbide deploy check prod
 carbide deploy preview prod
 ```
 

@@ -13,6 +13,7 @@ Use this app only for the docs runtime and deploy loop:
 
 ```sh
 carbide doctor
+carbide deploy check de-sci
 carbide deploy preview de-sci
 carbide deploy apply de-sci
 ```

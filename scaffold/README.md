@@ -70,13 +70,19 @@ separate secrets container.
 Infrastructure uses a preview-before-apply rule:
 
 ```sh
+carbide deploy check prod
 carbide deploy preview prod
 carbide deploy apply prod
 ```
 
-`preview` shows what would change. `apply` is the only command allowed to make
-real infrastructure changes. No deploy target is implemented yet, so `apply`
-currently refuses to mutate anything.
+`check` classifies the target as missing, preview-only, invalid, or
+apply-supported. `preview` shows what would change. `apply` is the only command
+allowed to make real infrastructure changes.
+
+Carbide supports `ssh-compose` apply for a checked-in single-VM target. New
+generated apps ship with no deploy target, so `apply prod` refuses until you
+add one. Multi-VM `ssh-compose-environment` targets validate and preview only
+until clustered orchestration is implemented.
 
 ## Where Code Lives
 
@@ -110,6 +116,8 @@ currently refuses to mutate anything.
   contract, and deploy guardrails.
 - `AGENTS.md` points agents to the central `/for/agents` guide and names the
   local files that own app truth.
+- `PROJECT.md` owns app-specific product facts, user roles, business rules,
+  and acceptance criteria. Keep framework instructions out of it.
 
 Every root directory maps to a standalone Docker service: `web/`, `api/`, and
 `db/`. Shared runtime coordination lives in `docker-compose.yml`.
@@ -161,6 +169,15 @@ Query the latest structured logs from the project root:
 carbide logs service api
 carbide logs containing "/api/login" json
 carbide follow logs service api
+```
+
+Read machine-friendly state with JSON subcommands:
+
+```sh
+carbide urls json
+carbide status json
+carbide doctor json
+carbide deploy check prod json
 ```
 
 ## Included

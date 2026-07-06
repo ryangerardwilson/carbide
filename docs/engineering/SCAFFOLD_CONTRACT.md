@@ -10,6 +10,7 @@ Generated app root:
 ```text
 .
 |-- AGENTS.md
+|-- PROJECT.md
 |-- api/
 |-- db/
 |-- web/
@@ -19,6 +20,11 @@ Generated app root:
 ```
 
 Every root directory is a standalone Docker service.
+
+`PROJECT.md` is the only generated home for app-specific product truth: domain
+facts, user roles, business rules, and acceptance criteria. It is not an agent
+runbook and must not duplicate `/for/agents`, install instructions, or
+framework setup rules.
 
 ## Web Contract
 
@@ -38,6 +44,10 @@ Every root directory is a standalone Docker service.
   scrollbar pseudo-selector CSS to `styles.css`.
 - Do not reintroduce generated `--carbide-*` color variables or `@theme` into
   `styles.css`.
+- If a real app intentionally needs global product CSS, create
+  `web/src/product.css`, import it explicitly, document the reason in
+  `PROJECT.md`, and update the doctor contract. Do not hide product CSS inside
+  `web/src/styles.css`.
 
 ## API And DB Contract
 

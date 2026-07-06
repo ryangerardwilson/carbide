@@ -18,8 +18,10 @@ carbide doctor
 carbide stop dev
 ```
 
-The installer builds the CLI with Go. The generated app does not require host
-Bun, Node, Go API setup, or Postgres because those run inside containers.
+The installer uses a release binary when available and falls back to a source
+build. Go is required only for that source-build fallback. The generated app
+does not require host Bun, Node, Go API setup, or Postgres because those run
+inside containers.
 
 Then open:
 
@@ -53,10 +55,12 @@ URLs. Logs begin only after Compose reports the stack ready. `Ctrl+C` detaches
 from live log streaming and leaves the containers running. `carbide follow
 logs` attaches to live container logs again. `carbide status` prints the current
 service table.
-`carbide stop dev` stops the local development stack. Web, API, db,
-and watch events appear in one timestamped, service-tagged stream and
-are mirrored to `.carbide/log/dev.jsonl`. `NO_COLOR` disables ANSI color
-without disabling the terminal startup or shutdown animation.
+`carbide stop dev` stops the local development stack. `carbide urls`,
+`carbide status json`, and `carbide doctor json` provide machine-readable state
+for agents and CI. Web, API, db, and watch events appear in one timestamped,
+service-tagged stream and are mirrored to `.carbide/log/dev.jsonl`. `NO_COLOR`
+disables ANSI color without disabling the terminal startup or shutdown
+animation.
 
 `carbide doctor` runs the fast project contract check without starting
 containers. It verifies the generated root shape, `carbide.toml`, Compose
@@ -94,7 +98,7 @@ Prints the command reference.
 
 ### `carbide upgrade`
 
-Upgrades the installed CLI when a newer GitHub commit is available.
+Upgrades the installed CLI.
 
 ### `carbide project migrate`
 

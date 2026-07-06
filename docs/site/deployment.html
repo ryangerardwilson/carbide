@@ -82,10 +82,13 @@
 
         <section id="deploy-model">
           <h2>Deploy Model</h2>
-          <p>Always preview first. <code>carbide deploy preview prod</code> is the canonical production preview. <code>carbide deploy apply prod</code> mutates infrastructure only when <code>prod</code> is a checked-in target with implemented apply semantics.</p>
-          <pre><code>carbide deploy preview prod
+          <p>Check the target first, then preview, then apply. <code>carbide deploy check prod</code> classifies the target as missing, preview-only, invalid, or apply-supported. <code>carbide deploy apply prod</code> mutates infrastructure only when <code>prod</code> is a checked-in target with implemented apply semantics.</p>
+          <pre><code>carbide deploy check prod
+carbide deploy preview prod
 carbide deploy apply prod</code></pre>
-          <p>Today, <code>ssh-compose</code> applies to one VM. <code>ssh-compose-environment</code> validates and previews multi-VM topology, but apply is guarded until clustered orchestration is implemented.</p>
+          <p>Carbide supports <code>ssh-compose</code> apply for a checked-in single-VM target. New generated apps ship with no deploy target, so <code>apply prod</code> refuses until one exists. <code>ssh-compose-environment</code> validates and previews multi-VM topology, but apply is guarded until clustered orchestration is implemented.</p>
+          <pre><code>carbide deploy check prod json
+carbide deploy preview prod json</code></pre>
         </section>
 
         <section id="single-vm">

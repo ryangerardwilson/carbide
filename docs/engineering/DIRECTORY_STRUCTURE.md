@@ -8,6 +8,7 @@ app because that is the structure application teams live in.
 ```text
 my-carbide-app/
 |-- AGENTS.md
+|-- PROJECT.md
 |-- README.md
 |-- .env.example
 |-- .gitignore
@@ -72,6 +73,8 @@ The generated project root is intentionally small:
   environment contract, and deploy targets.
 - `AGENTS.md` points agents to the central `/for/agents` guide and names the
   local files that own app truth.
+- `PROJECT.md` owns app-specific product facts, users, roles, business rules,
+  and acceptance criteria.
 - `.env.example` documents local development variables without storing real
   secrets.
 

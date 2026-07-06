@@ -51,3 +51,10 @@ cd docs/app && carbide doctor
 Run `carbide doctor runtime` when container behavior changed and Docker is
 available.
 
+## Docs Agent Route
+
+After deploying docs, verify the public agent guide:
+
+```sh
+bash tests/smoke/docs_for_agents_http.sh
+```

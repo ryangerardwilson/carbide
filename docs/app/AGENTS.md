@@ -24,6 +24,7 @@ documentation website from `../site`.
 
 ```sh
 carbide doctor
+carbide deploy check de-sci
 carbide deploy preview de-sci
 carbide deploy apply de-sci
 ```

@@ -135,7 +135,8 @@ Future checks:
   source, web package/config files, `api/`, `db/`, and
   `api/Dockerfile` changes;
 - generated apps include an env contract in `carbide.toml`, `.env.example`,
-  and an `AGENTS.md` pointer to `/for/agents`;
+  a `PROJECT.md` product-context file, and an `AGENTS.md` pointer to
+  `/for/agents` with a raw GitHub fallback;
 - generated frontend structure keeps L1/L2/L3 as class-ownership layers
   reflected in component directories;
 - generated apps include a Bun/React/Tailwind web container, Go API
@@ -155,9 +156,11 @@ Future checks:
 - browser-exposed variables cannot be marked secret;
 - framework-owned keys are visible in the contract and protected from casual app
   override;
+- `carbide deploy check prod` classifies missing, invalid, preview-only, and
+  apply-supported deploy targets;
 - `carbide deploy preview prod` is non-mutating and reports either the
   checked-in production target plan, including environment hosts and roles, or
-  the guarded unknown-target state;
+  the missing-target state;
 - `carbide deploy apply prod` refuses unknown targets and runs only when `prod`
   is a checked-in deploy target with implemented apply semantics;
 - `ssh-compose-environment` targets are previewable and validated while
@@ -189,15 +192,21 @@ Future checks:
   through timestamped service-tagged rows after the stack is ready;
 - `carbide status` prints a stable table of services, container names,
   published host ports, internal container ports, and status;
+- `carbide urls json`, `carbide status json`, `carbide doctor json`,
+  `carbide doctor env json`, `carbide doctor runtime json`, and deploy JSON
+  subcommands emit valid, ANSI-free machine-readable state;
 - `carbide project migrate` creates an agent-assisted migration workspace with
   a latest-scaffold snapshot and migration brief, without copying generated
   local artifacts;
 - `carbide doctor` prints a stable table of project-contract checks;
+- `carbide doctor` verifies `PROJECT.md` exists and is not a competing
+  framework runbook;
 - `carbide doctor env` validates the generated environment contract without
   printing secret values;
 - `carbide doctor framework` runs source-repo regressions: shell syntax, Go
   CLI tests, repo contract, scaffold checks, and Docker smoke;
 - `carbide deploy preview prod` prints the non-mutating deploy plan;
+- `carbide deploy check prod` prints a non-mutating deploy classifier;
 - `carbide deploy apply prod` applies only a checked-in production target and
   remains guarded for unknown targets and preview-only environment targets;
 - `carbide follow logs` reattaches to live container logs and preserves

@@ -35,6 +35,22 @@ Use subject/action/object style where possible:
 Do not add user-facing dash-flag aliases for core actions. `help`, `version`,
 and `upgrade` are commands, not options.
 
+Machine-readable output uses command-shaped JSON subcommands, not dash flags:
+
+```sh
+carbide urls json
+carbide status json
+carbide doctor json
+carbide doctor env json
+carbide doctor runtime json
+carbide deploy check prod json
+carbide deploy preview prod json
+```
+
+`-h` and `--help` may remain accepted as hidden compatibility aliases while
+they exist, but do not show them in help text, README examples, or new command
+docs.
+
 ## Installed Binary Refresh
 
 After CLI source changes:
@@ -51,4 +67,3 @@ ln -sfn /home/ryan/Apps/carbide/.cli/bin/carbide /home/ryan/.local/bin/carbide
 
 Use `-dirty` in the commit metadata only when intentionally installing an
 uncommitted working tree.
-
