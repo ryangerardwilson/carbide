@@ -245,6 +245,7 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"Usage:",
 		"  carbide <command> [arguments]",
 		"Available commands:",
+		"  clean dev",
 		"  deploy apply prod",
 		"  deploy check prod",
 		"  deploy check prod json",
@@ -255,7 +256,9 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"  doctor env",
 		"  doctor env json",
 		"  doctor framework",
+		"  doctor framework json",
 		"  doctor runtime",
+		"  doctor runtime json",
 		"  help",
 		"  init",
 		"  logs",
@@ -286,12 +289,15 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"deploy preview prod",
 		"deploy preview prod json",
 		"deploy apply prod",
+		"clean dev",
 		"doctor",
 		"doctor json",
 		"doctor env",
 		"doctor env json",
 		"doctor runtime",
+		"doctor runtime json",
 		"doctor framework",
+		"doctor framework json",
 		"project migrate",
 		"run dev",
 		"status json",
@@ -502,10 +508,12 @@ func TestProjectMigrateCreatesAgentWorkspace(t *testing.T) {
 		}
 		got := string(content)
 		for _, want := range []string{
-			"AI-assisted framework upgrade",
+			"manual framework upgrade",
 			"latest-scaffold",
+			"What This Command Created",
 			"carbide doctor",
 			"Preserve app-owned behavior",
+			"Expect manual judgment",
 		} {
 			if !strings.Contains(got, want) {
 				t.Fatalf("brief = %q, missing %q", got, want)

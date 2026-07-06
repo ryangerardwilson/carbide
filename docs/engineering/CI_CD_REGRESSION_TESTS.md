@@ -184,6 +184,8 @@ Future checks:
   terminal animation;
 - `Ctrl+C` during `carbide run dev` detaches from live logs without running
   `docker compose down`;
+- `carbide clean dev` normalizes session state without deleting volumes and
+  runs `docker compose down --remove-orphans` when containers exist;
 - `carbide stop dev` is the explicit teardown path, runs `docker compose down`,
   and shows full-width TTY-only per-container shutdown animation;
 - CLI success, error, version, upgrade, and dev-stack output use the shared
@@ -193,11 +195,12 @@ Future checks:
 - `carbide status` prints a stable table of services, container names,
   published host ports, internal container ports, and status;
 - `carbide urls json`, `carbide status json`, `carbide doctor json`,
-  `carbide doctor env json`, `carbide doctor runtime json`, and deploy JSON
-  subcommands emit valid, ANSI-free machine-readable state;
-- `carbide project migrate` creates an agent-assisted migration workspace with
-  a latest-scaffold snapshot and migration brief, without copying generated
-  local artifacts;
+  `carbide doctor env json`, `carbide doctor runtime json`,
+  `carbide doctor framework json`, and deploy JSON subcommands emit valid,
+  ANSI-free machine-readable state;
+- `carbide project migrate` creates a manual framework-upgrade workspace with a
+  latest-scaffold snapshot and migration brief, without copying generated local
+  artifacts;
 - `carbide doctor` prints a stable table of project-contract checks;
 - `carbide doctor` verifies `PROJECT.md` exists and is not a competing
   framework runbook;

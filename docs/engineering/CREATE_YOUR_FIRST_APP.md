@@ -102,11 +102,12 @@ Upgrades the installed CLI.
 
 ### `carbide project migrate`
 
-Prepares an AI-assisted framework migration workspace under
-`.carbide/migration/`. The command copies the latest scaffold contract from the
-installed Carbide checkout and writes a migration brief for an agent to port
-framework-owned files while preserving app-owned API, database, deploy, and
-product behavior.
+Prepares a manual framework-upgrade workspace under
+`.carbide/migration/`. The command writes `latest-scaffold/` with the newest
+scaffold rendered for the current app and `MIGRATION.md` with the migration
+brief. It is a manual framework-upgrade aid: agents still need to port
+framework-owned files deliberately while preserving app-owned API, database,
+deploy, and product behavior.
 
 ### `carbide new <project-name>`
 
@@ -126,6 +127,12 @@ Runs the generated app through Docker Compose. The web, API, and
 db services are separate, matching the runtime topology contract. The CLI
 prints the app URL and API URL, then streams logs until `Ctrl+C`. `Ctrl+C`
 detaches from the log stream without stopping containers.
+
+### `carbide clean dev`
+
+Normalizes local dev state without deleting volumes. Use it when `run dev` was
+interrupted, the current session state is unclear, or you want a clean restart
+before running `carbide run dev` again.
 
 ### `carbide status`
 
@@ -153,6 +160,24 @@ Reads `.carbide/log/dev.jsonl`, the structured log file written by `carbide run
 dev`. It supports simple word-based queries such as `carbide logs service api`,
 `carbide logs containing "/api/login"`, and `carbide logs json`.
 `carbide follow logs` attaches to live container logs again after detaching.
+
+Carbide uses command-shaped JSON output instead of `--json` flags. Use
+`carbide status json`, `carbide doctor json`, `carbide doctor runtime json`,
+and `carbide deploy check prod json` when an agent or CI needs machine-readable
+state.
+
+## Troubleshooting
+
+- If `carbide doctor` fails, fix the named contract before changing runtime
+  behavior. Use `carbide doctor json` or `carbide doctor env json` when an
+  agent needs structured output.
+- If container state is unclear after `Ctrl+C`, run `carbide clean dev`, then
+  `carbide run dev`.
+- If deploy fails around nginx or sudo, the remote user needs non-interactive
+  sudo for Carbide-managed nginx, or the deploy target should set
+  `nginx = false` and use user-managed ingress.
+- If framework versions drift, run `carbide version`, `carbide doctor
+  framework`, then `carbide project migrate`.
 
 ## Product Principle
 

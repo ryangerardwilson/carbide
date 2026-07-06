@@ -171,7 +171,15 @@ carbide logs containing "/api/login" json
 carbide follow logs service api
 ```
 
-Read machine-friendly state with JSON subcommands:
+If the current session state is unclear after `Ctrl+C` or a failed startup,
+normalize it without deleting volumes:
+
+```sh
+carbide clean dev
+```
+
+Read machine-friendly state with JSON subcommands. Carbide uses command-shaped
+JSON output instead of `--json` flags:
 
 ```sh
 carbide urls json

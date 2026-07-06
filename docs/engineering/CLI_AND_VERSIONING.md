@@ -27,6 +27,7 @@ When changing the version:
 
 Use subject/action/object style where possible:
 
+- `carbide clean dev`
 - `carbide run dev`
 - `carbide stop dev`
 - `carbide follow logs`
@@ -43,6 +44,7 @@ carbide status json
 carbide doctor json
 carbide doctor env json
 carbide doctor runtime json
+carbide doctor framework json
 carbide deploy check prod json
 carbide deploy preview prod json
 ```

@@ -52,7 +52,7 @@ The audit job reports drift. It does not edit files, run package upgrades, or
 mutate generated projects.
 
 After installing a newer CLI, run `carbide project migrate` inside an existing
-app to prepare an agent-assisted migration workspace. The command copies the
+app to prepare a manual framework-upgrade workspace. The command copies the
 latest scaffold contract and writes a brief; an agent such as Codex should do
 the actual code migration, preserving app-owned behavior and proving the result
 with `carbide doctor`.

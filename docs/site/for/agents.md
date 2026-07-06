@@ -53,7 +53,8 @@ inside an existing app.
 
 Carbide generated apps run Bun, React, Tailwind, Go API builds, and Postgres
 inside Docker containers. The host needs Docker, Docker Compose, Git, and curl.
-Current source installs also need Go until release binaries are available.
+The installer uses a release binary when available and falls back to a source
+build, so Go is needed only for that source-build fallback.
 
 Use quick checks when setup is uncertain:
 
@@ -102,6 +103,7 @@ Use these commands from the generated app root:
 ```shell
 carbide run dev
 carbide status
+carbide clean dev
 carbide follow logs
 carbide logs
 carbide doctor
@@ -112,7 +114,12 @@ carbide stop dev
 
 `carbide run dev` starts the Docker stack and streams logs after the stack is
 ready. `Ctrl+C` detaches from log streaming and leaves containers running. Use
-`carbide follow logs` to attach again and `carbide stop dev` to stop the stack.
+`carbide follow logs` to attach again, `carbide stop dev` for explicit
+teardown, or `carbide clean dev` when session state is unclear and you want a
+fresh restart without deleting volumes.
+
+Carbide uses command-shaped JSON output, not `--json` flags. Use
+`carbide status json`, not `carbide status --json`.
 
 For machine-readable state, use JSON subcommands:
 
@@ -122,6 +129,9 @@ carbide status json
 carbide doctor json
 carbide doctor env json
 carbide doctor runtime json
+carbide doctor framework json
+carbide deploy check prod json
+carbide deploy preview prod json
 ```
 
 Use `carbide help` for the command reference. Use `carbide upgrade` to update
@@ -222,9 +232,40 @@ contract, use:
 carbide project migrate
 ```
 
-Treat the generated migration workspace as an AI-assisted comparison target,
-not as a deterministic code rewrite. Preserve app-specific behavior, data,
-deploy targets, secrets, and externally visible behavior.
+`carbide project migrate` creates:
+
+- `.carbide/migration/<timestamp>/latest-scaffold/`: the newest scaffold
+  rendered with the current app name and slug.
+- `.carbide/migration/<timestamp>/MIGRATION.md`: the migration brief and
+  verification loop.
+
+Treat that workspace as a manual framework-upgrade aid, not as a deterministic
+code rewrite. The command does not port business logic, merge conflicts, or
+rewrite app-owned files for you. Preserve app-specific behavior, data, deploy
+targets, secrets, and externally visible behavior while porting
+framework-owned files from `latest-scaffold/`.
+
+## Troubleshooting
+
+Use the smallest command that classifies the failure before editing code.
+
+- Doctor or env failures:
+  Run `carbide doctor json` or `carbide doctor env json`. Fix the named
+  contract first. Missing env values belong in `.env` for local dev or the
+  deploy secret layer for remote targets.
+- Container start failure or unclear local state:
+  Run `carbide clean dev`, then `carbide run dev`. If you need the current
+  stack instead of a reset, run `carbide status`, `carbide follow logs`, or
+  query `.carbide/log/dev.jsonl` with `carbide logs service api`.
+- Deploy, nginx, or sudo failure:
+  Run `carbide deploy check prod` and `carbide deploy preview prod` first. If
+  Carbide-managed nginx fails, the remote user needs non-interactive sudo for
+  nginx install/reload, or the target should set `nginx = false` and use
+  user-managed ingress.
+- Version drift or framework mismatch:
+  Run `carbide version`. For framework work, run `carbide doctor framework`.
+  For generated apps, upgrade the CLI, run `carbide project migrate`, then
+  port framework-owned files manually against `latest-scaffold/`.
 
 ## Verification
 
@@ -257,7 +298,8 @@ runtime flow. Report which checks passed and which checks could not be run.
 ## Recovery
 
 - If `carbide run dev` was interrupted, assume containers are still running.
-  Run `carbide status`, then `carbide follow logs` or `carbide stop dev`.
+  Run `carbide status`, then `carbide follow logs`, `carbide stop dev`, or
+  `carbide clean dev`.
 - If ports are unclear, run `carbide urls` or `carbide urls json`.
 - If deploy is unclear, run `carbide deploy check prod`.
 - If a doctor check fails, fix the named contract before adding new behavior.

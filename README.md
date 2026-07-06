@@ -26,8 +26,8 @@ app code.
 - **Infrastructure as code:** services, ports, health checks, volumes, env
   values, secrets policy, and deploy targets are checked in.
 - **Inspectable dev loop:** `carbide run dev`, `carbide status`,
-  `carbide follow logs`, `carbide logs`, and `carbide doctor` keep the local
-  stack understandable.
+  `carbide clean dev`, `carbide follow logs`, `carbide logs`, and
+  `carbide doctor` keep the local stack understandable.
 - **Explicit baselines:** runtime versions are recorded in `carbide.toml`;
   `carbide doctor` rejects floating Docker images, `latest`, and framework-owned
   semver ranges.
@@ -58,13 +58,14 @@ Docker with Docker Compose is required to run generated apps.
 | `carbide run dev` | Start the local web, API, and Postgres containers. |
 | `carbide status` | Show services, containers, ports, and health. |
 | `carbide urls` | Show the local app and API URLs. |
+| `carbide clean dev` | Normalize local dev state without deleting volumes. |
 | `carbide stop dev` | Stop the local development stack. |
 | `carbide follow logs` | Stream live container logs. |
 | `carbide logs` | Query saved structured dev logs. |
 | `carbide doctor` | Check the generated project contract. |
 | `carbide doctor env` | Check env and secrets rules without printing secrets. |
 | `carbide doctor runtime` | Run the Docker-backed health and auth flow check. |
-| `carbide project migrate` | Prepare an AI-assisted framework migration workspace. |
+| `carbide project migrate` | Prepare a manual framework-upgrade workspace. |
 | `carbide deploy check prod` | Classify a deploy target before preview/apply. |
 | `carbide deploy preview prod` | Preview a checked-in production deploy target. |
 | `carbide deploy apply prod` | Apply a checked-in single-VM production target. |
@@ -73,8 +74,9 @@ Docker with Docker Compose is required to run generated apps.
 | `carbide upgrade` | Upgrade the installed CLI from GitHub. |
 
 `Ctrl+C` in `carbide run dev` detaches from log streaming and leaves containers
-running. Use `carbide follow logs` to attach again and `carbide stop dev` to
-stop the stack.
+running. Use `carbide follow logs` to attach again, `carbide stop dev` for
+explicit teardown, or `carbide clean dev` when the current session state is
+unclear and you want a fresh restart without deleting volumes.
 
 ## Generated App Layout
 

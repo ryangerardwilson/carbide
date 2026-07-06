@@ -166,6 +166,7 @@ grep -q 'slug = "my-carbide-app"' README.md
 grep -q "carbide run dev" README.md
 grep -q "carbide status" README.md
 grep -q "carbide urls" README.md
+grep -q "carbide clean dev" README.md
 grep -q "carbide stop dev" README.md
 grep -q "carbide follow logs" README.md
 grep -q "carbide logs" README.md
@@ -293,8 +294,10 @@ grep -q "Postgres major-version baseline change" scaffold/README.md
 grep -q "carbide deploy check prod" scaffold/README.md
 grep -q "carbide deploy preview prod" scaffold/README.md
 grep -q "carbide deploy apply prod" scaffold/README.md
+grep -q "carbide clean dev" scaffold/README.md
 grep -q "carbide status json" scaffold/README.md
 grep -q "carbide urls json" scaffold/README.md
+grep -q "JSON output instead of \`--json\` flags" scaffold/README.md
 grep -q "PROJECT.md" scaffold/README.md
 grep -q "POSTGRES_PASSWORD" scaffold/.env.example
 ! grep -q 'url = "http://localhost:8080"' scaffold/carbide.toml
@@ -714,9 +717,11 @@ grep -q "PROJECT.md" docs/site/frontend-starter-contract.html
 grep -q "scrollbar-width:thin" docs/site/assets/styles.css
 grep -q "scrollbar-color:#525252 transparent" docs/site/assets/styles.css
 grep -q "carbide follow logs" docs/site/create-your-first-app.html
+grep -q "carbide clean dev" docs/site/create-your-first-app.html
 grep -q "carbide status" docs/site/create-your-first-app.html
 grep -q "carbide project migrate" docs/site/create-your-first-app.html
 grep -q "carbide doctor runtime" docs/site/create-your-first-app.html
+grep -q "Troubleshooting" docs/site/create-your-first-app.html
 grep -q "Install, create, run, register" docs/site/create-your-first-app.html
 test ! -f docs/site/for/agents.html
 test ! -f docs/engineering/FOR_AGENTS.md
@@ -752,7 +757,9 @@ grep -q "carbide status" docs/site/for/agents.md
 grep -q "carbide urls json" docs/site/for/agents.md
 grep -q "carbide status json" docs/site/for/agents.md
 grep -q "carbide doctor json" docs/site/for/agents.md
+grep -q "carbide doctor framework json" docs/site/for/agents.md
 grep -q "carbide follow logs" docs/site/for/agents.md
+grep -q "carbide clean dev" docs/site/for/agents.md
 grep -q "carbide doctor env" docs/site/for/agents.md
 grep -q "carbide doctor env json" docs/site/for/agents.md
 grep -q "carbide doctor runtime" docs/site/for/agents.md
@@ -766,6 +773,9 @@ grep -q "carbide deploy preview prod" docs/site/for/agents.md
 grep -q "carbide deploy preview prod json" docs/site/for/agents.md
 grep -q "carbide deploy apply prod" docs/site/for/agents.md
 grep -q "carbide project migrate" docs/site/for/agents.md
+grep -q "MIGRATION.md" docs/site/for/agents.md
+grep -q "command-shaped JSON output" docs/site/for/agents.md
+grep -q "^## Troubleshooting" docs/site/for/agents.md
 grep -q "Generated apps do not include .*\`agents.d/\`" docs/site/for/agents.md
 grep -q "Do not add seeded demo credentials" docs/site/for/agents.md
 grep -q "Do not print secret values" docs/site/for/agents.md

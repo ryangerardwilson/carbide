@@ -100,6 +100,7 @@ carbide stop dev</code></pre>
           <p>The CLI presents aligned rows and compact tables with TTY-only color and full-width terminal-only per-container startup and shutdown animation while Docker Compose builds, starts, waits for, or stops containers. Captured or piped output remains plain text for tests, scripts, and AI agents.</p>
           <p>Before startup, <code>carbide run dev</code> prints only the working app and API URLs. Logs begin only after Compose reports the stack ready. <code>Ctrl+C</code> detaches from live log streaming and leaves the containers running.</p>
           <p>Web, API, db, and watch events appear in one timestamped, service-tagged stream and are mirrored to <code>.carbide/log/dev.jsonl</code>. <code>NO_COLOR</code> disables ANSI color without disabling the terminal startup or shutdown animation.</p>
+          <p>If local session state is unclear after a detach or failed startup, run <code>carbide clean dev</code> before restarting the stack. It stops project containers and orphans without deleting volumes.</p>
         </section>
 
         <section id="generated-app">
@@ -124,15 +125,27 @@ carbide stop dev</code></pre>
           <ul>
             <li><code>carbide help</code> prints the command reference.</li>
             <li><code>carbide upgrade</code> upgrades the installed CLI.</li>
-            <li><code>carbide project migrate</code> prepares an AI-assisted migration workspace under <code>.carbide/migration/</code>, copies the latest scaffold contract, and writes a brief for an agent to port framework-owned files while preserving app-owned behavior.</li>
+            <li><code>carbide project migrate</code> prepares a manual framework-upgrade workspace under <code>.carbide/migration/</code>, writes <code>latest-scaffold/</code>, and writes <code>MIGRATION.md</code> so an agent can port framework-owned files while preserving app-owned behavior.</li>
             <li><code>carbide new &lt;project-name&gt;</code> creates a new project directory. Human names are accepted: <code>carbide new "My Carbide App"</code> creates <code>my-carbide-app</code>, stores <code>name = "My Carbide App"</code>, and stores <code>slug = "my-carbide-app"</code>.</li>
             <li><code>carbide init</code> initializes the current empty directory.</li>
             <li><code>carbide run dev</code> starts the Docker Compose dev stack, prints the app URL and API URL, then streams logs until <code>Ctrl+C</code> detaches.</li>
+            <li><code>carbide clean dev</code> normalizes local dev state before a fresh restart without deleting volumes.</li>
             <li><code>carbide status</code> prints services, containers, published ports, internal ports, and status.</li>
             <li><code>carbide doctor</code> checks project shape, <code>carbide.toml</code>, Compose, env/secrets, web/API/db contracts, the <code>AGENTS.md</code> pointer, and legacy-regression markers.</li>
             <li><code>carbide doctor runtime</code> starts the Docker stack if needed, verifies health, registration, dashboard, and logout, then stops containers it started.</li>
             <li><code>carbide stop dev</code> stops the Docker Compose dev stack.</li>
             <li><code>carbide logs</code> reads <code>.carbide/log/dev.jsonl</code> with service, text, limit, and JSON queries. <code>carbide follow logs</code> attaches to live container logs.</li>
+            <li>Machine-readable state uses command-shaped JSON subcommands such as <code>carbide status json</code>, <code>carbide doctor json</code>, and <code>carbide deploy check prod json</code>, not <code>--json</code> flags.</li>
+          </ul>
+        </section>
+
+        <section id="troubleshooting">
+          <h2>Troubleshooting</h2>
+          <ul>
+            <li>If <code>carbide doctor</code> fails, fix the named contract before changing runtime behavior. Use <code>carbide doctor json</code> or <code>carbide doctor env json</code> when an agent needs structured output.</li>
+            <li>If container state is unclear after <code>Ctrl+C</code>, run <code>carbide clean dev</code>, then <code>carbide run dev</code>.</li>
+            <li>If deploy fails around nginx or sudo, the remote user needs non-interactive sudo for Carbide-managed nginx, or the deploy target should set <code>nginx = false</code> and use user-managed ingress.</li>
+            <li>If framework versions drift, run <code>carbide version</code>, <code>carbide doctor framework</code>, then <code>carbide project migrate</code>.</li>
           </ul>
         </section>
       </main>
@@ -144,6 +157,7 @@ carbide stop dev</code></pre>
           <li><a class="toc-link" href="#run-dev">Run Dev</a></li>
           <li><a class="toc-link" href="#generated-app">Generated App</a></li>
           <li><a class="toc-link" href="#commands">Commands</a></li>
+          <li><a class="toc-link" href="#troubleshooting">Troubleshooting</a></li>
         </ol>
       </aside>
     </div>
