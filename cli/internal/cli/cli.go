@@ -2778,6 +2778,18 @@ func (a app) commandUpgrade() error {
 			return err
 		}
 		if currentHead == remoteHead {
+			if upgradeBinaryNeedsRebuild(currentHead) {
+				if err := buildInstalledBinary(a.home); err != nil {
+					return err
+				}
+				newRenderer(a.stdout).Message(
+					"Carbide upgrade",
+					"installed CLI",
+					outputRow{"status", "refreshed"},
+					outputRow{"commit", currentHead},
+				)
+				return nil
+			}
 			newRenderer(a.stdout).Message(
 				"Carbide upgrade",
 				"installed CLI",
@@ -2816,6 +2828,14 @@ func (a app) commandUpgrade() error {
 	cmd.Stdout = a.stdout
 	cmd.Stderr = a.stderr
 	return cmd.Run()
+}
+
+func upgradeBinaryNeedsRebuild(currentHead string) bool {
+	currentHead = strings.TrimSpace(currentHead)
+	if currentHead == "" {
+		return false
+	}
+	return strings.TrimSpace(commit) != currentHead
 }
 
 func (a app) commandRunDev() error {

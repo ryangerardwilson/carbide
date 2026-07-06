@@ -658,6 +658,28 @@ nginx_site = "carbide"
 	})
 }
 
+func TestUpgradeBinaryNeedsRebuild(t *testing.T) {
+	original := commit
+	t.Cleanup(func() {
+		commit = original
+	})
+
+	commit = ""
+	if !upgradeBinaryNeedsRebuild("abc123") {
+		t.Fatalf("expected empty embedded commit to require rebuild")
+	}
+
+	commit = "abc123"
+	if upgradeBinaryNeedsRebuild("abc123") {
+		t.Fatalf("expected matching embedded commit to skip rebuild")
+	}
+
+	commit = "def456"
+	if !upgradeBinaryNeedsRebuild("abc123") {
+		t.Fatalf("expected mismatched embedded commit to require rebuild")
+	}
+}
+
 func TestDeploySSHDestinationResolvesHostTableEnv(t *testing.T) {
 	t.Setenv("CARBIDE_DOCS_DEPLOY_SSH", "deploy@example-host")
 	target := deployTarget{
