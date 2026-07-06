@@ -38,7 +38,7 @@
             <p class="nav-title">Prologue</p>
             <ul class="nav-list">
               <li><a class="nav-link" href="/" aria-current="page">Installation</a></li>
-              <li><a class="nav-link" href="/#for-agents">For Agents</a></li>
+              <li><a class="nav-link" href="/#start">Start</a></li>
               <li><a class="nav-link" href="/version-policy">Version Policy</a></li>
             </ul>
           </div>
@@ -79,17 +79,10 @@
           <p class="lead">Install the Carbide CLI, create an app, and start the local Docker stack. The generated app begins with a Bun frontend, Go API, and Postgres database.</p>
         </header>
 
-        <section id="for-agents">
-          <h2>For Agents</h2>
-          <h3>Guiding Your Agents to Get Started</h3>
-          <pre><code>curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash
-carbide new demo
-cd demo
-carbide run dev
-carbide doctor
-carbide status</code></pre>
-          <p>The installer builds the Go CLI. Human app names are accepted: <code>carbide new "My Carbide App"</code> creates <code>my-carbide-app</code> while storing the display name as <code>My Carbide App</code>.</p>
-          <p><code>carbide help</code> prints the command reference. <code>carbide upgrade</code> updates the installed CLI when a newer GitHub commit is available.</p>
+        <section id="start">
+          <h2>Start</h2>
+          <p>For a new Carbide app, use the Markdown guide served from <a href="/for/agents"><code>/for/agents</code></a>. That route is the agent-facing source of truth for the install, create, run, doctor, and status loop.</p>
+          <p>The full local walkthrough lives in <a href="/create-your-first-app">Create Your First App</a>.</p>
         </section>
 
         <section id="runtime-overview">
@@ -156,7 +149,7 @@ carbide status</code></pre>
       <aside class="docs-toc" aria-label="On this page">
         <p class="toc-title">On this page</p>
         <ol class="toc-list">
-          <li><a class="toc-link" href="#for-agents">For Agents</a></li>
+          <li><a class="toc-link" href="#start">Start</a></li>
           <li><a class="toc-link" href="#runtime-overview">Runtime Overview</a></li>
           <li><a class="toc-link" href="#product-contract">Product Contract</a></li>
           <li><a class="toc-link" href="#first-milestone">First Milestone</a></li>

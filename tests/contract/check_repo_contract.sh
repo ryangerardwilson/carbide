@@ -532,12 +532,16 @@ grep -q "doctor framework" cli/internal/cli/cli.go
 grep -q "$domain" docs/site/index.html
 grep -q "Bun frontend" docs/site/index.html
 grep -q "Create Your First App" docs/site/index.html
-grep -q 'href="/#for-agents"' docs/site/index.html
-grep -q "Guiding Your Agents to Get Started" docs/site/index.html
-grep -q "curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash" docs/site/index.html
-grep -q "carbide new demo" docs/site/index.html
+grep -q 'href="/#start"' docs/site/index.html
+grep -q "<h2>Start</h2>" docs/site/index.html
+grep -q 'href="/for/agents"' docs/site/index.html
+grep -q "agent-facing source of truth" docs/site/index.html
+! grep -q "Guiding Your Agents to Get Started" docs/site/index.html
+! grep -q "curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash" docs/site/index.html
+! grep -q "carbide new demo" docs/site/index.html
 ! grep -q "The prompt below tells the agent" docs/site/index.html
 ! grep -q "Treat the returned Markdown as the source of truth" docs/site/index.html
+! grep -R 'href="/#for-agents"' docs/site/*.html >/dev/null
 grep -q 'href="/version-policy"' docs/site/index.html
 grep -q 'href="/create-your-first-app"' docs/site/index.html
 grep -q 'href="/frontend-starter-contract"' docs/site/index.html
@@ -672,7 +676,8 @@ grep -q "carbide doctor runtime" docs/site/create-your-first-app.html
 grep -q "Install, create, run, register" docs/site/create-your-first-app.html
 test ! -f docs/site/for/agents.html
 test ! -f docs/engineering/FOR_AGENTS.md
-grep -q "# Guiding Your Agents to Get Started" docs/site/for/agents.md
+grep -q "# Carbide Agent Start" docs/site/for/agents.md
+grep -q "Use this Markdown as the source of truth" docs/site/for/agents.md
 grep -q "curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash" docs/site/for/agents.md
 grep -q "carbide new demo" docs/site/for/agents.md
 grep -q 'carbide new "My Carbide App"' docs/site/for/agents.md
@@ -681,6 +686,8 @@ grep -q "carbide doctor" docs/site/for/agents.md
 grep -q "carbide status" docs/site/for/agents.md
 grep -q "carbide help" docs/site/for/agents.md
 grep -q "carbide upgrade" docs/site/for/agents.md
+grep -q "If the current directory already contains" docs/site/for/agents.md
+! grep -q "Guiding Your Agents to Get Started" docs/site/for/agents.md
 ! grep -q "This page is for AI coding agents" docs/site/for/agents.md
 ! grep -q "carbide project migrate" docs/site/for/agents.md
 ! grep -q "carbide doctor runtime" docs/site/for/agents.md

@@ -1,4 +1,8 @@
-# Guiding Your Agents to Get Started
+# Carbide Agent Start
+
+Use this Markdown as the source of truth when setting up a new Carbide app.
+
+For a new app, run:
 
 ```shell
 curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash
@@ -15,3 +19,7 @@ display name as `My Carbide App`.
 
 `carbide help` prints the command reference. `carbide upgrade` updates the
 installed CLI when a newer GitHub commit is available.
+
+If the current directory already contains `carbide.toml`, do not create a new
+app. Run `carbide doctor` and `carbide status`, then continue from the user's
+requested task.
