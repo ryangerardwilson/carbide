@@ -26,7 +26,7 @@
         </div>
         <nav class="topbar-actions" aria-label="Documentation actions">
           <span class="version-pill">Version v0.1</span>
-          <a class="github-link" href="https://github.com/ryangerardwilson/carbide">GitHub</a>
+          <a class="github-link" href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer">GitHub</a>
         </nav>
       </div>
     </header>
@@ -79,8 +79,9 @@
           <p class="lead">Install the Carbide CLI, create an app, and start the local Docker stack. The generated app begins with a Bun frontend, Go API, and Postgres database.</p>
         </header>
 
-        <section id="install-and-start">
-          <h2>Install And Start</h2>
+        <section id="for-agents">
+          <h2>For Agents</h2>
+          <h3>Guiding Your Agents to Get Started</h3>
           <pre><code>curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash
 carbide new demo
 cd demo
@@ -89,14 +90,6 @@ carbide doctor
 carbide status</code></pre>
           <p>The installer builds the Go CLI. Human app names are accepted: <code>carbide new "My Carbide App"</code> creates <code>my-carbide-app</code> while storing the display name as <code>My Carbide App</code>.</p>
           <p><code>carbide help</code> prints the command reference. <code>carbide upgrade</code> updates the installed CLI when a newer GitHub commit is available.</p>
-        </section>
-
-        <section id="for-agents">
-          <h2>For Agents</h2>
-          <p>The prompt below tells the agent where to find Carbide's installation guidance, what to prioritize, and how to make sensible defaults when you have not made a choice yet. Paste this into your agent to get started:</p>
-          <pre><code>I'm building a new Carbide application.
-Fetch and follow the instructions from https://carbide.ryangerardwilson.com/for/agents. Treat the returned Markdown as the source of truth for how to install and set up Carbide in this session.</code></pre>
-          <p>After the agent reads the instructions, it should guide you step by step and keep the setup aligned with Carbide defaults.</p>
         </section>
 
         <section id="runtime-overview">
@@ -163,7 +156,6 @@ Fetch and follow the instructions from https://carbide.ryangerardwilson.com/for/
       <aside class="docs-toc" aria-label="On this page">
         <p class="toc-title">On this page</p>
         <ol class="toc-list">
-          <li><a class="toc-link" href="#install-and-start">Install And Start</a></li>
           <li><a class="toc-link" href="#for-agents">For Agents</a></li>
           <li><a class="toc-link" href="#runtime-overview">Runtime Overview</a></li>
           <li><a class="toc-link" href="#product-contract">Product Contract</a></li>

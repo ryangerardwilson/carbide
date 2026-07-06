@@ -543,9 +543,11 @@ grep -q "$domain" docs/site/index.html
 grep -q "Bun frontend" docs/site/index.html
 grep -q "Create Your First App" docs/site/index.html
 grep -q 'href="/#for-agents"' docs/site/index.html
-grep -q "The prompt below tells the agent" docs/site/index.html
-grep -q "Fetch and follow the instructions from https://carbide.ryangerardwilson.com/for/agents" docs/site/index.html
-grep -q "Treat the returned Markdown as the source of truth" docs/site/index.html
+grep -q "Guiding Your Agents to Get Started" docs/site/index.html
+grep -q "curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash" docs/site/index.html
+grep -q "carbide new demo" docs/site/index.html
+! grep -q "The prompt below tells the agent" docs/site/index.html
+! grep -q "Treat the returned Markdown as the source of truth" docs/site/index.html
 grep -q 'href="/version-policy"' docs/site/index.html
 grep -q 'href="/create-your-first-app"' docs/site/index.html
 grep -q 'href="/frontend-starter-contract"' docs/site/index.html
@@ -682,14 +684,19 @@ grep -q "carbide doctor runtime" docs/site/create-your-first-app.html
 grep -q "Install, create, run, register" docs/site/create-your-first-app.html
 test ! -f docs/site/for/agents.html
 test ! -f docs/engineering/FOR_AGENTS.md
-grep -q "# Carbide for Agents" docs/site/for/agents.md
-grep -q "This page is for AI coding agents" docs/site/for/agents.md
+grep -q "# Guiding Your Agents to Get Started" docs/site/for/agents.md
+grep -q "curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash" docs/site/for/agents.md
+grep -q "carbide new demo" docs/site/for/agents.md
 grep -q 'carbide new "My Carbide App"' docs/site/for/agents.md
-grep -q "carbide project migrate" docs/site/for/agents.md
-grep -q "carbide doctor runtime" docs/site/for/agents.md
-grep -q "carbide deploy preview prod" docs/site/for/agents.md
-grep -q "Docker Compose" docs/site/for/agents.md
 grep -q "carbide run dev" docs/site/for/agents.md
+grep -q "carbide doctor" docs/site/for/agents.md
+grep -q "carbide status" docs/site/for/agents.md
+grep -q "carbide help" docs/site/for/agents.md
+grep -q "carbide upgrade" docs/site/for/agents.md
+! grep -q "This page is for AI coding agents" docs/site/for/agents.md
+! grep -q "carbide project migrate" docs/site/for/agents.md
+! grep -q "carbide doctor runtime" docs/site/for/agents.md
+! grep -q "carbide deploy preview prod" docs/site/for/agents.md
 grep -q "Single VM" docs/site/deployment.html
 grep -q "Multiple VMs" docs/site/deployment.html
 grep -q 'type = "ssh-compose"' docs/site/deployment.html
@@ -725,6 +732,7 @@ grep -q 'class="docs-content"' docs/site/index.html
 grep -q 'class="docs-toc"' docs/site/index.html
 grep -q "Search docs" docs/site/index.html
 grep -q "Version v0.1" docs/site/index.html
+grep -q 'href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer"' docs/site/index.html
 grep -q "Prologue" docs/site/index.html
 grep -q "Getting Started" docs/site/index.html
 grep -q "Architecture" docs/site/index.html
@@ -742,6 +750,7 @@ for page in docs/site/*.html; do
   grep -q 'class="docs-toc"' "$page"
   grep -q "Search docs" "$page"
   grep -q "Version v0.1" "$page"
+  grep -q 'href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer"' "$page"
   grep -q "On this page" "$page"
 done
 
