@@ -7,8 +7,6 @@ app because that is the structure application teams live in.
 
 ```text
 my-carbide-app/
-|-- AGENTS.md
-|-- README.md
 |-- .env.example
 |-- .gitignore
 |-- carbide.toml
@@ -70,12 +68,11 @@ The generated project root is intentionally small:
 - `docker-compose.yml` owns local runtime coordination across services.
 - `carbide.toml` owns the app name, slug, default dev port, product contract
   current starter runtime defaults, environment contract, and deploy targets.
-- `AGENTS.md` points agents to the central `/for/agents` guide and names the
-  local files that own app truth.
-- `README.md` owns app-specific product facts, users, roles, business rules,
-  acceptance criteria, and upgrade boundaries.
 - `.env.example` documents local development variables without storing real
   secrets.
+- Carbide does not scaffold `README.md` or `AGENTS.md`. If the app owner
+  creates them later, they are local prose files rather than framework-owned
+  contract files.
 
 There is no root `src/`, `frontend/`, `backend/`, `model/`, `controller/`,
 `view/`, `infra/`, or `doc/` directory in generated apps.
@@ -112,12 +109,13 @@ and `web/node_modules/` is ignored.
 
 ## Agent Context
 
-Generated apps include `AGENTS.md`, but they do not include `agents.d/`.
+Generated apps start without local `AGENTS.md`, `README.md`, or `agents.d/`.
 Agent startup guidance is centralized at:
 
 ```text
 https://carbide.ryangerardwilson.com/for/agents
 ```
 
-App-specific truth stays in `README.md`, `carbide.toml`,
-`docker-compose.yml`, and the `web/`, `api/`, and `db/` source trees.
+Runtime and framework truth stays in `carbide.toml`, `docker-compose.yml`, and
+the `web/`, `api/`, and `db/` source trees. If local `README.md` or
+`AGENTS.md` files exist, treat them as app-owned context.

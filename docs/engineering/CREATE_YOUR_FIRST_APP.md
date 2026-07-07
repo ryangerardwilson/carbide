@@ -64,8 +64,8 @@ animation.
 
 `carbide health` runs the fast app-law check without starting
 containers. It verifies the generated root shape, `carbide.toml`, Compose
-services, env/secrets rules, frontend, API, DB, the `AGENTS.md` pointer, and
-legacy regression markers. `carbide health runtime` runs the heavier
+services, env/secrets rules, and legacy regression markers.
+`carbide health runtime` runs the heavier
 Docker-backed health/auth/dashboard flow and stops containers it started.
 
 The generated app starts with no seeded users. The first browser visit opens the
@@ -85,10 +85,16 @@ The generated app includes:
 - a Go API container;
 - a Postgres service container;
 - checked-in Docker Compose infrastructure;
+- checked-in app/runtime contract files in `carbide.toml`, `docker-compose.yml`,
+  and `.env.example`;
 - register, login, logout, and dashboard routes;
 - `api/` and `db/` directories for API and database code;
 - Postgres-backed users and sessions;
 - queryable structured dev logs.
+
+Generated apps do not create `README.md` or `AGENTS.md`. If the app owner wants
+those files later, they are user-owned context rather than framework-owned
+starter files.
 
 ## Commands
 
@@ -102,9 +108,12 @@ Upgrades the installed CLI.
 
 ### `carbide audit`
 
-Prepares a manual audit workspace under `.carbide/audit/`. The command writes
+Starts a Codex audit session for Carbide contract compliance. The command
+creates an audit workspace under `.carbide/audit/`, writes
 `starter-reference/` with the current Carbide starter rendered for the current
-app and `AUDIT.md` with the audit brief.
+app, and writes `AUDIT.md` with the audit brief. In an interactive terminal
+with `codex` installed, the command launches the audit directly in the Codex
+CLI.
 
 Carbide itself does not rewrite app code. Agents still need to compare the
 current app to the starter reference and make intentional edits only when the

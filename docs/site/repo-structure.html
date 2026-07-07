@@ -83,8 +83,6 @@
         <section id="generated-layout">
           <h2>Generated App Layout</h2>
 <pre><code>my-carbide-app/
-|-- AGENTS.md
-|-- README.md
 |-- .env.example
 |-- .gitignore
 |-- carbide.toml
@@ -144,9 +142,8 @@
             <li><strong>web, api, db:</strong> each maps to a standalone Docker service.</li>
             <li><strong>docker-compose.yml:</strong> local runtime coordination across the three services.</li>
             <li><strong>carbide.toml:</strong> app name, slug, default dev port, current starter runtime defaults, environment contract, and deploy targets.</li>
-            <li><strong>AGENTS.md:</strong> points agents to the central <code>/for/agents</code> guide and names the local files that own app truth.</li>
-            <li><strong>README.md:</strong> app-specific product facts, users, roles, business rules, acceptance criteria, and upgrade boundaries. It is not a framework setup guide.</li>
             <li><strong>.env.example:</strong> local development variables without real secrets.</li>
+            <li>Carbide does not scaffold <code>README.md</code> or <code>AGENTS.md</code>. If the app owner creates them later, they are local prose rather than framework-owned contract files.</li>
           </ul>
           <p>Generated apps do not include root <code>src</code>, <code>frontend</code>, <code>backend</code>, <code>model</code>, <code>controller</code>, <code>view</code>, <code>infra</code>, or <code>doc</code> directories.</p>
         </section>
@@ -176,8 +173,8 @@
 
         <section id="agent-context">
           <h2>Agent Context</h2>
-          <p>Generated apps include <code>AGENTS.md</code>, but they do not include <code>agents.d</code>. Agent startup guidance is centralized at <a href="/for/agents"><code>/for/agents</code></a>.</p>
-          <p>App-specific product truth belongs in <code>README.md</code>. Runtime and framework truth stays in <code>carbide.toml</code>, <code>docker-compose.yml</code>, and the <code>web</code>, <code>api</code>, and <code>db</code> source trees.</p>
+          <p>Generated apps start without local <code>AGENTS.md</code>, <code>README.md</code>, or <code>agents.d</code>. Agent startup guidance is centralized at <a href="/for/agents"><code>/for/agents</code></a>.</p>
+          <p>Runtime and framework truth stays in <code>carbide.toml</code>, <code>docker-compose.yml</code>, and the <code>web</code>, <code>api</code>, and <code>db</code> source trees. If local <code>README.md</code> or <code>AGENTS.md</code> files exist, they are app-owned context.</p>
         </section>
       </main>
 

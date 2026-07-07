@@ -15,7 +15,7 @@ evaluation and first use.
   left-sidebar app shell.
 - Go API backed by Postgres users and sessions.
 - Environment/secrets contract in `carbide.toml`.
-- Generated `AGENTS.md` pointer to `/for/agents`.
+- Central `/for/agents` startup guide for generated apps.
 - Queryable structured dev logs in `.carbide/log/dev.jsonl`.
 - Fast project health and Docker-backed runtime health.
 - CI coverage for shell syntax, Go CLI tests, repo contract, scaffold checks,

@@ -10,14 +10,12 @@ checks these laws and nothing broader.
 
 1. One app repo.
 2. Root runtime directories are `web/`, `api/`, and `db/`.
-3. `carbide.toml`, `docker-compose.yml`, `README.md`, and `AGENTS.md` are
-   checked in.
+3. `carbide.toml` and `docker-compose.yml` are checked in.
 4. The browser entrypoint is `web`, and browser API traffic stays same-origin
    through `/api` to `api`.
 5. Postgres is the required durable database.
 6. Deploy remains preview-before-apply.
-7. `AGENTS.md` points agents to `/for/agents`.
-8. Carbide output, docs, and agent guidance never print secrets.
+7. Carbide output, docs, and agent guidance never print secrets.
 
 ## Ownership Rule
 
@@ -25,7 +23,9 @@ checks these laws and nothing broader.
 
 After scaffold, the app owns its own code immediately. Carbide does not treat
 existing app files as framework-managed and does not rewrite them as part of
-upgrade, migration, or health checks.
+upgrade, migration, or health checks. Carbide does not scaffold or validate
+`README.md`, `AGENTS.md`, or `agents.d/`; if an app owner creates local prose
+files later, they are app-owned context.
 
 ## Audit Rule
 

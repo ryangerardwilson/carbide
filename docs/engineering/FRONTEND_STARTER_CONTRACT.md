@@ -116,8 +116,8 @@ Use these sanctioned paths instead:
   Tailwind utilities;
 - keep third-party CSS imports explicit and product-owned;
 - if a real product intentionally needs global CSS, create
-  `web/src/product.css`, import it explicitly, document the reason in
-  `README.md`, and update the law contract.
+  `web/src/product.css`, import it explicitly, document the reason in local
+  app docs if they exist, and update the law contract.
 
 `typecheck` runs `tsc --noEmit`. Docker builds run typecheck before building
 browser assets, so broken component props, API response shapes, or Bun server

@@ -1,5 +1,6 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { AssetManifest } from './lib/types';
 
 const root = join(import.meta.dir, '..');
 const publicRoot = join(root, 'public');
@@ -24,14 +25,13 @@ if (!html.includes(`/assets/${scripts[0]}`)) {
 }
 
 await writeFile(join(publicRoot, 'index.html'), html);
+
+const manifest: AssetManifest = {
+  entry: `/assets/${scripts[0]}`,
+  stylesheets: stylesheets.map((file) => `/assets/${file}`)
+};
+
 await writeFile(
   join(publicRoot, 'asset-manifest.json'),
-  `${JSON.stringify(
-    {
-      entry: `/assets/${scripts[0]}`,
-      stylesheets: stylesheets.map((file) => `/assets/${file}`)
-    },
-    null,
-    2
-  )}\n`
+  `${JSON.stringify(manifest, null, 2)}\n`
 );

@@ -36,6 +36,7 @@ const projectConfigPath = "carbide.toml"
 const composeFilePath = "docker-compose.yml"
 const legacyComposeFilePath = "compose.yml"
 const defaultTerminalWidth = 80
+const helpOutputMaxWidth = 79
 const progressStateColumnWidth = 8
 const minimumProgressFrameWidth = 4
 
@@ -482,7 +483,7 @@ func (a app) printHelp() {
 	r.CommandList([]helpCommandSection{
 		{
 			rows: []outputRow{
-				{"audit", "prepare a starter audit workspace"},
+				{"audit", "start a codex session to audit the app for compliance with the carbide contract, and fix any loose ends or missing files"},
 				{"clean dev", "normalize local dev state"},
 				{"deploy apply prod", "apply production deploy"},
 				{"deploy check prod", "classify deploy target state"},
@@ -669,6 +670,19 @@ func (a app) commandAudit() error {
 		return err
 	}
 
+	if shouldLaunchAuditCodex(a.stdout) {
+		if _, err := exec.LookPath("codex"); err == nil {
+			newRenderer(a.stdout).Message(
+				"Carbide audit",
+				"launching Codex",
+				outputRow{"path", root},
+				outputRow{"starter", scaffoldTarget},
+				outputRow{"brief", briefPath},
+			)
+			return a.launchAuditCodex(pwd, root, briefPath, scaffoldTarget)
+		}
+	}
+
 	newRenderer(a.stdout).Message(
 		"Carbide audit",
 		"starter workspace",
@@ -677,6 +691,25 @@ func (a app) commandAudit() error {
 		outputRow{"brief", briefPath},
 		outputRow{"next", "read AUDIT.md, compare starter-reference, run carbide health"},
 	)
+	return nil
+}
+
+func (a app) launchAuditCodex(projectPath string, auditRoot string, briefPath string, scaffoldPath string) error {
+	cmd := exec.Command("codex", "-C", projectPath, auditCodexPrompt(auditRoot, briefPath, scaffoldPath))
+	cmd.Stdin = os.Stdin
+	if a.stdout != nil {
+		cmd.Stdout = a.stdout
+	} else {
+		cmd.Stdout = os.Stdout
+	}
+	if a.stderr != nil {
+		cmd.Stderr = a.stderr
+	} else {
+		cmd.Stderr = os.Stderr
+	}
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("codex audit failed: %w", err)
+	}
 	return nil
 }
 
@@ -913,7 +946,6 @@ func (a app) projectHealthResults() []healthResult {
 		healthConfigContract(),
 		healthEnvContract(),
 		healthComposeContract(),
-		healthAgentsContract(),
 		healthForbiddenRegressions("."),
 	}
 }
@@ -924,7 +956,7 @@ func healthProjectShape() healthResult {
 		return healthFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
 
-	requiredFiles := []string{projectConfigPath, composeFilePath, "AGENTS.md", "README.md"}
+	requiredFiles := []string{projectConfigPath, composeFilePath}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
 		return healthFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
@@ -1269,61 +1301,6 @@ func healthDatabaseContract() healthResult {
 		}
 	}
 	return healthOK("database", "Postgres users sessions")
-}
-
-func healthAgentsContract() healthResult {
-	requiredFiles := []string{
-		"AGENTS.md",
-	}
-	if missing := missingFiles(requiredFiles); len(missing) > 0 {
-		return healthFail("agents", "missing "+strings.Join(missing, ", "))
-	}
-	required := map[string][]string{
-		"AGENTS.md": {
-			"https://carbide.ryangerardwilson.com/for/agents",
-			"https://raw.githubusercontent.com/ryangerardwilson/carbide/main/docs/site/for/agents.md",
-			"carbide run dev",
-			"carbide health",
-			"carbide status",
-			"intentionally does not include `agents.d/`",
-			"README.md",
-		},
-	}
-	for path, needles := range required {
-		if missing := missingNeedles(readFileString(path), needles); len(missing) > 0 {
-			return healthFail("agents", path+" missing "+strings.Join(missing, ", "))
-		}
-	}
-	return healthOK("agents", "AGENTS.md /for/agents")
-}
-
-func healthAppTruthContract() healthResult {
-	if !isFile("README.md") {
-		return healthFail("app truth", "missing README.md")
-	}
-	content := readFileString("README.md")
-	required := []string{
-		"# ",
-		"## Product Truth",
-		"## Users And Roles",
-		"## Business Rules",
-		"## Acceptance Criteria",
-		"## Upgrade Boundaries",
-	}
-	if missing := missingNeedles(content, required); len(missing) > 0 {
-		return healthFail("app truth", "README.md missing "+strings.Join(missing, ", "))
-	}
-	forbidden := []string{
-		"curl -fsSL",
-		"carbide new",
-		"carbide init",
-		"source of truth for Carbide setup",
-		"agents.d/",
-	}
-	if found := containedNeedles(content, forbidden); len(found) > 0 {
-		return healthFail("app truth", "README.md contains framework install text: "+strings.Join(found, ", "))
-	}
-	return healthOK("app truth", "README.md")
 }
 
 func healthDocsProjectShape() healthResult {
@@ -3520,12 +3497,24 @@ func (r renderer) CommandList(sections []helpCommandSection) {
 }
 
 func (r renderer) writeHelpCommand(row outputRow, width int) {
+	valueWidth := helpOutputMaxWidth - 4 - width
+	if valueWidth < 16 {
+		valueWidth = 16
+	}
+	lines := wrapHelpText(row.value, valueWidth)
+	if len(lines) == 0 {
+		lines = []string{""}
+	}
 	if r.styled {
 		key := r.paint("38;5;245", row.key)
-		fmt.Fprintf(r.out, "  %s%s  %s\n", key, strings.Repeat(" ", width-len(row.key)), row.value)
-		return
+		fmt.Fprintf(r.out, "  %s%s  %s\n", key, strings.Repeat(" ", width-len(row.key)), lines[0])
+	} else {
+		fmt.Fprintf(r.out, "  %-*s  %s\n", width, row.key, lines[0])
 	}
-	fmt.Fprintf(r.out, "  %-*s  %s\n", width, row.key, row.value)
+	padding := strings.Repeat(" ", width+4)
+	for _, line := range lines[1:] {
+		fmt.Fprintf(r.out, "%s%s\n", padding, line)
+	}
 }
 
 func (r renderer) formatHelpHeading(value string) string {
@@ -3899,6 +3888,44 @@ func helpCommandWidth(sections []helpCommandSection) int {
 		}
 	}
 	return width
+}
+
+func wrapHelpText(value string, width int) []string {
+	if width <= 0 || len(value) <= width {
+		return []string{value}
+	}
+
+	var lines []string
+	for _, paragraph := range strings.Split(value, "\n") {
+		if strings.TrimSpace(paragraph) == "" {
+			lines = append(lines, "")
+			continue
+		}
+
+		words := strings.Fields(paragraph)
+		current := words[0]
+		for len(current) > width {
+			lines = append(lines, current[:width])
+			current = current[width:]
+		}
+		for _, word := range words[1:] {
+			if len(current)+1+len(word) <= width {
+				current += " " + word
+				continue
+			}
+			lines = append(lines, current)
+			current = word
+			for len(current) > width {
+				lines = append(lines, current[:width])
+				current = current[width:]
+			}
+		}
+		lines = append(lines, current)
+	}
+	if len(lines) == 0 {
+		return []string{""}
+	}
+	return lines
 }
 
 func padRight(value string, width int) string {
@@ -5287,9 +5314,20 @@ func shouldStyleOutput(w io.Writer) bool {
 	return isTerminalOutput(w)
 }
 
+func shouldLaunchAuditCodex(w io.Writer) bool {
+	return isTerminalOutput(w) && isTerminalFile(os.Stdin)
+}
+
 func isTerminalOutput(w io.Writer) bool {
 	file, ok := w.(*os.File)
 	if !ok {
+		return false
+	}
+	return isTerminalFile(file)
+}
+
+func isTerminalFile(file *os.File) bool {
+	if file == nil {
 		return false
 	}
 	info, err := file.Stat()
@@ -5527,11 +5565,10 @@ func projectAuditBrief(projectPath string, name string, slug string, scaffoldPat
 		"## Laws",
 		"",
 		"- One app repo with root `web/`, `api/`, and `db/` service directories.",
-		"- Checked-in `carbide.toml`, `docker-compose.yml`, `README.md`, and `AGENTS.md`.",
+		"- Checked-in `carbide.toml` and `docker-compose.yml`.",
 		"- Same-origin browser flow: `web -> /api -> api`.",
 		"- Postgres is the required durable database.",
 		"- Deploy stays preview-before-apply.",
-		"- `AGENTS.md` points agents to `/for/agents`.",
 		"- Secrets are never printed in Carbide output, logs, docs, or agent chatter.",
 		"",
 		"## Current Taste",
@@ -5550,7 +5587,7 @@ func projectAuditBrief(projectPath string, name string, slug string, scaffoldPat
 		"1. Run `carbide health` first. Fix law failures before adopting any starter taste.",
 		"2. Compare the current project to `starter-reference/`.",
 		"3. Carbide itself never rewrites app files. If the user wants changes, Codex may edit app code intentionally during the audit.",
-		"4. Preserve product truth in `README.md`, local behavior, deploy targets, secrets, and data unless the user explicitly asks to change them.",
+		"4. Preserve local product docs such as `README.md` or `AGENTS.md` when they exist, plus local behavior, deploy targets, secrets, and data unless the user explicitly asks to change them.",
 		"5. Expect manual judgment. This command does not merge conflicts, move business logic, or rewrite the current app for you.",
 		"6. Do not copy generated output such as `node_modules`, `web/public`, `web/src/tailwind.css`, `.carbide`, or local `.env` files.",
 		"7. Run `carbide health runtime` when runtime behavior, auth, or containers changed, plus the app-specific build/test commands.",
@@ -5561,6 +5598,28 @@ func projectAuditBrief(projectPath string, name string, slug string, scaffoldPat
 		"Use .carbide/audit/*/starter-reference as the current Carbide starter reference, not as framework-managed truth. Fix any carbide health law failures first. Then compare the app to current Carbide taste, propose intentional changes, and edit app code only when the user wants those changes. Finish by running carbide health and the relevant build/tests.",
 		"```",
 		"",
+	}
+	return strings.Join(rows, "\n")
+}
+
+func auditCodexPrompt(auditRoot string, briefPath string, scaffoldPath string) string {
+	rows := []string{
+		"Audit this Carbide app against current Carbide taste.",
+		"",
+		"Start by reading the checked-in audit brief and using it as the local audit contract:",
+		fmt.Sprintf("- `%s`", briefPath),
+		fmt.Sprintf("- `%s`", scaffoldPath),
+		fmt.Sprintf("- `%s`", auditRoot),
+		"",
+		"Required audit loop:",
+		"1. Run `carbide health` first. Fix any law failures before adopting starter taste.",
+		"2. Compare the current app to `starter-reference/`.",
+		"3. Preserve local product docs such as `README.md` or `AGENTS.md` when they exist, plus local behavior, deploy targets, secrets, and data unless the user explicitly asked to change them.",
+		"4. Carbide itself does not own existing app code after scaffold. If changes are appropriate, edit app code intentionally during the audit.",
+		"5. Do not copy generated output such as `node_modules`, `web/public`, `web/src/tailwind.css`, `.carbide`, or local `.env` files.",
+		"6. Finish with `carbide health`, `carbide health runtime` when runtime behavior changed, plus the relevant app build/test commands.",
+		"",
+		"Use `starter-reference/` as the current Carbide starter reference, not as framework-managed truth.",
 	}
 	return strings.Join(rows, "\n")
 }

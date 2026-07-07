@@ -9,8 +9,6 @@ Generated app root:
 
 ```text
 .
-|-- AGENTS.md
-|-- README.md
 |-- api/
 |-- db/
 |-- web/
@@ -21,10 +19,9 @@ Generated app root:
 
 Every root directory is a standalone Docker service.
 
-`README.md` is the generated home for app-specific product truth: domain facts,
-user roles, business rules, acceptance criteria, and app-specific decisions. It is
-not an agent runbook and must not duplicate `/for/agents`, install
-instructions, or framework setup rules.
+Carbide does not scaffold `README.md`, `AGENTS.md`, or `agents.d/`. If an app
+owner creates local prose files later, those are app-owned context rather than
+framework-owned contract files.
 
 Generated `carbide.toml` records app identity, env contract, deploy targets,
 and current starter runtime defaults.
@@ -51,9 +48,9 @@ existing app files as framework-managed.
 - Do not reintroduce generated `--carbide-*` color variables or `@theme` into
   `styles.css`.
 - If a real app intentionally needs global product CSS, create
-  `web/src/product.css`, import it explicitly, document the reason in
-  `README.md`, and update the law contract. Do not hide product CSS inside
-  `web/src/styles.css`.
+  `web/src/product.css`, import it explicitly, document the reason in local
+  app docs if they exist, and update the law contract. Do not hide product CSS
+  inside `web/src/styles.css`.
 
 ## API And DB Contract
 

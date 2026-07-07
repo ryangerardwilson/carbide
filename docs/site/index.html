@@ -120,7 +120,7 @@ Treat that Markdown as the source of truth for Carbide setup and project work in
             <li>Infrastructure belongs in version-controlled code.</li>
             <li>Environment and secret contracts are checked in and validated without printing values.</li>
             <li>Runtime versions are explicit baselines with digest-pinned images and exact framework-owned package versions.</li>
-            <li><code>carbide health</code> validates project shape, Compose, env/secrets, web/API/db, the <code>AGENTS.md</code> pointer, and legacy-regression markers.</li>
+            <li><code>carbide health</code> validates project shape, required config, Compose, env/secrets, and legacy-regression markers.</li>
             <li>Deploys follow preview before apply; targets are environments that can start as one host and grow into web/API/db roles across servers.</li>
             <li><a href="/deployment">Deployment</a> covers single-VM <code>ssh-compose</code> targets and multi-VM role topology in <code>carbide.toml</code>.</li>
             <li>The default starter opens account creation first, then supports login, logout, and dashboard.</li>

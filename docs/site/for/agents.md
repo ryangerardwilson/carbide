@@ -18,9 +18,9 @@ https://raw.githubusercontent.com/ryangerardwilson/carbide/main/docs/site/for/ag
 When instructions conflict, use this order:
 
 1. The user's latest explicit instruction.
-2. The local generated app `AGENTS.md`.
-3. Local `README.md`.
-4. Local `carbide.toml` and `docker-compose.yml`.
+2. A local `AGENTS.md`, if the app owner created one for local agent guidance.
+3. A local `README.md`, if the app owner uses it for product context.
+4. Local `carbide.toml` and `docker-compose.yml` for runtime and deploy truth.
 5. This `/for/agents` guide.
 6. Public Carbide documentation pages.
 7. Carbide framework repo engineering docs, only when working on Carbide
@@ -32,8 +32,6 @@ A directory is a Carbide app when it has:
 
 - `carbide.toml`
 - `docker-compose.yml`
-- `AGENTS.md`
-- `README.md`
 - `web/`
 - `api/`
 - `db/`
@@ -45,9 +43,10 @@ carbide health
 carbide status
 ```
 
-Read `AGENTS.md`, `README.md`, `carbide.toml`, `docker-compose.yml`, and the
-files directly related to the user's task. Do not run `carbide new` or
-`carbide init` inside an existing app.
+Read local `AGENTS.md` and `README.md` when those prose files exist.
+Otherwise read `carbide.toml`, `docker-compose.yml`, and the files directly
+related to the user's task. Do not run `carbide new` or `carbide init` inside
+an existing app.
 
 ## Prerequisites
 
@@ -143,13 +142,11 @@ These are the Carbide laws for generated apps:
 
 1. One app repo.
 2. Root runtime directories are `web/`, `api/`, and `db/`.
-3. `carbide.toml`, `docker-compose.yml`, `README.md`, and `AGENTS.md` stay
-   checked in.
+3. `carbide.toml` and `docker-compose.yml` stay checked in.
 4. Browser API traffic stays same-origin through `web -> /api -> api`.
 5. Postgres is the required durable database.
 6. Deploy remains preview-before-apply.
-7. `AGENTS.md` points agents back to this `/for/agents` guide.
-8. Secrets are never printed in logs, docs, CLI output, errors, or chat.
+7. Secrets are never printed in logs, docs, CLI output, errors, or chat.
 
 `carbide health` checks these laws. It does not try to enforce the entire
 starter taste forever.
@@ -162,10 +159,9 @@ After scaffold, the app owns its own code immediately. Carbide does not treat
 existing app files as framework-managed, and Carbide commands do not rewrite
 app code as part of upgrade, migration, or health checks.
 
-App truth stays in `README.md`. Keep framework guidance here in `/for/agents`.
-
-Generated apps do not include `agents.d/`. Do not create a competing local
-agent runbook.
+Carbide does not scaffold `README.md`, `AGENTS.md`, or `agents.d/`. If the app
+owner creates local prose files later, they are app-owned context. Keep
+framework guidance here in `/for/agents`.
 
 ## Current Taste
 
@@ -236,11 +232,15 @@ Use:
 carbide audit
 ```
 
-`carbide audit` creates:
+`carbide audit` starts a Codex audit session for Carbide contract compliance.
+To do that it creates:
 
 - `.carbide/audit/<timestamp>/starter-reference/`: the current Carbide starter
   rendered with the app name and slug.
 - `.carbide/audit/<timestamp>/AUDIT.md`: the audit brief and comparison loop.
+
+In an interactive terminal with `codex` installed, `carbide audit` launches
+that audit directly in the Codex CLI from the current app root.
 
 This is a comparison aid. It is not a framework-owned rewrite path.
 
@@ -315,10 +315,12 @@ If the user wants to compare the app to current Carbide taste, run
   architecture.
 - Keep the app monorepo-first. Do not split it into extra services unless the
   user explicitly chooses that cost.
-- Keep framework truth in `/for/agents`. Keep app truth in `README.md`.
+- Keep framework truth in `/for/agents`. Optional local `README.md` or
+  `AGENTS.md` files are app-owned context when they exist.
 - Do not add seeded demo credentials.
 - Do not print secret values.
 - Ask only when the user must choose a product or operational direction.
 - When reporting progress, name the exact command, URL, or file you changed.
-- If a task needs product facts that are not in source, update `README.md`
-  rather than inventing a hidden local runbook.
+- If a task needs product facts that are not in source, update local app docs
+  such as `README.md` when they exist, or ask the app owner where that context
+  should live.

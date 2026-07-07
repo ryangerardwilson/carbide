@@ -134,9 +134,8 @@ Future checks:
 - generated Compose config declares file-watch rebuilds for `web`
   source, web package/config files, `api/`, `db/`, and
   `api/Dockerfile` changes;
-- generated apps include an env contract in `carbide.toml`, `.env.example`,
-  a `README.md` app-truth file, and an `AGENTS.md` pointer to `/for/agents`
-  with a raw GitHub fallback;
+- generated apps include an env contract in `carbide.toml` and
+  `.env.example`, but do not scaffold `README.md`, `AGENTS.md`, or `agents.d/`;
 - generated frontend structure keeps L1/L2/L3 as class-ownership layers
   reflected in component directories;
 - generated apps include a Bun/React/Tailwind web container, Go API
@@ -148,9 +147,9 @@ Future checks:
 - restart behavior preserves Postgres data;
 - environment contract rejects missing required values;
 - secret values are never printed by `carbide health env`;
-- `carbide health` verifies generated project shape, env/secrets, Compose,
-  web/API/db contracts, the `AGENTS.md` pointer, and legacy-regression markers without
-  starting containers;
+- `carbide health` verifies generated project shape, required config,
+  env/secrets, Compose, and legacy-regression markers without starting
+  containers;
 - `carbide health runtime` runs the Docker-backed health/auth/dashboard flow
   and stops containers it started;
 - browser-exposed variables cannot be marked secret;
@@ -198,9 +197,10 @@ Future checks:
   `carbide health env json`, `carbide health runtime json`,
   `carbide health framework json`, and deploy JSON subcommands emit valid,
   ANSI-free machine-readable state;
-- `carbide audit` creates a manual audit workspace with a starter-reference
-  snapshot and an audit brief, without copying generated local artifacts or
-  rewriting app code;
+- `carbide audit` starts a Codex audit session, creates an audit workspace
+  with a starter-reference snapshot and an audit brief, auto-launches Codex
+  only in interactive terminals, and does not copy generated local artifacts
+  or rewrite app code;
 - `carbide health` prints a stable table of app-law checks;
 - `carbide health env` validates the generated environment contract without
   printing secret values;

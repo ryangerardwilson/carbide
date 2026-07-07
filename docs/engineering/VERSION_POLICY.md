@@ -55,6 +55,7 @@ mutate generated projects.
 
 After installing a newer CLI, run `carbide audit` inside an existing app when
 you want to compare the app against Carbide's current starter taste. The
-command creates a reference workspace and an audit brief. Carbide does not
-rewrite app code; an agent such as Codex may apply intentional app changes
-while proving the result with `carbide health`.
+command creates a reference workspace and an audit brief and, in an
+interactive terminal with `codex` installed, launches the audit in the Codex
+CLI. Carbide does not rewrite app code; an agent such as Codex may apply
+intentional app changes while proving the result with `carbide health`.

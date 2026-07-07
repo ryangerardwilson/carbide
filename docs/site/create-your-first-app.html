@@ -125,13 +125,13 @@ carbide stop dev</code></pre>
           <ul>
             <li><code>carbide help</code> prints the command reference.</li>
             <li><code>carbide upgrade</code> upgrades the installed CLI.</li>
-            <li><code>carbide audit</code> prepares a manual audit workspace under <code>.carbide/audit/</code>, writes <code>starter-reference/</code>, and writes <code>AUDIT.md</code> so an agent can compare the current app to Carbide's current starter taste without Carbide rewriting app code.</li>
+            <li><code>carbide audit</code> starts a Codex audit session for Carbide contract compliance, creates an audit workspace under <code>.carbide/audit/</code>, writes <code>starter-reference/</code> and <code>AUDIT.md</code>, and in an interactive terminal with <code>codex</code> installed launches the audit directly in the Codex CLI without Carbide rewriting app code.</li>
             <li><code>carbide new &lt;project-name&gt;</code> creates a new project directory. Human names are accepted: <code>carbide new "My Carbide App"</code> creates <code>my-carbide-app</code>, stores <code>name = "My Carbide App"</code>, and stores <code>slug = "my-carbide-app"</code>.</li>
             <li><code>carbide init</code> initializes the current empty directory.</li>
             <li><code>carbide run dev</code> starts the Docker Compose dev stack, prints the app URL and API URL, then streams logs until <code>Ctrl+C</code> detaches.</li>
             <li><code>carbide clean dev</code> normalizes local dev state before a fresh restart without deleting volumes.</li>
             <li><code>carbide status</code> prints services, containers, published ports, internal ports, and status.</li>
-            <li><code>carbide health</code> checks app laws: project shape, required config, Compose, env/secrets, the <code>AGENTS.md</code> pointer, and legacy-regression markers.</li>
+            <li><code>carbide health</code> checks app laws: project shape, required config, Compose, env/secrets, and legacy-regression markers.</li>
             <li><code>carbide health runtime</code> starts the Docker stack if needed, verifies health, registration, dashboard, and logout, then stops containers it started.</li>
             <li><code>carbide stop dev</code> stops the Docker Compose dev stack.</li>
             <li><code>carbide logs</code> reads <code>.carbide/log/dev.jsonl</code> with service, text, limit, and JSON queries. <code>carbide follow logs</code> attaches to live container logs.</li>

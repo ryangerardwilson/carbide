@@ -65,7 +65,7 @@ Docker with Docker Compose is required to run generated apps.
 | `carbide health` | Check the generated app laws. |
 | `carbide health env` | Check env and secrets rules without printing secrets. |
 | `carbide health runtime` | Run the Docker-backed health and auth flow check. |
-| `carbide audit` | Prepare a starter audit workspace. |
+| `carbide audit` | Start a Codex session to audit the app for compliance with the Carbide contract, and fix any loose ends or missing files. |
 | `carbide deploy check prod` | Classify a deploy target before preview/apply. |
 | `carbide deploy preview prod` | Preview a checked-in production deploy target. |
 | `carbide deploy apply prod` | Apply a checked-in single-VM production target. |
@@ -82,21 +82,20 @@ unclear and you want a fresh restart without deleting volumes.
 
 ```text
 my-carbide-app/
-|-- AGENTS.md
+|-- .env.example
 |-- api/
 |-- db/
 |-- web/
 |-- carbide.toml
-|-- docker-compose.yml
-`-- README.md
+`-- docker-compose.yml
 ```
 
 `web/` is the Bun/React/Tailwind browser container. `api/` is the Go API
-container. `db/` owns Postgres schema and database helper code. `README.md`
-owns app-specific product truth. `AGENTS.md` points agents to the central
-`/for/agents` guide. The root `carbide.toml` stores the app identity, port
-defaults, the env contract, current starter runtime defaults, and deploy
-targets.
+container. `db/` owns Postgres schema and database helper code. The root
+`carbide.toml` stores the app identity, port defaults, the env contract,
+current starter runtime defaults, and deploy targets. Carbide does not
+scaffold `README.md` or `AGENTS.md`; if the app owner creates them later, they
+are app-owned prose rather than framework-owned contract files.
 
 At the generated project root, every directory maps to a standalone Docker
 service. The root Compose file is the app orchestration file: it describes how
@@ -115,8 +114,9 @@ The ownership rule is simple:
 - `carbide new` and `carbide init` create the starter.
 - After scaffold, the app owns its own code immediately.
 - `carbide health` checks eternal laws only.
-- `carbide audit` creates a comparison workspace under `.carbide/audit/`; it
-  does not rewrite app code.
+- `carbide audit` creates a comparison workspace under `.carbide/audit/` and,
+  in an interactive terminal with `codex` installed, launches the audit in the
+  Codex CLI. Carbide itself does not rewrite app code.
 - If app code changes during an audit, those changes are Codex edits made
   intentionally inside the app.
 

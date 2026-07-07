@@ -152,8 +152,8 @@ func TestCopyScaffoldSkipsRuntimeDirectory(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(source, ".env"), []byte("secret=value\n"), 0644); err != nil {
 		t.Fatalf("WriteFile env returned %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(source, "README.md"), []byte("__PROJECT_NAME__\n"), 0644); err != nil {
-		t.Fatalf("WriteFile README returned %v", err)
+	if err := os.WriteFile(filepath.Join(source, "notes.txt"), []byte("__PROJECT_NAME__\n"), 0644); err != nil {
+		t.Fatalf("WriteFile notes returned %v", err)
 	}
 
 	if err := copyScaffoldPart(source, target, "Demo", "demo"); err != nil {
@@ -174,12 +174,12 @@ func TestCopyScaffoldSkipsRuntimeDirectory(t *testing.T) {
 	if isFile(filepath.Join(target, ".env")) {
 		t.Fatalf("copyScaffoldPart copied local env")
 	}
-	content, err := os.ReadFile(filepath.Join(target, "README.md"))
+	content, err := os.ReadFile(filepath.Join(target, "notes.txt"))
 	if err != nil {
-		t.Fatalf("ReadFile README returned %v", err)
+		t.Fatalf("ReadFile notes returned %v", err)
 	}
 	if got := strings.TrimSpace(string(content)); got != "Demo" {
-		t.Fatalf("README content = %q, want Demo", got)
+		t.Fatalf("notes content = %q, want Demo", got)
 	}
 }
 
@@ -350,9 +350,9 @@ func TestHealthPrintsAppLaws(t *testing.T) {
 			`(?m)^Carbide health$`,
 			`(?m)^app laws$`,
 			`(?m)^project shape\s+ok\s+web api db$`,
+			`(?m)^config\s+ok\s+carbide\.toml$`,
 			`(?m)^env contract\s+ok\s+0 missing, 2 secrets$`,
 			`(?m)^compose\s+ok\s+web api db$`,
-			`(?m)^agents\s+ok\s+AGENTS.md /for/agents$`,
 			`(?m)^regressions\s+ok\s+no legacy markers$`,
 			`(?m)^runtime\s+skip\s+run carbide health runtime$`,
 		}
@@ -442,6 +442,28 @@ func TestAuditCreatesAgentWorkspace(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestAuditCodexPromptIncludesAuditLoop(t *testing.T) {
+	got := auditCodexPrompt(
+		".carbide/audit/20260707T000000Z",
+		".carbide/audit/20260707T000000Z/AUDIT.md",
+		".carbide/audit/20260707T000000Z/starter-reference",
+	)
+
+	for _, want := range []string{
+		"Audit this Carbide app against current Carbide taste.",
+		".carbide/audit/20260707T000000Z/AUDIT.md",
+		".carbide/audit/20260707T000000Z/starter-reference",
+		"Run `carbide health` first.",
+		"Preserve local product docs such as `README.md` or `AGENTS.md` when they exist",
+		"Finish with `carbide health`, `carbide health runtime`",
+		"not as framework-managed truth",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("audit prompt = %q, missing %q", got, want)
+		}
+	}
 }
 
 func TestHealthEnvPrintsContractSummary(t *testing.T) {
