@@ -98,7 +98,7 @@
             <li>No <code>latest</code>, semver ranges, or floating Docker image tags for framework-owned runtimes.</li>
             <li>Docker references include <code>@sha256:</code> digests.</li>
             <li><code>carbide health</code> checks the local app laws.</li>
-            <li>The scheduled dependency audit reports drift but never edits files.</li>
+            <li>The dependency audit script reports drift whether it runs locally or from CI, and it never edits files.</li>
             <li>Postgres major-version changes require migration notes and explicit operator action.</li>
             <li>The generated <code>[runtime]</code> block records Carbide's current starter defaults, not framework ownership over the app after scaffold.</li>
           </ul>

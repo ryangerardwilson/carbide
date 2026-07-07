@@ -77,14 +77,15 @@
         <header class="article-header">
           <h1>CI/CD Regression Plan</h1>
           <p class="lead">The test system starts with repository contracts and grows into Go API, Postgres, container, IaC, security, and documentation regression suites.</p>
-          <p class="lead">The CI/CD regression plan protects the framework contract before feature work expands.</p>
+          <p class="lead">The regression plan is runner-agnostic: run it locally, wire it into any CI system, or both.</p>
         </header>
 
         <section id="required-gates">
           <h2>Required Gates</h2>
-          <h3>Pull Request Gate</h3>
+          <h3>Change Gate</h3>
           <ul>
             <li>Repository contract checks.</li>
+            <li>Non-mutating dependency and image drift audit.</li>
             <li>Go CLI unit tests.</li>
             <li>Shell syntax checks for repo-owned test and launcher scripts.</li>
             <li>Documentation site contract checks.</li>
@@ -92,21 +93,31 @@
             <li><code>carbide health</code> fast app-law checks.</li>
             <li>Future API unit, integration, and compatibility checks.</li>
           </ul>
-          <h3>Main Branch Gate</h3>
+          <h3>Publish Gate</h3>
           <ul>
-            <li>The pull request gate.</li>
+            <li>The change gate.</li>
             <li>Documentation deployment through the Carbide docs app.</li>
             <li>Extensionless documentation routes with redirects from legacy <code>.html</code> URLs.</li>
             <li>Future release candidate smoke checks.</li>
+          </ul>
+          <h3>Release Gate</h3>
+          <ul>
+            <li>Supported Go version matrix.</li>
+            <li>Race and compatibility matrix.</li>
+            <li>Postgres integration matrix.</li>
+            <li>Generated project smoke tests.</li>
+            <li>Migration up/down tests.</li>
+            <li>Container build and boot tests.</li>
+            <li>Documentation deploy preview or published docs verification.</li>
           </ul>
         </section>
 
         <section id="regression-suites">
           <h2>Regression Suites</h2>
           <ul>
-            <li><strong>Repository contract:</strong> protects required files, docs, workflows, and product constraints.</li>
+            <li><strong>Repository contract:</strong> protects required files, docs, runner-agnostic regression hooks, and product constraints.</li>
             <li><strong>CLI scaffold:</strong> tests the Go CLI, shared output renderer, <code>carbide new</code>, <code>carbide init</code>, <code>carbide audit</code>, compact <code>run dev</code> output, status table rendering, detach-without-teardown on <code>Ctrl+C</code>, idempotent <code>clean dev</code> normalization, explicit <code>stop dev</code> teardown, per-container progress behavior, timestamped service-log streaming, live log follow, structured log querying, placeholder replacement, and empty-directory enforcement.</li>
-            <li><strong>API build and behavior:</strong> protects generated API builds, public API behavior, and release compatibility.</li>
+            <li><strong>API build and behavior:</strong> protects generated API builds, public API behavior, and explicit release compatibility work.</li>
             <li><strong>Unit tests:</strong> protects router, request, response, middleware, config, and logging behavior.</li>
             <li><strong>Compatibility and race tests:</strong> exposes concurrency and generated app compatibility failures.</li>
             <li><strong>Postgres integration:</strong> tests readiness, pooling, migrations, transactions, and parameterized queries.</li>
@@ -128,7 +139,7 @@ bash tests/contract/check_repo_contract.sh
 bash tests/scaffold/cli_scaffold.sh
 bash tests/smoke/starter_docker_flow.sh
 carbide health framework</code></pre>
-          <p>The source plan is maintained in <code>docs/engineering/CI_CD_REGRESSION_TESTS.md</code>.</p>
+          <p>The source plan is maintained in <code>docs/engineering/CI_CD_REGRESSION_TESTS.md</code> and can be run locally or from any CI runner.</p>
         </section>
       </main>
 

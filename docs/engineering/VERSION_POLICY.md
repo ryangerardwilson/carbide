@@ -42,16 +42,17 @@ ownership over the app after scaffold.
 
 ## Upgrade Process
 
-1. Run the scheduled dependency audit or `bash tests/contract/audit_versions.sh`
-   to see newer stable versions and changed image digests.
+1. Run `bash tests/contract/audit_versions.sh` to see newer stable versions
+   and changed image digests.
 2. Update this policy, `scaffold/carbide.toml`, Dockerfiles, Compose, lockfiles,
    docs, and contract tests in the same change.
 3. Run `carbide health framework` from the framework checkout.
 4. Publish migration notes when a baseline changes database major versions,
    Go directives, or container operating systems.
 
-The audit job reports drift. It does not edit files, run package upgrades, or
-mutate generated projects.
+The audit script reports drift whether it is run locally or from your CI
+runner. It does not edit files, run package upgrades, or mutate generated
+projects.
 
 After installing a newer CLI, run `carbide audit` inside an existing app when
 you want to compare the app against Carbide's current starter taste. The

@@ -1,16 +1,17 @@
 # CI/CD Regression Test Plan
 
-Carbide's test strategy starts with repository contracts and grows toward full
-Go API, Postgres, container, and infrastructure regression coverage.
+Carbide's regression plan is runner-agnostic. Run it locally, wire it into any
+CI system you trust, or both. The checked-in contract lives in this repo rather
+than in GitHub-specific workflow files.
 
 ## Required Gates
 
-### Pull Request Gate
+### Change Gate
 
-Runs on every pull request:
+Runs before merging or publishing any framework change:
 
 - repository contract checks;
-- scheduled non-mutating dependency and image drift audit;
+- non-mutating dependency and image drift audit;
 - Go CLI unit tests;
 - shell syntax checks for repo-owned test and launcher scripts;
 - documentation site contract checks;
@@ -19,11 +20,12 @@ Runs on every pull request:
 - `carbide health` fast app-law checks;
 - future API unit, integration, and compatibility checks.
 
-### Main Branch Gate
+### Publish Gate
 
-Runs after every push to `main`:
+Runs before updating shared docs, installers, or branch tips that other people
+consume:
 
-- the pull request gate;
+- the change gate;
 - documentation deployment through the Carbide docs app;
 - documentation routes are served as extensionless canonical URLs, with legacy
   `.html` paths redirected;
@@ -31,7 +33,7 @@ Runs after every push to `main`:
 
 ### Release Gate
 
-Runs before a tagged framework release:
+Runs before a deliberate framework release or installer refresh:
 
 - supported Go version matrix;
 - race and compatibility matrix;
@@ -59,7 +61,8 @@ Initial checks:
 - documentation site files exist;
 - documentation deployment is owned by the Carbide docs app, not GitHub Pages;
 - docs-site internal links use extensionless routes, not `.html` hrefs;
-- workflow files exist.
+- the repo remains CI-runner-agnostic with no checked-in GitHub workflow
+  dependency.
 
 ### API Build And Behavior
 
@@ -71,7 +74,8 @@ Future checks:
 - build generated API code with the pinned Go version;
 - run API unit tests with strict failure behavior;
 - verify public API routes, cookies, and JSON response shapes;
-- fail on accidental generated API contract changes outside release workflows.
+- fail on accidental generated API contract changes outside explicit release
+  work.
 
 ### Unit Tests
 

@@ -33,9 +33,6 @@ required_files=(
   "cli/cmd/carbide/main.go"
   "cli/internal/cli/cli.go"
   "cli/internal/cli/cli_test.go"
-  ".github/workflows/ci.yml"
-  ".github/workflows/dependency-audit.yml"
-  ".github/workflows/release.yml"
   "docs/engineering/CI_CD_REGRESSION_TESTS.md"
   "docs/engineering/DEPLOYMENT.md"
   "docs/engineering/FRONTEND_STARTER_CONTRACT.md"
@@ -222,7 +219,7 @@ grep -q ".cli/" .gitignore
 ! test -d src
 ! test -d examples
 ! test -d infra
-test "$(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.github' ! -name '.cli' ! -name '.bin' -printf '%f\n' | sort | tr '\n' ' ')" = "cli docs scaffold tests "
+test "$(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.cli' ! -name '.bin' -printf '%f\n' | sort | tr '\n' ' ')" = "cli docs scaffold tests "
 ! test -d agents.d
 ! test -d include
 ! test -d templates
