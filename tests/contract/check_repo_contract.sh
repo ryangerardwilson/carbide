@@ -3,6 +3,26 @@ set -euo pipefail
 
 domain="carbide.ryangerardwilson.com"
 
+repo_search() {
+  local pattern="$1"
+  shift
+  if command -v rg >/dev/null 2>&1; then
+    rg -n -- "$pattern" "$@"
+    return
+  fi
+  grep -REn -- "$pattern" "$@"
+}
+
+repo_search_files() {
+  local pattern="$1"
+  shift
+  if command -v rg >/dev/null 2>&1; then
+    rg -l -- "$pattern" "$@"
+    return
+  fi
+  grep -REl -- "$pattern" "$@"
+}
+
 required_files=(
   ".gitignore"
   "README.md"
@@ -711,8 +731,8 @@ grep -q "ThemeToggle.tsx" docs/site/frontend-starter-contract.html
 grep -q "localStorage" docs/site/frontend-starter-contract.html
 grep -q "matchMedia" docs/site/frontend-starter-contract.html
 grep -q "dataset.themeMode" docs/site/frontend-starter-contract.html
-! rg -n "de-sci|public domain behavior" docs/app docs/site cli/internal/cli/cli.go >/dev/null
-! rg -n "PROJECT\\.md" README.md scaffold docs cli/internal/cli tests >/dev/null
+! repo_search "de-sci|public domain behavior" docs/app docs/site cli/internal/cli/cli.go >/dev/null
+! repo_search "PROJECT\\.md" README.md scaffold docs cli/internal/cli tests >/dev/null
 grep -q "scrollbar-width:thin" docs/site/assets/styles.css
 grep -q "scrollbar-color:#d97706 transparent" docs/site/assets/styles.css
 grep -q "scrollbar-color:#facc15 transparent" docs/site/assets/styles.css
@@ -816,8 +836,8 @@ grep -q "Do not print secret values" docs/site/for/agents.md
 grep -q "If the current directory already contains" docs/site/for/agents.md
 ! grep -q "Guiding Your Agents to Get Started" docs/site/for/agents.md
 ! grep -q "This page is for AI coding agents" docs/site/for/agents.md
-! rg -n '<a class="nav-link" href="https://github.com/ryangerardwilson/carbide">Source Repository</a>' docs/site/*.html >/dev/null
-test "$(rg -l '<a class="nav-link" href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer">Source Repository</a>' docs/site/*.html | wc -l)" -eq 7
+! repo_search '<a class="nav-link" href="https://github.com/ryangerardwilson/carbide">Source Repository</a>' docs/site/*.html >/dev/null
+test "$(repo_search_files '<a class="nav-link" href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer">Source Repository</a>' docs/site/*.html | wc -l)" -eq 7
 grep -q "Single VM" docs/site/deployment.html
 grep -q "Multiple VMs" docs/site/deployment.html
 grep -q 'type = "ssh-compose"' docs/site/deployment.html
