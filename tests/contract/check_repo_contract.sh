@@ -691,9 +691,11 @@ grep -q 'host = "prod"' docs/app/carbide.toml
 grep -q '\[deploy.targets.prod-environment\]' docs/app/carbide.toml
 grep -q 'primary = "prod"' docs/app/carbide.toml
 grep -q "bg-amber-50" docs/app/web/src/component/l1/tokens.ts
+grep -q "dark:text-neutral-50" docs/app/web/src/component/l1/tokens.ts
 grep -q "dark:text-yellow-200" docs/app/web/src/component/l1/tokens.ts
 grep -q "bg-yellow-400" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "text-yellow-300" docs/app/web/src/component/l2/DocsChrome.tsx
+grep -F -q "dark:[&_p]:text-neutral-300" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
 grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
 grep -q "Tailwind Plus and Catalyst" docs/site/frontend-starter-contract.html

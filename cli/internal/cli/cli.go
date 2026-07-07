@@ -1492,13 +1492,13 @@ func healthDocsWebContract() healthResult {
 		"web/package.json":                    {`"build"`, `"assets:build"`, `"docs:styles"`, `"tailwind:build"`, `"typecheck": "tsc --noEmit"`, `"@tailwindcss/cli":`, `"react":`, `"react-dom":`, `"tailwindcss":`, `"typescript": "6.0.3"`, `"@types/bun": "1.3.14"`, `"@types/react": "19.2.17"`, `"@types/react-dom": "19.2.3"`, `--entry-naming='assets/[name]-[hash].[ext]'`},
 		"web/tsconfig.json":                   {`"strict": true`, `"jsx": "react-jsx"`, `"types": ["bun-types"]`},
 		"web/src/build-styles.ts":             {"tailwindcss", "./src/styles.css", "styles.css"},
-		"web/src/main.tsx":                    {"createRoot", "DocsRuntime", "./tailwind.css", `bg-amber-50`, `[scrollbar-width:thin]`, `dark:[scrollbar-color:rgb(250_204_21)_transparent]`},
+		"web/src/main.tsx":                    {"createRoot", "DocsRuntime", "./tailwind.css", `bg-amber-50`, `dark:text-neutral-50`, `[scrollbar-width:thin]`, `dark:[scrollbar-color:rgb(250_204_21)_transparent]`},
 		"web/src/styles.css":                  {`@import "tailwindcss";`, `@source "./component/**/*.tsx";`, `@source "./lib/**/*.ts";`, `@source "./main.tsx";`, `@source "./server.ts";`, `@custom-variant dark`},
 		"web/src/write-index.ts":              {"asset-manifest.json", `/assets/${scripts[0]}`},
 		"web/index.html":                      {"carbide.theme", "./src/main.tsx", "Carbide Docs", `[scrollbar-width:thin]`, `[scrollbar-color:rgb(250_204_21)_transparent]`},
 		"web/src/server.ts":                   {"serveStatic", "servePublicFile", "publicRoot", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3`, "docsResponseHeaders", "rewriteDocsHtml", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`, "Cache-Control", "public, max-age=31536000, immutable", `return "no-store"`},
-		"web/src/component/l1/tokens.ts":      {"docsClassLayers", "scrollbar", `bg-amber-50`, `dark:text-yellow-200`, `[scrollbar-width:thin]`, "l1:", "l2:", "l3:"},
-		"web/src/component/l2/DocsChrome.tsx": {"docsScrollbarClass", "docsChromeClassLayers", "docsStaticClassMap", "rewriteDocsClasses", "docsStaticHeaders", `bg-yellow-400`, `text-yellow-300`, `[&_pre]:[scrollbar-width:thin]`},
+		"web/src/component/l1/tokens.ts":      {"docsClassLayers", "scrollbar", `bg-amber-50`, `dark:text-neutral-50`, `dark:text-yellow-200`, `[scrollbar-width:thin]`, "l1:", "l2:", "l3:"},
+		"web/src/component/l2/DocsChrome.tsx": {"docsScrollbarClass", "docsChromeClassLayers", "docsStaticClassMap", "rewriteDocsClasses", "docsStaticHeaders", `bg-yellow-400`, `text-yellow-300`, `dark:[&_p]:text-neutral-300`, `[&_pre]:[scrollbar-width:thin]`},
 		"web/src/component/l3/DocsSite.tsx":   {"docsSiteClassLayers", "docsWebContract", "rewriteDocsHtml", "docsResponseHeaders", `[scrollbar-width:thin]`},
 	}
 	for path, needles := range required {
