@@ -1,15 +1,16 @@
+import { docsClassLayers, ui } from "../l1";
 import { docsStaticHeaders, rewriteDocsClasses } from "../l2";
 
 export const docsSiteClassLayers = {
   shell: {
     l1: "grid min-h-screen",
     l2: "grid-cols-1 lg:grid-cols-[270px_minmax(0,1fr)_224px]",
-    l3: "bg-neutral-950 text-neutral-100 [scrollbar-width:thin] [scrollbar-color:rgb(82_82_82)_transparent] hover:[scrollbar-color:rgb(250_204_21)_transparent]",
+    l3: `${docsClassLayers.page.l3} [scrollbar-width:thin]`,
   },
   article: {
     l1: "min-w-0",
     l2: "max-w-3xl",
-    l3: "text-neutral-200",
+    l3: ui.muted,
   },
 };
 
