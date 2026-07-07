@@ -90,6 +90,25 @@ That hierarchy is part of the generated starter contract. App teams may evolve
 it later, but `carbide new` should teach the intended organization from the
 first generated project.
 
+Carbide's component-design taste should track Tailwind Plus / Catalyst more
+than bespoke framework chrome:
+
+- default to Application UI patterns for product work;
+- keep components production-ready, fully responsive, accessible, and easy to
+  customize;
+- keep utility classes in component markup instead of pushing design into a
+  separate CSS abstraction layer;
+- favor neutral palettes, clear hierarchy, dense but readable spacing, and
+  operational layouts over decorative marketing composition;
+- include normal interaction and data states in the component contract:
+  default, hover, focus-visible, active, disabled, loading, empty, and error
+  where relevant;
+- keep component APIs small and composable, usually around content, intent,
+  size, state, and `className`;
+- rely on conventional application primitives such as sidebars, stacked
+  headers, form sections, cards, tables, dialogs, dropdowns, and stats rows
+  before inventing a new surface pattern.
+
 ## Styling
 
 Generated apps use Tailwind as the mandatory styling path. `styles.css` is the
@@ -107,6 +126,21 @@ ID selectors, scrollbar pseudo-selectors, `--carbide-*` color variables,
 `@theme`, `@apply`, `@layer`, keyframes, media rules, and container rules in
 `styles.css`; those belong in Tailwind utility classes and component class
 layers.
+
+Theme mode follows one starter pattern:
+
+- `ThemeToggle.tsx` lives in `component/l1/`.
+- Theme state stays browser-local by default.
+- The selected mode is stored in `localStorage`.
+- `system` resolves through `matchMedia('(prefers-color-scheme: dark)')`.
+- The app sets `document.documentElement.dataset.theme` to the resolved
+  `light` or `dark` value.
+- The app sets `document.documentElement.dataset.themeMode` to the selected
+  mode and mirrors the resolved mode with `document.documentElement.style.colorScheme`.
+- `styles.css` keeps Tailwind's dark variant bound to
+  `[data-theme="dark"]`.
+- L2 and L3 components receive `mode`, `resolved`, and `onMode`; they should
+  not each create their own theme state.
 
 Use these sanctioned paths instead:
 

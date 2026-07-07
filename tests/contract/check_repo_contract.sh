@@ -678,12 +678,19 @@ grep -q '\[deploy.targets.prod-environment\]' docs/app/carbide.toml
 grep -q 'primary = "prod"' docs/app/carbide.toml
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
 grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
+grep -q "Tailwind Plus and Catalyst" docs/site/frontend-starter-contract.html
+grep -q "Application UI patterns" docs/site/frontend-starter-contract.html
+grep -q "production-ready, fully responsive, accessible, and easy to customize" docs/site/frontend-starter-contract.html
 grep -q "carbide health.*rejects global" docs/site/frontend-starter-contract.html
 grep -q "built-in scrollbar styling" docs/site/frontend-starter-contract.html
 grep -q "custom selectors" docs/site/frontend-starter-contract.html
 grep -q "component styling belongs in Tailwind utility classes" docs/site/frontend-starter-contract.html
 grep -q "web/src/product.css" docs/site/frontend-starter-contract.html
 grep -q "local app docs if they exist" docs/site/frontend-starter-contract.html
+grep -q "ThemeToggle.tsx" docs/site/frontend-starter-contract.html
+grep -q "localStorage" docs/site/frontend-starter-contract.html
+grep -q "matchMedia" docs/site/frontend-starter-contract.html
+grep -q "dataset.themeMode" docs/site/frontend-starter-contract.html
 ! rg -n "de-sci|public domain behavior" docs/app docs/site cli/internal/cli/cli.go >/dev/null
 ! rg -n "PROJECT\\.md" README.md scaffold docs cli/internal/cli tests >/dev/null
 grep -q "scrollbar-width:thin" docs/site/assets/styles.css
@@ -709,6 +716,22 @@ grep -q "## Laws" docs/site/for/agents.md
 grep -q "## Ownership Rule" docs/site/for/agents.md
 grep -q "## Current Taste" docs/site/for/agents.md
 grep -q "## Frontend Contract" docs/site/for/agents.md
+grep -q "web/src/component/l1" docs/site/for/agents.md
+grep -q "web/src/component/l2" docs/site/for/agents.md
+grep -q "web/src/component/l3" docs/site/for/agents.md
+grep -F -q '`l1`: structure and layout' docs/site/for/agents.md
+grep -F -q '`l2`: geometry, spacing, borders, radii, and type scale' docs/site/for/agents.md
+grep -F -q '`l3`: theme, color, state, motion, and interaction' docs/site/for/agents.md
+grep -q "Tailwind Plus / Catalyst style" docs/site/for/agents.md
+grep -q "Application UI patterns" docs/site/for/agents.md
+grep -q "production-ready, fully responsive, accessible, and easy" docs/site/for/agents.md
+grep -q "ship all normal states for interactive components" docs/site/for/agents.md
+grep -q "focus-visible, active, disabled, loading, empty, and error" docs/site/for/agents.md
+grep -q "ThemeToggle" docs/site/for/agents.md
+grep -q "localStorage" docs/site/for/agents.md
+grep -q "matchMedia" docs/site/for/agents.md
+grep -q "dataset.theme" docs/site/for/agents.md
+grep -q "dataset.themeMode" docs/site/for/agents.md
 grep -q "## Environment And Secrets" docs/site/for/agents.md
 grep -q "## Deployment" docs/site/for/agents.md
 grep -q "## Audits" docs/site/for/agents.md

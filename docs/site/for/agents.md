@@ -170,6 +170,7 @@ Carbide still has a current starter taste. Today that means:
 - `web/` is a Bun, React, Tailwind, and TypeScript browser container.
 - `api/` is a Go HTTP/API container.
 - `db/` owns Postgres access and checked-in migrations.
+- `web/src/component/l1`, `l2`, and `l3` are the starter frontend tiers.
 - the starter includes register, login, logout, dashboard, and theme behavior;
 - runtime defaults are pinned in scaffolded files;
 - current docs and examples assume this starter shape.
@@ -182,7 +183,48 @@ Tailwind is the required default styling path for the generated starter.
 
 - Keep `web/src/styles.css` small: Tailwind import, `@source` globs, and the
   `data-theme` dark variant.
+- Keep the component tree explicit:
+  - `web/src/component/l1`: primitives and Tailwind utility tokens.
+  - `web/src/component/l2`: reusable composed patterns and layouts.
+  - `web/src/component/l3`: product screens and domain-specific sections.
+- Keep Tailwind class ownership explicit inside reusable components:
+  - `l1`: structure and layout.
+  - `l2`: geometry, spacing, borders, radii, and type scale.
+  - `l3`: theme, color, state, motion, and interaction.
+- Design reusable components in the Tailwind Plus / Catalyst style:
+  - default to Application UI patterns, not marketing blocks, unless the user
+    is explicitly building a marketing surface;
+  - make components production-ready, fully responsive, accessible, and easy
+    to adapt;
+  - keep styling in utility classes directly in the component markup instead
+    of hiding design decisions in custom CSS systems;
+  - prefer neutral surfaces, strong information hierarchy, restrained borders
+    and shadows, and operational density over decorative chrome;
+  - ship all normal states for interactive components: default, hover,
+    focus-visible, active, disabled, loading, empty, and error when relevant;
+  - keep component APIs small and composable: content, intent, size, state,
+    and `className` overrides are usually enough;
+  - prefer common Tailwind-style application primitives such as sidebars,
+    stacked headers, form sections, cards, tables, dialogs, dropdowns, and
+    stats blocks over one-off ornamental layouts.
 - Prefer Tailwind utilities, tokens, and components over growing global CSS.
+- Prefer small class-layer maps plus `cx()` over long unreadable inline class
+  strings once a component becomes reusable or variant-heavy.
+- Implement theme mode the Carbide way:
+  - keep `ThemeToggle` in `web/src/component/l1`;
+  - keep selected theme mode browser-local, not server- or database-backed by
+    default;
+  - store the selected mode in `localStorage` and resolve `system` with
+    `matchMedia('(prefers-color-scheme: dark)')`;
+  - set `document.documentElement.dataset.theme` to the resolved `light` or
+    `dark` value;
+  - set `document.documentElement.dataset.themeMode` to the selected mode and
+    mirror the resolved value through `document.documentElement.style.colorScheme`;
+  - keep the Tailwind `dark:` variant wired through
+    `@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));`
+    in `web/src/styles.css`;
+  - thread `mode`, `resolved`, and `onMode` through L2/L3 components instead of
+    reimplementing theme state in multiple places.
 - Keep visible focus states and semantic form labels.
 - Keep the built-in light/dark/system theme browser-local.
 
