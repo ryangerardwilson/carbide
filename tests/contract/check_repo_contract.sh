@@ -719,9 +719,23 @@ grep -q "## Prerequisites" docs/site/for/agents.md
 grep -q "## Create A New App" docs/site/for/agents.md
 grep -q "## Development Loop" docs/site/for/agents.md
 grep -q "## Laws" docs/site/for/agents.md
+grep -q "### Law 1. One App Repo" docs/site/for/agents.md
+grep -q "### Law 7. Secrets Are Never Printed" docs/site/for/agents.md
+grep -q 'Use `Law 1` through `Law 7`' docs/site/for/agents.md
 grep -q "## Ownership Rule" docs/site/for/agents.md
 grep -q "## Current Taste" docs/site/for/agents.md
+grep -q "### Taste 1. Starter Stack" docs/site/for/agents.md
+grep -q "### Taste 6. CLI And Audit Reporting" docs/site/for/agents.md
+grep -q 'Use `Taste 1` through `Taste 6`' docs/site/for/agents.md
 grep -q "## Frontend Contract" docs/site/for/agents.md
+grep -q "### Law 1. One App Repo" docs/engineering/LAWS.md
+grep -q "### Law 7. Secrets Are Never Printed" docs/engineering/LAWS.md
+grep -q "## 2. Ownership Rule" docs/engineering/LAWS.md
+grep -q "## 3. Audit Rule" docs/engineering/LAWS.md
+grep -q "### Taste 1. Starter Stack" docs/engineering/TASTE_GUIDE.md
+grep -q "### Taste 6. CLI Presentation" docs/engineering/TASTE_GUIDE.md
+grep -q "## 2. Enforcement Rule" docs/engineering/TASTE_GUIDE.md
+grep -q "## 3. Current Frontend Taste" docs/engineering/TASTE_GUIDE.md
 grep -q "web/src/component/l1" docs/site/for/agents.md
 grep -q "web/src/component/l2" docs/site/for/agents.md
 grep -q "web/src/component/l3" docs/site/for/agents.md

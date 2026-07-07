@@ -8,16 +8,38 @@ checks these laws and nothing broader.
 
 ## Generated App Laws
 
-1. One app repo.
-2. Root runtime directories are `web/`, `api/`, and `db/`.
-3. `carbide.toml` and `docker-compose.yml` are checked in.
-4. The browser entrypoint is `web`, and browser API traffic stays same-origin
-   through `/api` to `api`.
-5. Postgres is the required durable database.
-6. Deploy remains preview-before-apply.
-7. Carbide output, docs, and agent guidance never print secrets.
+Agents should cite these clauses as `Law 1` through `Law 7`.
 
-## Ownership Rule
+### Law 1. One App Repo
+
+Every Carbide app is one repo.
+
+### Law 2. Root Runtime Directories
+
+The root runtime directories are `web/`, `api/`, and `db/`.
+
+### Law 3. Checked-In Runtime Contracts
+
+`carbide.toml` and `docker-compose.yml` are checked in.
+
+### Law 4. Same-Origin Browser Flow
+
+The browser entrypoint is `web`, and browser API traffic stays same-origin
+through `/api` to `api`.
+
+### Law 5. Postgres Is Required
+
+Postgres is the required durable database.
+
+### Law 6. Preview Before Apply
+
+Deploy remains preview-before-apply.
+
+### Law 7. Secrets Are Never Printed
+
+Carbide output, docs, and agent guidance never print secrets.
+
+## 2. Ownership Rule
 
 `carbide new` and `carbide init` create the starter.
 
@@ -27,7 +49,7 @@ upgrade, migration, or health checks. Carbide does not scaffold or validate
 `README.md`, `AGENTS.md`, or `agents.d/`; if an app owner creates local prose
 files later, they are app-owned context.
 
-## Audit Rule
+## 3. Audit Rule
 
 `carbide audit` may create local comparison material under `.carbide/`, but it
 does not rewrite app code.

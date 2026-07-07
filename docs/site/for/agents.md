@@ -140,13 +140,35 @@ the installed CLI.
 
 These are the Carbide laws for generated apps:
 
-1. One app repo.
-2. Root runtime directories are `web/`, `api/`, and `db/`.
-3. `carbide.toml` and `docker-compose.yml` stay checked in.
-4. Browser API traffic stays same-origin through `web -> /api -> api`.
-5. Postgres is the required durable database.
-6. Deploy remains preview-before-apply.
-7. Secrets are never printed in logs, docs, CLI output, errors, or chat.
+Use `Law 1` through `Law 7` when you report compliance or drift.
+
+### Law 1. One App Repo
+
+The app stays in one repo.
+
+### Law 2. Root Runtime Directories
+
+The root runtime directories are `web/`, `api/`, and `db/`.
+
+### Law 3. Checked-In Runtime Contracts
+
+`carbide.toml` and `docker-compose.yml` stay checked in.
+
+### Law 4. Same-Origin Browser Flow
+
+Browser API traffic stays same-origin through `web -> /api -> api`.
+
+### Law 5. Postgres Is Required
+
+Postgres is the required durable database.
+
+### Law 6. Preview Before Apply
+
+Deploy remains preview-before-apply.
+
+### Law 7. Secrets Are Never Printed
+
+Secrets are never printed in logs, docs, CLI output, errors, or chat.
 
 `carbide health` checks these laws. It does not try to enforce the entire
 starter taste forever.
@@ -165,15 +187,33 @@ framework guidance here in `/for/agents`.
 
 ## Current Taste
 
-Carbide still has a current starter taste. Today that means:
+Use `Taste 1` through `Taste 6` when you report starter alignment or drift.
 
-- `web/` is a Bun, React, Tailwind, and TypeScript browser container.
-- `api/` is a Go HTTP/API container.
-- `db/` owns Postgres access and checked-in migrations.
-- `web/src/component/l1`, `l2`, and `l3` are the starter frontend tiers.
-- the starter includes register, login, logout, dashboard, and theme behavior;
-- runtime defaults are pinned in scaffolded files;
-- current docs and examples assume this starter shape.
+### Taste 1. Starter Stack
+
+`web/` is a Bun, React, Tailwind, and TypeScript browser container. `api/` is
+a Go HTTP/API container. `db/` owns Postgres access and checked-in migrations.
+
+### Taste 2. Runtime Pins
+
+Runtime defaults are pinned in scaffolded files.
+
+### Taste 3. Starter Product Surface
+
+The starter includes register, login, logout, dashboard, and theme behavior.
+
+### Taste 4. Frontend Organization
+
+`web/src/component/l1`, `l2`, and `l3` are the starter frontend tiers.
+
+### Taste 5. Docs And Examples
+
+Current docs and examples assume this starter shape.
+
+### Taste 6. CLI And Audit Reporting
+
+Carbide expects command-shaped CLI output and audit reports that refer back to
+these numbered laws and taste clauses.
 
 Taste can change over time. The laws above should not.
 

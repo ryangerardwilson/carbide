@@ -430,10 +430,13 @@ func TestAuditCreatesAgentWorkspace(t *testing.T) {
 		got := string(content)
 		for _, want := range []string{
 			"Carbide Audit",
-			"Current Taste",
+			"### Law 1. One App Repo",
+			"### Taste 1. Starter Stack",
 			"starter-reference",
 			"What This Command Created",
 			"carbide health",
+			"Law N",
+			"Taste N",
 			"Carbide does not rewrite app code",
 			"Codex may edit app code intentionally",
 		} {
@@ -456,6 +459,7 @@ func TestAuditCodexPromptIncludesAuditLoop(t *testing.T) {
 		".carbide/audit/20260707T000000Z/AUDIT.md",
 		".carbide/audit/20260707T000000Z/starter-reference",
 		"Run `carbide health` first.",
+		"Report findings with `Law N` and `Taste N` references",
 		"Preserve local product docs such as `README.md` or `AGENTS.md` when they exist",
 		"Finish with `carbide health`, `carbide health runtime`",
 		"not as framework-managed truth",
