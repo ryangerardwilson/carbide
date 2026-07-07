@@ -892,6 +892,10 @@ migration = "once"
 }
 
 func TestHealthPrintsDocsProjectContract(t *testing.T) {
+	repoRoot, err := filepath.Abs(filepath.Join("..", "..", ".."))
+	if err != nil {
+		t.Fatalf("Abs repo root returned %v", err)
+	}
 	source, err := filepath.Abs(filepath.Join("..", "..", "..", "docs", "app"))
 	if err != nil {
 		t.Fatalf("Abs docs app returned %v", err)
@@ -899,6 +903,31 @@ func TestHealthPrintsDocsProjectContract(t *testing.T) {
 	target := filepath.Join(t.TempDir(), "docs-app")
 	if err := copyScaffoldPart(source, target, "Carbide Docs", "carbide-docs"); err != nil {
 		t.Fatalf("copyScaffoldPart returned %v", err)
+	}
+	rootAgents, err := os.ReadFile(filepath.Join(repoRoot, "AGENTS.md"))
+	if err != nil {
+		t.Fatalf("ReadFile AGENTS.md returned %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(target, "..", "..", "AGENTS.md"), rootAgents, 0644); err != nil {
+		t.Fatalf("WriteFile AGENTS.md returned %v", err)
+	}
+	rootReadme, err := os.ReadFile(filepath.Join(repoRoot, "README.md"))
+	if err != nil {
+		t.Fatalf("ReadFile README.md returned %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(target, "..", "..", "README.md"), rootReadme, 0644); err != nil {
+		t.Fatalf("WriteFile README.md returned %v", err)
+	}
+	docsContractPath := filepath.Join(target, "..", "..", "docs", "engineering", "DOCS_APP.md")
+	if err := os.MkdirAll(filepath.Dir(docsContractPath), 0755); err != nil {
+		t.Fatalf("MkdirAll docs engineering returned %v", err)
+	}
+	rootDocsContract, err := os.ReadFile(filepath.Join(repoRoot, "docs", "engineering", "DOCS_APP.md"))
+	if err != nil {
+		t.Fatalf("ReadFile DOCS_APP.md returned %v", err)
+	}
+	if err := os.WriteFile(docsContractPath, rootDocsContract, 0644); err != nil {
+		t.Fatalf("WriteFile DOCS_APP.md returned %v", err)
 	}
 
 	withWorkingDir(t, target, func() {
@@ -920,7 +949,7 @@ func TestHealthPrintsDocsProjectContract(t *testing.T) {
 			"web               ok      Bun React Tailwind TypeScript docs",
 			"api               ok      docs health API",
 			"database          ok      Postgres deploy checks",
-			"agents            ok      docs AGENTS.md /for/agents",
+			"agents            ok      root docs ops guidance /for/agents",
 			"runtime           skip    run carbide health runtime",
 		} {
 			if !strings.Contains(got, want) {

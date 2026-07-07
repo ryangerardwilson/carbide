@@ -55,6 +55,44 @@ app, not framework-owned rewrites.
 - Before changing scaffold output, update contract tests and run the scaffold
   checks.
 
+## Docs Website Management
+
+The public docs site is managed from the framework repo root, not from local
+`docs/app/AGENTS.md` or `docs/app/README.md` files.
+
+- Durable docs content lives in `docs/site/`.
+- Docs runtime and deploy config live in `docs/app/`.
+- Docs-app engineering rules live in `docs/engineering/DOCS_APP.md`.
+- The public agent route is `https://carbide.ryangerardwilson.com/for/agents`
+  and its checked-in source is `docs/site/for/agents.md`.
+- Do not recreate local prose files inside `docs/app/` unless the framework
+  contract changes deliberately.
+
+For docs-site edits, use this loop:
+
+```sh
+cd docs/app/web && bun run typecheck && bun run assets:build
+cd ../ && docker compose build web
+cd ../.. && bash tests/contract/check_repo_contract.sh
+cd docs/app && carbide health
+```
+
+For deploys, set `CARBIDE_DOCS_DEPLOY_SSH` from shell env or CI secrets, then:
+
+```sh
+cd docs/app
+carbide deploy check prod
+carbide deploy preview prod
+carbide deploy apply prod
+```
+
+After deploy, verify:
+
+```sh
+bash tests/smoke/docs_for_agents_http.sh
+curl -fsS https://carbide.ryangerardwilson.com/health
+```
+
 ## Normal Verification
 
 Use the narrowest check that proves the change, then run broader checks before

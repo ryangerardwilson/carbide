@@ -31,8 +31,6 @@ required_files=(
   "docs/engineering/DOCS_APP.md"
   "docs/engineering/REGRESSION_CHECKS.md"
   "docs/engineering/ROADMAP.md"
-  "docs/app/AGENTS.md"
-  "docs/app/README.md"
   "docs/app/carbide.toml"
   "docs/app/docker-compose.yml"
   "docs/app/web/Dockerfile"
@@ -662,16 +660,24 @@ grep -q "docsWebContract" docs/app/web/src/component/l3/DocsSite.tsx
 grep -q "rewriteDocsHtml" docs/app/web/src/component/l3/DocsSite.tsx
 grep -F -q "[scrollbar-width:thin]" docs/app/web/src/component/l3/DocsSite.tsx
 grep -q "fileLineCount" cli/internal/cli/cli.go
-grep -q "https://carbide.ryangerardwilson.com/for/agents" docs/app/AGENTS.md
-grep -q "../site/for/agents.md" docs/app/AGENTS.md
-grep -q "intentionally does not include .*\`agents.d/\`" docs/app/AGENTS.md
-grep -q "CARBIDE_DOCS_DEPLOY_SSH" docs/app/AGENTS.md
-grep -q "carbide deploy check prod" docs/app/AGENTS.md
-grep -q "carbide deploy preview prod" docs/app/AGENTS.md
-grep -q "carbide deploy apply prod" docs/app/AGENTS.md
-grep -q "https://carbide.ryangerardwilson.com/for/agents" docs/app/README.md
-grep -q "CARBIDE_DOCS_DEPLOY_SSH" docs/app/README.md
-grep -q "carbide deploy check prod" docs/app/README.md
+! test -f docs/app/AGENTS.md
+! test -f docs/app/README.md
+grep -q "## Docs Website Management" AGENTS.md
+grep -q "docs/site/" AGENTS.md
+grep -q "docs/app/" AGENTS.md
+grep -q "CARBIDE_DOCS_DEPLOY_SSH" AGENTS.md
+grep -q "carbide deploy check prod" AGENTS.md
+grep -q "carbide deploy preview prod" AGENTS.md
+grep -q "carbide deploy apply prod" AGENTS.md
+grep -q "tests/smoke/docs_for_agents_http.sh" AGENTS.md
+grep -q "## Docs Website" README.md
+grep -q "docs/site/" README.md
+grep -q "docs/app/" README.md
+grep -q "CARBIDE_DOCS_DEPLOY_SSH" README.md
+grep -q "carbide deploy check prod" README.md
+grep -q "carbide deploy preview prod" README.md
+grep -q "carbide deploy apply prod" README.md
+grep -q "should not carry its own \`AGENTS.md\` or \`README.md\`" docs/engineering/DOCS_APP.md
 grep -q 'ssh = "${CARBIDE_DOCS_DEPLOY_SSH}"' docs/app/carbide.toml
 grep -q 'host = "prod"' docs/app/carbide.toml
 grep -q '\[deploy.targets.prod-environment\]' docs/app/carbide.toml

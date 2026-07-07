@@ -8,6 +8,18 @@ Public URL:
 https://carbide.ryangerardwilson.com
 ```
 
+Public agent route:
+
+```text
+https://carbide.ryangerardwilson.com/for/agents
+```
+
+Checked-in source:
+
+```text
+docs/site/for/agents.md
+```
+
 ## Ownership
 
 - `docs/site/`: checked-in static documentation pages.
@@ -21,6 +33,8 @@ https://carbide.ryangerardwilson.com
 
 - Docs app should dogfood the current scaffold frontend contract unless there
   is a clear reason not to.
+- Root `AGENTS.md` and root `README.md` own docs website management guidance.
+  `docs/app/` should not carry its own `AGENTS.md` or `README.md`.
 - `docs/app/web/src/styles.css` must match `scaffold/web/src/styles.css`.
 - Edit durable docs content in `docs/engineering/` and checked-in public pages
   under `docs/site/` as appropriate.

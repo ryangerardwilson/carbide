@@ -1309,7 +1309,7 @@ func healthDocsProjectShape() healthResult {
 		return healthFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
 
-	requiredFiles := []string{projectConfigPath, composeFilePath, "AGENTS.md"}
+	requiredFiles := []string{projectConfigPath, composeFilePath}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
 		return healthFail("project shape", "missing "+strings.Join(missing, ", "))
 	}
@@ -1644,21 +1644,38 @@ func healthDocsDatabaseContract() healthResult {
 
 func healthDocsAgentsContract() healthResult {
 	requiredFiles := []string{
-		"AGENTS.md",
+		"../../AGENTS.md",
+		"../../README.md",
+		"../../docs/engineering/DOCS_APP.md",
 	}
 	if missing := missingFiles(requiredFiles); len(missing) > 0 {
 		return healthFail("agents", "missing "+strings.Join(missing, ", "))
 	}
 	required := map[string][]string{
-		"AGENTS.md": {
-			"https://carbide.ryangerardwilson.com/for/agents",
-			"../site/for/agents.md",
-			"carbide health",
+		"../../AGENTS.md": {
+			"## Docs Website Management",
+			"docs/site/",
+			"docs/app/",
 			"CARBIDE_DOCS_DEPLOY_SSH",
 			"carbide deploy check prod",
 			"carbide deploy preview prod",
 			"carbide deploy apply prod",
-			"intentionally does not include `agents.d/`",
+			"tests/smoke/docs_for_agents_http.sh",
+		},
+		"../../README.md": {
+			"## Docs Website",
+			"docs/site/",
+			"docs/app/",
+			"CARBIDE_DOCS_DEPLOY_SSH",
+			"carbide deploy check prod",
+			"carbide deploy preview prod",
+			"carbide deploy apply prod",
+		},
+		"../../docs/engineering/DOCS_APP.md": {
+			"https://carbide.ryangerardwilson.com/for/agents",
+			"`docs/app/` should not carry its own `AGENTS.md` or `README.md`",
+			"CARBIDE_DOCS_DEPLOY_SSH",
+			"carbide deploy apply prod",
 		},
 	}
 	for path, needles := range required {
@@ -1666,7 +1683,7 @@ func healthDocsAgentsContract() healthResult {
 			return healthFail("agents", path+" missing "+strings.Join(missing, ", "))
 		}
 	}
-	return healthOK("agents", "docs AGENTS.md /for/agents")
+	return healthOK("agents", "root docs ops guidance /for/agents")
 }
 
 func healthForbiddenRegressions(root string) healthResult {

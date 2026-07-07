@@ -136,6 +136,37 @@ to change remote infrastructure. Carbide supports `ssh-compose` apply for a
 checked-in single-VM target; multi-VM `ssh-compose-environment` targets are
 preview-only until clustered orchestration is implemented.
 
+## Docs Website
+
+The public docs website is managed from this repo. Checked-in docs content
+lives in `docs/site/`. The docs runtime and deploy target live in `docs/app/`.
+
+Typical docs-management loop:
+
+```sh
+cd docs/app/web
+bun run typecheck
+bun run assets:build
+cd ../
+docker compose build web
+carbide health
+```
+
+Deploy from `docs/app` after setting `CARBIDE_DOCS_DEPLOY_SSH`:
+
+```sh
+carbide deploy check prod
+carbide deploy preview prod
+carbide deploy apply prod
+```
+
+After deploy, verify the public site and the agent route:
+
+```sh
+bash ../../tests/smoke/docs_for_agents_http.sh
+curl -fsS https://carbide.ryangerardwilson.com/health
+```
+
 ## Learn More
 
 - Public docs: <https://carbide.ryangerardwilson.com>
