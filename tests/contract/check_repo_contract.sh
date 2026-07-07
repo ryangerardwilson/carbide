@@ -640,15 +640,15 @@ grep -q "COPY app/web/index.html" docs/app/web/Dockerfile
 grep -q "Carbide Docs | Carbide" docs/app/web/index.html
 grep -q "carbide.theme" docs/app/web/index.html
 grep -F -q "[scrollbar-width:thin]" docs/app/web/index.html
-grep -F -q "[scrollbar-color:rgb(82_82_82)_transparent]" docs/app/web/index.html
+grep -F -q "[scrollbar-color:rgb(250_204_21)_transparent]" docs/app/web/index.html
 grep -q "createRoot" docs/app/web/src/main.tsx
 grep -q "DocsRuntime" docs/app/web/src/main.tsx
-grep -F -q "dark:[scrollbar-color:rgb(82_82_82)_transparent]" docs/app/web/src/main.tsx
+grep -F -q "dark:[scrollbar-color:rgb(250_204_21)_transparent]" docs/app/web/src/main.tsx
 grep -q "asset-manifest.json" docs/app/web/src/write-index.ts
 grep -q "docsClassLayers" docs/app/web/src/component/l1/tokens.ts
 grep -q "scrollbar" docs/app/web/src/component/l1/tokens.ts
 grep -F -q "[scrollbar-width:thin]" docs/app/web/src/component/l1/tokens.ts
-grep -F -q "[scrollbar-color:rgb(82_82_82)_transparent]" docs/app/web/src/component/l1/tokens.ts
+grep -F -q "dark:[scrollbar-color:rgb(250_204_21)_transparent]" docs/app/web/src/component/l1/tokens.ts
 grep -q "docsScrollbarClass" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "docsStaticClassMap" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "rewriteDocsClasses" docs/app/web/src/component/l2/DocsChrome.tsx
@@ -678,10 +678,22 @@ grep -q "carbide deploy check prod" README.md
 grep -q "carbide deploy preview prod" README.md
 grep -q "carbide deploy apply prod" README.md
 grep -q "should not carry its own \`AGENTS.md\` or \`README.md\`" docs/engineering/DOCS_APP.md
+grep -q "preserve the Carbide docs brand palette" docs/engineering/DOCS_APP.md
+grep -q "black/yellow family across modes" docs/engineering/DOCS_APP.md
+grep -q "preserve the app's existing" docs/site/for/agents.md
+grep -q "A branded black/yellow app may stay black/yellow" docs/site/for/agents.md
+grep -q "audits should preserve that" docs/engineering/TASTE_GUIDE.md
+grep -q "Theme modes control" docs/engineering/TASTE_GUIDE.md
+grep -q "Light/dark variants describe readable state treatment" docs/engineering/SCAFFOLD_CONTRACT.md
+grep -q "Preserve a product-owned palette" docs/engineering/SCAFFOLD_CONTRACT.md
 grep -q 'ssh = "${CARBIDE_DOCS_DEPLOY_SSH}"' docs/app/carbide.toml
 grep -q 'host = "prod"' docs/app/carbide.toml
 grep -q '\[deploy.targets.prod-environment\]' docs/app/carbide.toml
 grep -q 'primary = "prod"' docs/app/carbide.toml
+grep -q "bg-amber-50" docs/app/web/src/component/l1/tokens.ts
+grep -q "dark:text-yellow-200" docs/app/web/src/component/l1/tokens.ts
+grep -q "bg-yellow-400" docs/app/web/src/component/l2/DocsChrome.tsx
+grep -q "text-yellow-300" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
 grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
 grep -q "Tailwind Plus and Catalyst" docs/site/frontend-starter-contract.html
@@ -700,7 +712,8 @@ grep -q "dataset.themeMode" docs/site/frontend-starter-contract.html
 ! rg -n "de-sci|public domain behavior" docs/app docs/site cli/internal/cli/cli.go >/dev/null
 ! rg -n "PROJECT\\.md" README.md scaffold docs cli/internal/cli tests >/dev/null
 grep -q "scrollbar-width:thin" docs/site/assets/styles.css
-grep -q "scrollbar-color:#525252 transparent" docs/site/assets/styles.css
+grep -q "scrollbar-color:#d97706 transparent" docs/site/assets/styles.css
+grep -q "scrollbar-color:#facc15 transparent" docs/site/assets/styles.css
 grep -q "carbide follow logs" docs/site/create-your-first-app.html
 grep -q "carbide clean dev" docs/site/create-your-first-app.html
 grep -q "carbide status" docs/site/create-your-first-app.html

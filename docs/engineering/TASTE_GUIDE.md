@@ -46,6 +46,11 @@ Generated apps may diverge from this taste.
 starter taste. Taste is for scaffolding and for audits driven by Codex with
 user intent.
 
+When an app already has a deliberate brand palette, audits should preserve that
+palette unless the user explicitly asks for a rebrand. Theme modes control
+contrast and surface behavior; they do not require agents to flatten a branded
+app into generic light equals white and dark equals black neutrals.
+
 ## 3. Current Frontend Taste
 
 The current starter frontend teaches two related conventions:
@@ -78,3 +83,8 @@ Component design should also stay close to Tailwind Plus / Catalyst taste:
 - complete interaction states;
 - small, composable component APIs;
 - conventional primitives before novel layout inventions.
+
+For theme support, preserve the product's hue family unless a rebrand is
+explicitly requested. A black/yellow product can stay black/yellow in both
+light and dark modes while changing contrast, background depth, border
+strength, and highlight intensity.

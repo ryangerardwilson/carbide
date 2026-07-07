@@ -265,6 +265,13 @@ Tailwind is the required default styling path for the generated starter.
     in `web/src/styles.css`;
   - thread `mode`, `resolved`, and `onMode` through L2/L3 components instead of
     reimplementing theme state in multiple places.
+- Treat `light`, `dark`, and `system` as contrast modes, not as instructions
+  to replace the app palette with generic white/black neutrals.
+- Unless the user explicitly asks for a rebrand, preserve the app's existing
+  hue family across modes.
+- A branded black/yellow app may stay black/yellow in both modes and adjust
+  surface depth, border contrast, muted text, and highlight intensity instead
+  of collapsing back to starter neutrals.
 - Keep visible focus states and semantic form labels.
 - Keep the built-in light/dark/system theme browser-local.
 

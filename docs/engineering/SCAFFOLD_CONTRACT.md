@@ -42,6 +42,9 @@ existing app files as framework-managed.
   classes and component tokens.
 - Generated colors and light/dark variants belong in component Tailwind
   classes, especially `web/src/component/l1/tokens.ts`.
+- Light/dark variants describe readable state treatment, not a mandatory hue
+  family. Preserve a product-owned palette unless the user explicitly asks to
+  rebrand.
 - Built-in scrollbar styling belongs in Tailwind tokens/classes using
   `scrollbar-width` and `scrollbar-color`, with light/dark variants. Do not add
   scrollbar pseudo-selector CSS to `styles.css`.

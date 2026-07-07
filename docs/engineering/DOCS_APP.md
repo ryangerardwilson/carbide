@@ -31,11 +31,21 @@ docs/site/for/agents.md
 
 ## Rules
 
-- Docs app should dogfood the current scaffold frontend contract unless there
-  is a clear reason not to.
+- Docs app should dogfood the current scaffold frontend contract at the
+  structure, Tailwind, TypeScript, and theme-mechanics layers unless there is
+  a clear reason not to.
+- Docs app should preserve the Carbide docs brand palette. Theme mode is about
+  contrast, readability, and surface treatment; it does not mean collapsing
+  the docs site into generic white/black starter neutrals.
+- Keep the docs site in the Carbide black/yellow family across modes. Light
+  mode may lighten surfaces and dark mode may deepen them, but audits should
+  not treat a brand palette as disposable unless the user explicitly asks for
+  a rebrand.
 - Root `AGENTS.md` and root `README.md` own docs website management guidance.
   `docs/app/` should not carry its own `AGENTS.md` or `README.md`.
-- `docs/app/web/src/styles.css` must match `scaffold/web/src/styles.css`.
+- `docs/app/web/src/styles.css` must match `scaffold/web/src/styles.css` at
+  the Tailwind input-contract layer. Product palette and docs-specific tokens
+  belong in component Tailwind classes, not in `styles.css`.
 - Edit durable docs content in `docs/engineering/` and checked-in public pages
   under `docs/site/` as appropriate.
 - Run `bun run assets:build` in `docs/app/web` after docs style changes so
