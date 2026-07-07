@@ -692,10 +692,10 @@ grep -q '\[deploy.targets.prod-environment\]' docs/app/carbide.toml
 grep -q 'primary = "prod"' docs/app/carbide.toml
 grep -q "bg-amber-50" docs/app/web/src/component/l1/tokens.ts
 grep -q "dark:text-neutral-50" docs/app/web/src/component/l1/tokens.ts
-grep -q "dark:text-yellow-200" docs/app/web/src/component/l1/tokens.ts
 grep -q "bg-yellow-400" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "text-yellow-300" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -F -q "dark:[&_p]:text-neutral-300" docs/app/web/src/component/l2/DocsChrome.tsx
+grep -F -q "dark:[&_pre]:text-neutral-50" docs/app/web/src/component/l2/DocsChrome.tsx
 grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
 grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
 grep -q "Tailwind Plus and Catalyst" docs/site/frontend-starter-contract.html
@@ -816,6 +816,8 @@ grep -q "Do not print secret values" docs/site/for/agents.md
 grep -q "If the current directory already contains" docs/site/for/agents.md
 ! grep -q "Guiding Your Agents to Get Started" docs/site/for/agents.md
 ! grep -q "This page is for AI coding agents" docs/site/for/agents.md
+! rg -n '<a class="nav-link" href="https://github.com/ryangerardwilson/carbide">Source Repository</a>' docs/site/*.html >/dev/null
+test "$(rg -l '<a class="nav-link" href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer">Source Repository</a>' docs/site/*.html | wc -l)" -eq 7
 grep -q "Single VM" docs/site/deployment.html
 grep -q "Multiple VMs" docs/site/deployment.html
 grep -q 'type = "ssh-compose"' docs/site/deployment.html

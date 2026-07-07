@@ -4,7 +4,7 @@ export const ui = {
   accent: "text-amber-950 dark:text-yellow-300",
   border: "border-amber-300/45 dark:border-yellow-300/18",
   borderStrong: "border-amber-400/55 dark:border-yellow-300/35",
-  code: "bg-amber-100/80 text-amber-950 dark:bg-black dark:text-yellow-200",
+  code: "bg-amber-100/80 text-amber-950 dark:bg-black dark:text-neutral-50",
   focus: "focus-visible:ring-4 focus-visible:ring-amber-300/45 dark:focus-visible:ring-yellow-300/30",
   gridLines: "bg-amber-300/30 dark:bg-yellow-300/15",
   hero: "bg-amber-50 text-neutral-950 dark:bg-neutral-950 dark:text-neutral-50",

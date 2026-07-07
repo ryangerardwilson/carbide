@@ -1497,8 +1497,8 @@ func healthDocsWebContract() healthResult {
 		"web/src/write-index.ts":              {"asset-manifest.json", `/assets/${scripts[0]}`},
 		"web/index.html":                      {"carbide.theme", "./src/main.tsx", "Carbide Docs", `[scrollbar-width:thin]`, `[scrollbar-color:rgb(250_204_21)_transparent]`},
 		"web/src/server.ts":                   {"serveStatic", "servePublicFile", "publicRoot", "proxy(request", `url.pathname === "/health"`, `url.pathname.startsWith("/api/")`, `./component/l3`, "docsResponseHeaders", "rewriteDocsHtml", "cacheBustHtml", "versionedAssetPath", "createHash", `?v=${hash}`, "Cache-Control", "public, max-age=31536000, immutable", `return "no-store"`},
-		"web/src/component/l1/tokens.ts":      {"docsClassLayers", "scrollbar", `bg-amber-50`, `dark:text-neutral-50`, `dark:text-yellow-200`, `[scrollbar-width:thin]`, "l1:", "l2:", "l3:"},
-		"web/src/component/l2/DocsChrome.tsx": {"docsScrollbarClass", "docsChromeClassLayers", "docsStaticClassMap", "rewriteDocsClasses", "docsStaticHeaders", `bg-yellow-400`, `text-yellow-300`, `dark:[&_p]:text-neutral-300`, `[&_pre]:[scrollbar-width:thin]`},
+		"web/src/component/l1/tokens.ts":      {"docsClassLayers", "scrollbar", `bg-amber-50`, `dark:text-neutral-50`, `[scrollbar-width:thin]`, "l1:", "l2:", "l3:"},
+		"web/src/component/l2/DocsChrome.tsx": {"docsScrollbarClass", "docsChromeClassLayers", "docsStaticClassMap", "rewriteDocsClasses", "docsStaticHeaders", `bg-yellow-400`, `text-yellow-300`, `dark:[&_p]:text-neutral-300`, `dark:[&_pre]:text-neutral-50`, `[&_pre]:[scrollbar-width:thin]`},
 		"web/src/component/l3/DocsSite.tsx":   {"docsSiteClassLayers", "docsWebContract", "rewriteDocsHtml", "docsResponseHeaders", `[scrollbar-width:thin]`},
 	}
 	for path, needles := range required {
