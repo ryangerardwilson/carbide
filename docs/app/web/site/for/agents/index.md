@@ -17,13 +17,13 @@ The checked-in source that defines that contract lives here in the framework
 repo:
 
 ```text
-docs/site/for/agents.md
+docs/app/web/site/for/agents/index.md
 ```
 
 Fallback raw source if this route is unavailable:
 
 ```text
-https://raw.githubusercontent.com/ryangerardwilson/carbide/main/docs/site/for/agents.md
+https://raw.githubusercontent.com/ryangerardwilson/carbide/main/docs/app/web/site/for/agents/index.md
 ```
 
 ## Source Precedence
@@ -36,8 +36,9 @@ When instructions conflict, use this order:
 4. Local `carbide.toml` and `docker-compose.yml` for runtime and deploy truth.
 5. This `/for/agents` guide.
 6. Public Carbide documentation pages.
-7. The Carbide framework repo `README.md`, then the smallest relevant file in
-   `docs/engineering/`, only when working on Carbide itself.
+7. The Carbide framework repo `README.md`, then the smallest relevant checked-in
+   public docs page, source file, scaffold file, or test, only when working on
+   Carbide itself.
 
 ## Identify The Current State
 
@@ -69,7 +70,8 @@ The Carbide framework repo itself has a different shape:
 - `scaffold/`
 - `tests/`
 
-When you are in that repo, use the root `README.md` as the framework-agent entrypoint, then load the smallest relevant file from `docs/engineering/`.
+When you are in that repo, use the root `README.md` as the framework-agent entrypoint.
+There is no separate internal `docs/engineering/` tree.
 
 ## Prerequisites
 
@@ -154,8 +156,6 @@ carbide status json
 carbide health json
 carbide health env json
 carbide health runtime json
-carbide deploy check prod json
-carbide deploy preview prod json
 ```
 
 Use `carbide help` for the command reference. Use `carbide upgrade` to update
@@ -165,7 +165,7 @@ the installed CLI.
 
 These are the Carbide laws for generated apps:
 
-Use `Law 1` through `Law 7` when you report compliance or drift.
+Use `Law 1` through `Law 8` when you report compliance or drift.
 
 ### Law 1. One App Repo
 
@@ -187,13 +187,20 @@ Browser API traffic stays same-origin through `web -> /api -> api`.
 
 Postgres is the required durable database.
 
-### Law 6. Preview Before Apply
+### Law 6. Deploy Targets Stay Checked In
 
-Deploy remains preview-before-apply.
+If an app registers a Carbide deploy target, it points to a checked-in script
+inside the app repo.
 
 ### Law 7. Secrets Are Never Printed
 
 Secrets are never printed in logs, docs, CLI output, errors, or chat.
+
+### Law 8. Checked Files Stay Under 1000 Lines
+
+Repo-owned source, config, and test files stay at 1000 lines or fewer.
+Vendored dependencies, lockfiles, and generated local runtime artifacts do not
+count toward this law.
 
 `carbide health` checks these laws. It does not try to enforce the entire
 starter taste forever.
@@ -322,21 +329,24 @@ asks for a new architecture and accepts the operational cost.
 
 ## Deployment
 
-Deployment targets live in `carbide.toml`. Preview before applying:
+Deployment targets live in `carbide.toml`:
 
 ```shell
-carbide deploy check prod
-carbide deploy preview prod
-carbide deploy apply prod
+carbide deploy prod
 ```
 
-Carbide supports `ssh-compose` apply for a checked-in single-VM target. New
-apps ship with no deploy target, so `carbide deploy apply prod` refuses until a
-target exists. `ssh-compose-environment` validates and previews multi-VM
-topology, but apply is guarded until clustered orchestration is implemented.
+Each target resolves to a checked-in script, for example:
 
-Read `carbide.toml` before assuming topology. Do not mutate infrastructure
-without a preview.
+```toml
+[deploy.targets.prod]
+script = "./deploy/prod.sh"
+```
+
+Carbide does not interpret SSH, nginx, multi-VM topology, Cloudflare, or any
+other production platform detail anymore. The app-owned script handles those.
+
+Generated apps ship with no deploy target by default. Read `carbide.toml`
+before assuming that deploy exists at all.
 
 ## Audits
 
@@ -390,15 +400,16 @@ Use the smallest command that classifies the failure before editing code.
 
 - Health or env failures:
   Run `carbide health json` or `carbide health env json`. Fix the named law or
-  env contract first. Missing env values belong in `.env` for local dev or the
-  deploy secret layer for remote targets.
+  env contract first. Missing env values belong in `.env` for local dev or in
+  shell env / CI secrets consumed by an app-owned deploy script.
 - Container start failure or unclear local state:
   Run `carbide clean dev`, then `carbide run dev`. If you need the current
   stack instead of a reset, run `carbide status`, `carbide follow logs`, or
   query `.carbide/log/dev.jsonl` with `carbide logs service api`.
-- Deploy, nginx, or sudo failure:
-  The remote user needs non-interactive sudo for Carbide-managed nginx, or the
-  deploy target should set `nginx = false` and use user-managed ingress.
+- Deploy failure:
+  Inspect the target entry under `[deploy.targets.*]` and then inspect the
+  checked-in script it points to. Carbide only resolves the target name and
+  runs that script from the app root.
 - Starter drift or taste refresh:
   Run `carbide audit resolve fix` for the one-shot path, or run
   `carbide audit`, `carbide resolve`, and `carbide fix` separately when the

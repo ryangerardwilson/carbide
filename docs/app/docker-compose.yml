@@ -23,8 +23,6 @@ services:
         - action: rebuild
           path: ./web/src
         - action: rebuild
-          path: ./web/index.html
-        - action: rebuild
           path: ./web/package.json
         - action: rebuild
           path: ./web/bun.lock
@@ -33,7 +31,7 @@ services:
         - action: rebuild
           path: ./web/Dockerfile
         - action: rebuild
-          path: ../site
+          path: ./web/site
     restart: unless-stopped
 
   api:

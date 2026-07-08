@@ -1,17 +1,11 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { stat, readFile } from "node:fs/promises";
 import { extname, join, normalize, sep } from "node:path";
 import { docsResponseHeaders, rewriteDocsHtml } from "./component/l3";
 
 const port = Number(process.env.PORT || 8080);
-const defaultSiteRoot = join(import.meta.dir, "..", "..", "..", "site");
-const siteRootCandidates = [
-  join(import.meta.dir, "..", "..", "..", "site"),
-  join(import.meta.dir, "..", "site"),
-];
-const siteRoot = siteRootCandidates.find((candidate) => existsSync(candidate) && statSync(candidate).isDirectory()) || defaultSiteRoot;
-const publicRoot = join(import.meta.dir, "..", "public");
+const siteRoot = join(import.meta.dir, "..", "site");
 const apiURL = process.env.API_URL || "http://api:8080";
 
 const contentTypes: Record<string, string> = {
@@ -43,27 +37,12 @@ function sitePath(pathname: string): string | null {
   } catch {
     return null;
   }
-  if (requestPath === "/for/agents") requestPath = "/for/agents.md";
+  if (requestPath === "/for/agents") requestPath = "/for/agents/index.md";
   if (requestPath === "/") requestPath = "/index.html";
   if (!extname(requestPath)) requestPath = `${requestPath}.html`;
 
   const candidate = normalize(join(siteRoot, requestPath));
   if (!candidate.startsWith(siteRoot + sep) && candidate !== siteRoot) {
-    return null;
-  }
-  return candidate;
-}
-
-function publicPath(pathname: string): string | null {
-  let requestPath;
-  try {
-    requestPath = decodeURIComponent(pathname);
-  } catch {
-    return null;
-  }
-
-  const candidate = normalize(join(publicRoot, requestPath));
-  if (!candidate.startsWith(publicRoot + sep) && candidate !== publicRoot) {
     return null;
   }
   return candidate;
@@ -76,7 +55,7 @@ function canonicalDocsPath(pathname: string): string {
   if (pathname === "/index" || pathname === "/index.html") {
     return "/";
   }
-  if (pathname === "/for/agents.md") {
+  if (pathname === "/for/agents/index.md") {
     return "/for/agents";
   }
   if (pathname.endsWith(".html")) {
@@ -130,27 +109,6 @@ async function serveStatic(pathname: string): Promise<Response> {
   }
 }
 
-async function servePublicFile(request: Request, pathname: string): Promise<Response> {
-  const path = publicPath(pathname);
-  if (!path) return new Response("not found", { status: 404 });
-
-  try {
-    const info = await stat(path);
-    if (!info.isFile()) return new Response("not found", { status: 404 });
-    return new Response(request.method === "HEAD" ? null : Bun.file(path), {
-      headers: {
-        "Cache-Control": cacheControlFor(pathname),
-        "Content-Type": contentTypes[extname(path)] || "application/octet-stream",
-      },
-    });
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
-      return new Response("not found", { status: 404 });
-    }
-    throw error;
-  }
-}
-
 function cacheBustHtml(html: string): string {
   let output = html;
   for (const [assetPath, versionedPath] of versionedAssetPaths) {
@@ -163,9 +121,6 @@ function cacheBustHtml(html: string): string {
 function cacheControlFor(pathname: string): string {
   if (pathname === "/assets/intro.js" || pathname === "/assets/styles.css") {
     return "no-cache";
-  }
-  if (pathname.startsWith("/assets/")) {
-    return "public, max-age=31536000, immutable";
   }
   return "no-store";
 }
@@ -194,9 +149,6 @@ Bun.serve({
     const docsResponse = await serveStatic(url.pathname);
     if (docsResponse.status !== 404) {
       return docsResponse;
-    }
-    if (url.pathname.startsWith("/assets/") || url.pathname === "/asset-manifest.json") {
-      return servePublicFile(request, url.pathname);
     }
     return docsResponse;
   },

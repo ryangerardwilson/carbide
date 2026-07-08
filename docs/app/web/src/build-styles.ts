@@ -1,15 +1,7 @@
-import { existsSync, mkdirSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-const outputs = [
-  join(process.cwd(), "..", "..", "site", "assets", "styles.css"),
-  join(process.cwd(), "site", "assets", "styles.css"),
-];
-
-const output = outputs.find((candidate) => existsSync(dirname(candidate))) || outputs[0];
-if (!output) {
-  throw new Error("missing Tailwind output path");
-}
+const output = join(process.cwd(), "site", "assets", "styles.css");
 mkdirSync(dirname(output), { recursive: true });
 
 const result = Bun.spawnSync([

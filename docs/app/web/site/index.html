@@ -85,6 +85,7 @@
           <pre><code>I'm building a Carbide app.
 Fetch and follow the instructions at https://carbide.ryangerardwilson.com/for/agents.
 Treat that Markdown as the source of truth for Carbide setup and project work in this session.</code></pre>
+          <p><a href="/for/agents">Open the agent contract</a>.</p>
           <p>The full local walkthrough lives in <a href="/create-your-first-app">Create Your First App</a>.</p>
         </section>
 
@@ -122,7 +123,7 @@ Treat that Markdown as the source of truth for Carbide setup and project work in
             <li>Runtime versions are explicit baselines with digest-pinned images and exact framework-owned package versions.</li>
             <li><code>carbide health</code> validates project shape, required config, Compose, env/secrets, and legacy-regression markers.</li>
             <li>Deploys follow preview before apply; targets are environments that can start as one host and grow into web/API/db roles across servers.</li>
-            <li><a href="/deployment">Deployment</a> covers single-VM <code>ssh-compose</code> targets and multi-VM role topology in <code>carbide.toml</code>.</li>
+            <li><a href="/deployment">Deployment</a> covers the checked-in deploy-script contract behind <code>carbide deploy prod</code>.</li>
             <li>The default starter opens account creation first, then supports login, logout, and dashboard.</li>
             <li>The first IaC target is generated Docker Compose for local development.</li>
             <li>The CLI is implemented in Go and renders colored, aligned, script-safe output with full-width per-container startup and shutdown animation, status tables, timestamped logs, live log follow, and queryable structured dev logs.</li>
@@ -144,7 +145,7 @@ Treat that Markdown as the source of truth for Carbide setup and project work in
 
         <section id="current-automation">
           <h2>Current Automation</h2>
-          <p>The repo has a CI gate for contract checks. The documentation app serves the static site from <code>docs/site</code> through the checked-in Carbide docs app.</p>
+          <p>The repo has a CI gate for contract checks. The documentation app serves the checked-in site directly from <code>docs/app/web/site</code>.</p>
           <p>The published docs domain is <code>carbide.ryangerardwilson.com</code>.</p>
         </section>
       </main>

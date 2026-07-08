@@ -6,22 +6,17 @@
   "scripts": {
     "dev": "bun run typecheck && bun run assets:build && bun --hot src/server.ts",
     "build": "bun run typecheck && bun run assets:build && bun build --target=bun --production --outdir=build/server src/server.ts",
-    "assets:build": "bun run tailwind:build && bun run docs:styles && rm -rf public && bun build --target=browser --production --splitting --entry-naming='assets/[name]-[hash].[ext]' --chunk-naming='assets/[name]-[hash].[ext]' --asset-naming='assets/[name]-[hash].[ext]' --outdir=public src/main.tsx && bun src/write-index.ts",
+    "assets:build": "bun run docs:styles",
     "docs:styles": "bun src/build-styles.ts",
     "start": "NODE_ENV=production bun src/server.ts",
-    "tailwind:build": "tailwindcss -i ./src/styles.css -o ./src/tailwind.css --minify",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@tailwindcss/cli": "4.3.2",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
     "tailwindcss": "4.3.2"
   },
   "devDependencies": {
     "@types/bun": "1.3.14",
-    "@types/react": "19.2.17",
-    "@types/react-dom": "19.2.3",
     "typescript": "6.0.3"
   }
 }

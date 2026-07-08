@@ -133,11 +133,11 @@ carbide stop dev</code></pre>
             <li><code>carbide run dev</code> starts the Docker Compose dev stack, prints the app URL and API URL, then streams logs until <code>Ctrl+C</code> detaches.</li>
             <li><code>carbide clean dev</code> normalizes local dev state before a fresh restart without deleting volumes.</li>
             <li><code>carbide status</code> prints services, containers, published ports, internal ports, and status.</li>
-            <li><code>carbide health</code> checks app laws: project shape, required config, Compose, env/secrets, and legacy-regression markers.</li>
+            <li><code>carbide health</code> checks app laws: project shape, required config, checked-in deploy-script targets, Compose, env/secrets, file line limits, and legacy-regression markers.</li>
             <li><code>carbide health runtime</code> starts the Docker stack if needed, verifies health, registration, dashboard, and logout, then stops containers it started.</li>
             <li><code>carbide stop dev</code> stops the Docker Compose dev stack.</li>
             <li><code>carbide logs</code> reads <code>.carbide/log/dev.jsonl</code> with service, text, limit, and JSON queries. <code>carbide follow logs</code> attaches to live container logs.</li>
-            <li>Machine-readable state uses command-shaped JSON subcommands such as <code>carbide status json</code>, <code>carbide health json</code>, and <code>carbide deploy check prod json</code>, not <code>--json</code> flags.</li>
+            <li>Machine-readable state uses command-shaped JSON subcommands such as <code>carbide status json</code>, <code>carbide health json</code>, and <code>carbide health runtime json</code>, not <code>--json</code> flags.</li>
           </ul>
         </section>
 
@@ -146,7 +146,7 @@ carbide stop dev</code></pre>
           <ul>
             <li>If <code>carbide health</code> fails, fix the named contract before changing runtime behavior. Use <code>carbide health json</code> or <code>carbide health env json</code> when an agent needs structured output.</li>
             <li>If container state is unclear after <code>Ctrl+C</code>, run <code>carbide clean dev</code>, then <code>carbide run dev</code>.</li>
-            <li>If deploy fails around nginx or sudo, the remote user needs non-interactive sudo for Carbide-managed nginx, or the deploy target should set <code>nginx = false</code> and use user-managed ingress.</li>
+            <li>If deploy fails, inspect the app-owned script registered under <code>[deploy.targets.*]</code> in <code>carbide.toml</code>. Carbide only resolves the target name and runs that script.</li>
             <li>If the user wants the one-shot path, run <code>carbide audit resolve fix</code>. Run <code>carbide audit</code>, <code>carbide resolve</code>, and <code>carbide fix</code> separately when the user wants to review the intermediate report and plan. <code>carbide health framework</code> is for the Carbide source repo itself, not for generated apps.</li>
           </ul>
         </section>

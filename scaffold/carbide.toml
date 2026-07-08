@@ -111,7 +111,3 @@ browser_exposed = false
 framework_owned = true
 local_default = "carbide"
 description = "Local Postgres password. Replace in real deploy targets."
-
-[deploy]
-preview_before_apply = true
-targets = []

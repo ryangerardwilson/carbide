@@ -30,56 +30,49 @@ required_files=(
   "cli/go.mod"
   "cli/bin/carbide"
   "cli/cmd/carbide/main.go"
+  "cli/internal/cli/types.go"
   "cli/internal/cli/cli.go"
+  "cli/internal/cli/audit.go"
+  "cli/internal/cli/health.go"
+  "cli/internal/cli/dev.go"
+  "cli/internal/cli/render.go"
+  "cli/internal/cli/logs.go"
+  "cli/internal/cli/config.go"
+  "cli/internal/cli/project.go"
+  "cli/internal/cli/compose.go"
+  "cli/internal/cli/system.go"
   "cli/internal/cli/cli_test.go"
-  "docs/engineering/CI_CD_REGRESSION_TESTS.md"
-  "docs/engineering/DEPLOYMENT.md"
-  "docs/engineering/FRONTEND_STARTER_CONTRACT.md"
-  "docs/engineering/DIRECTORY_STRUCTURE.md"
-  "docs/engineering/CREATE_YOUR_FIRST_APP.md"
-  "docs/engineering/VERSION_POLICY.md"
-  "docs/engineering/PRODUCT_CONTRACT.md"
-  "docs/engineering/REPO_STRUCTURE.md"
-  "docs/engineering/CLI_AND_VERSIONING.md"
-  "docs/engineering/SCAFFOLD_CONTRACT.md"
-  "docs/engineering/LAWS.md"
-  "docs/engineering/TASTE_GUIDE.md"
-  "docs/engineering/DOCS_APP.md"
-  "docs/engineering/REGRESSION_CHECKS.md"
-  "docs/engineering/ROADMAP.md"
+  "cli/internal/cli/render_test.go"
   "docs/app/carbide.toml"
   "docs/app/docker-compose.yml"
   "docs/app/web/Dockerfile"
   "docs/app/web/bun.lock"
-  "docs/app/web/index.html"
   "docs/app/web/package.json"
   "docs/app/web/tsconfig.json"
   "docs/app/web/src/build-styles.ts"
-  "docs/app/web/src/main.tsx"
   "docs/app/web/src/server.ts"
   "docs/app/web/src/styles.css"
   "docs/app/web/src/styles.d.ts"
-  "docs/app/web/src/write-index.ts"
   "docs/app/web/src/lib/cx.ts"
   "docs/app/web/src/lib/types.ts"
-  "docs/app/web/src/component/l1/Text.tsx"
-  "docs/app/web/src/component/l1/Surface.tsx"
   "docs/app/web/src/component/l1/index.ts"
   "docs/app/web/src/component/l1/tokens.ts"
-  "docs/app/web/src/component/l2/DocsChrome.tsx"
+  "docs/app/web/src/component/l2/DocsChrome.ts"
   "docs/app/web/src/component/l2/index.ts"
-  "docs/app/web/src/component/l3/DocsSite.tsx"
+  "docs/app/web/src/component/l3/DocsSite.ts"
   "docs/app/web/src/component/l3/index.ts"
-  "docs/site/index.html"
-  "docs/site/deployment.html"
-  "docs/site/frontend-starter-contract.html"
-  "docs/site/create-your-first-app.html"
-  "docs/site/for/agents.md"
-  "docs/site/ci-cd-regression-tests.html"
-  "docs/site/repo-structure.html"
-  "docs/site/version-policy.html"
-  "docs/site/assets/styles.css"
+  "docs/app/web/site/index.html"
+  "docs/app/web/site/deployment.html"
+  "docs/app/web/site/frontend-starter-contract.html"
+  "docs/app/web/site/create-your-first-app.html"
+  "docs/app/web/site/for/agents/index.md"
+  "docs/app/web/site/ci-cd-regression-tests.html"
+  "docs/app/web/site/repo-structure.html"
+  "docs/app/web/site/version-policy.html"
+  "docs/app/web/site/assets/intro.js"
+  "docs/app/web/site/assets/styles.css"
   "tests/contract/audit_versions.sh"
+  "tests/contract/check_line_limits.sh"
   "tests/contract/check_repo_contract.sh"
   "tests/scaffold/cli_scaffold.sh"
   "tests/smoke/starter_docker_flow.sh"
@@ -157,6 +150,8 @@ for path in "${required_files[@]}"; do
   }
 done
 
+bash tests/contract/check_line_limits.sh
+
 for path in "${required_dirs[@]}"; do
   test -d "$path" || {
     printf 'missing required directory: %s\n' "$path" >&2
@@ -171,34 +166,38 @@ grep -q "https://carbide.ryangerardwilson.com/for/agents" README.md
 grep -q "source of truth for app agents" README.md
 grep -q "source of truth for framework agents" README.md
 grep -q "framework-agent entrypoint and routing layer" README.md
-grep -q "Its checked-in source is \`docs/site/for/agents.md\`" README.md
+grep -q "Its checked-in source is \`docs/app/web/site/for/agents/index.md\`" README.md
 grep -q "## Goals" README.md
 grep -q "## Non-Goals" README.md
 grep -q "## Source Of Truth" README.md
-grep -q "Checked-in app-agent contract source: \`docs/site/for/agents.md\`" README.md
-grep -q "docs/engineering/PRODUCT_CONTRACT.md" README.md
-grep -q "docs/engineering/REPO_STRUCTURE.md" README.md
-grep -q "docs/engineering/SCAFFOLD_CONTRACT.md" README.md
-grep -q "docs/engineering/LAWS.md" README.md
-grep -q "docs/engineering/TASTE_GUIDE.md" README.md
-grep -q "docs/engineering/DOCS_APP.md" README.md
+grep -q "Checked-in app-agent contract source:" README.md
+grep -q "docs/app/web/site/for/agents/index.md" README.md
+grep -q "There is no separate internal docs tree under \`docs/engineering/\`." README.md
+grep -q "Human docs page sources:" README.md
+grep -q "Executable framework contract:" README.md
 grep -q "## Task Router" README.md
-grep -q "docs/engineering/CLI_AND_VERSIONING.md" README.md
-grep -q "Docs website runtime, docs deploy behavior, and \`/for/agents\` publishing" README.md
+grep -q "CLI parsing, health, audit, deploy, logs, upgrade:" README.md
+grep -q "Public docs content:" README.md
+grep -q "Framework regressions:" README.md
+grep -q "## Current App Laws" README.md
+grep -q "## Current Starter Taste" README.md
+grep -q "Product-owned palettes are allowed." README.md
 grep -q "If a framework change alters app-facing commands" README.md
-grep -q "update \`docs/site/for/agents.md\`" README.md
+grep -q "docs/app/web/site/for/agents/index.md" README.md
 grep -q "## Verification" README.md
+grep -q "bash tests/contract/check_line_limits.sh" README.md
 grep -q "carbide health framework" README.md
-grep -q "If a required local toolchain is missing from \`PATH\`" README.md
 grep -q "## Docs Website" README.md
-grep -q "docs/site/" README.md
+grep -q "docs/app/web/site/" README.md
 grep -q "docs/app/" README.md
+grep -q "The docs app does not carry its own \`AGENTS.md\` or \`README.md\`." README.md
 grep -q "The public app-agent contract lives at" README.md
-grep -q "The checked-in source for that contract is \`docs/site/for/agents.md\`" README.md
+grep -q "The checked-in source for that contract is" README.md
+grep -q "docs/app/web/site/for/agents/index.md" README.md
+grep -q "docs/app/deploy/prod.sh" README.md
 grep -q "CARBIDE_DOCS_DEPLOY_SSH" README.md
-grep -q "carbide deploy check prod" README.md
-grep -q "carbide deploy preview prod" README.md
-grep -q "carbide deploy apply prod" README.md
+grep -q "CARBIDE_DOCS_POSTGRES_PASSWORD" README.md
+grep -q "carbide deploy prod" README.md
 grep -q "tests/smoke/docs_for_agents_http.sh" README.md
 ! grep -q "Postgres-backed queues" README.md
 ! grep -q "## Roadmap" README.md
@@ -207,10 +206,6 @@ grep -q "tests/smoke/docs_for_agents_http.sh" README.md
 ! grep -q "## Generated App Layout" README.md
 ! grep -q "## Runtime And Deploy" README.md
 ! test -f AGENTS.md
-grep -q "0.2.0" docs/engineering/CLI_AND_VERSIONING.md
-grep -q "Postgres-backed queues" docs/engineering/ROADMAP.md
-grep -q "Do not reintroduce generated" docs/engineering/SCAFFOLD_CONTRACT.md
-grep -F -q -- "--carbide-*" docs/engineering/SCAFFOLD_CONTRACT.md
 ! grep -q "command_format" cli/bin/carbide
 ! grep -q "carbide format" cli/bin/carbide
 grep -q "module github.com/ryangerardwilson/carbide/cli" cli/go.mod
@@ -221,6 +216,7 @@ grep -q ".cli/" .gitignore
 ! test -d infra
 test "$(find . -mindepth 1 -maxdepth 1 -type d ! -name '.git' ! -name '.cli' ! -name '.bin' -printf '%f\n' | sort | tr '\n' ' ')" = "cli docs scaffold tests "
 ! test -d agents.d
+! test -d docs/engineering
 ! test -d include
 ! test -d templates
 ! test -d scaffold/config
@@ -240,25 +236,23 @@ test "$(find scaffold -mindepth 1 -maxdepth 1 -type d ! -name .carbide -printf '
 ! test -f scaffold/Dockerfile
 ! test -f scaffold/go.mod
 ! test -f scaffold/go.sum
-grep -q "oo_______oo_______oo" cli/internal/cli/cli.go
+repo_search "oo_______oo_______oo" cli/internal/cli >/dev/null
 grep -q "package main" cli/cmd/carbide/main.go
 grep -q "package cli" cli/internal/cli/cli.go
-grep -q "commandHealth()" cli/internal/cli/cli.go
-grep -q "commandHealthEnv" cli/internal/cli/cli.go
-grep -q "commandHealthRuntime" cli/internal/cli/cli.go
-grep -q "commandHealthFramework" cli/internal/cli/cli.go
-grep -q "projectHealthResults" cli/internal/cli/cli.go
-grep -q "commandDeployPreview" cli/internal/cli/cli.go
-grep -q "commandDeployCheck" cli/internal/cli/cli.go
-grep -q "commandDeployApply" cli/internal/cli/cli.go
-grep -q "commandStatusJSON" cli/internal/cli/cli.go
-grep -q "commandURLs" cli/internal/cli/cli.go
-grep -q "projectDisplayName" cli/internal/cli/cli.go
+repo_search "commandHealth\\(\\)" cli/internal/cli >/dev/null
+repo_search "commandHealthEnv" cli/internal/cli >/dev/null
+repo_search "commandHealthRuntime" cli/internal/cli >/dev/null
+repo_search "commandHealthFramework" cli/internal/cli >/dev/null
+repo_search "projectHealthResults" cli/internal/cli >/dev/null
+repo_search "commandDeploy\\(" cli/internal/cli >/dev/null
+repo_search "commandStatusJSON" cli/internal/cli >/dev/null
+repo_search "commandURLs" cli/internal/cli >/dev/null
+repo_search "projectDisplayName" cli/internal/cli >/dev/null
 ! git grep -n -e 'S[e]alion' -e 's[e]alion' -e 'S[E]ALION' -- .
-grep -q "composeUpDetached" cli/internal/cli/cli.go
-grep -q "runDevStreams" cli/internal/cli/cli.go
-grep -q -- "--quiet-build" cli/internal/cli/cli.go
-grep -q "Carbide dev" cli/internal/cli/cli.go
+repo_search "composeUpDetached" cli/internal/cli >/dev/null
+repo_search "runDevStreams" cli/internal/cli >/dev/null
+repo_search "\-\-quiet-build" cli/internal/cli >/dev/null
+repo_search "Carbide dev" cli/internal/cli >/dev/null
 grep -q "release binary unavailable and Go is required for source build fallback" cli/install.sh
 grep -q "CARBIDE_VERSION" cli/install.sh
 grep -q "CARBIDE_CHANNEL" cli/install.sh
@@ -279,7 +273,7 @@ grep -q "\\[env.variables.DATABASE_URL\\]" scaffold/carbide.toml
 grep -q "secret = true" scaffold/carbide.toml
 grep -q "browser_exposed = true" scaffold/carbide.toml
 grep -q "framework_owned = true" scaffold/carbide.toml
-grep -q "preview_before_apply = true" scaffold/carbide.toml
+! grep -q "^\\[deploy\\]" scaffold/carbide.toml
 grep -q ".carbide/" scaffold/.gitignore
 grep -q ".env" scaffold/.gitignore
 grep -q "web/node_modules/" scaffold/.gitignore
@@ -396,8 +390,8 @@ grep -q "bg-white text-neutral-950 dark:bg-black dark:text-neutral-50" scaffold/
 ! grep -Eq '^[[:space:]]*\.[A-Za-z_-]' scaffold/web/src/styles.css
 ! grep -Eq '^[[:space:]]*#[A-Za-z_-]' scaffold/web/src/styles.css
 ! grep -Eq '@theme|@apply|@layer|@keyframes|@media|@container|@plugin|@config' scaffold/web/src/styles.css
-grep -q "scaffoldTailwindInputFindings" cli/internal/cli/cli.go
-grep -q "scaffold Tailwind input contract" cli/internal/cli/cli.go
+repo_search "scaffoldTailwindInputFindings" cli/internal/cli >/dev/null
+repo_search "scaffold Tailwind input contract" cli/internal/cli >/dev/null
 grep -F -q "text-2xl/8 sm:text-3xl/9" scaffold/web/src/component/l1/Text.tsx
 grep -F -q "min-h-8 rounded-md border px-2 py-1 text-sm/6" scaffold/web/src/component/l1/Field.tsx
 grep -F -q "md: 'min-h-8 px-3 text-xs'" scaffold/web/src/component/l1/Button.tsx
@@ -518,78 +512,78 @@ grep -q "api listening on container port" scaffold/api/main.go
 grep -q "public API URL is" scaffold/api/main.go
 ! grep -q "API listening inside api container" scaffold/api/main.go
 ! grep -q "frontend proxies API calls" scaffold/api/main.go
-grep -q "composeFilePath" cli/internal/cli/cli.go
-grep -q "COMPOSE_FILE" cli/internal/cli/cli.go
-grep -q "compose.supports(\"--watch\")" cli/internal/cli/cli.go
-grep -q "newRenderer" cli/internal/cli/cli.go
-grep -q "func (r renderer) Table" cli/internal/cli/cli.go
-grep -q "runDevStreams" cli/internal/cli/cli.go
-grep -q "commandStatus" cli/internal/cli/cli.go
-grep -q "commandStopDev" cli/internal/cli/cli.go
-grep -q "RunServiceProgress" cli/internal/cli/cli.go
-grep -q "RunServiceStopProgress" cli/internal/cli/cli.go
-grep -q "serviceProgressFrameWidth" cli/internal/cli/cli.go
-grep -q "serviceProgressFrame" cli/internal/cli/cli.go
-grep -q "terminalColumns" cli/internal/cli/cli.go
-grep -q "composeServiceStatuses" cli/internal/cli/cli.go
-grep -q "composeServiceSnapshots" cli/internal/cli/cli.go
-grep -q "composePublishedPorts" cli/internal/cli/cli.go
-grep -q "composeInternalPorts" cli/internal/cli/cli.go
-grep -q "streamLogOutput" cli/internal/cli/cli.go
-grep -q "parseComposeLogLine" cli/internal/cli/cli.go
-grep -q "composeLogsArgs" cli/internal/cli/cli.go
-grep -q "openDevLogSink" cli/internal/cli/cli.go
-grep -q "openAppendDevLogSink" cli/internal/cli/cli.go
-grep -q "commandLogs" cli/internal/cli/cli.go
-grep -q "commandFollowLogs" cli/internal/cli/cli.go
-grep -q ".carbide/log/dev.jsonl" cli/internal/cli/cli.go
-grep -q "carbide follow logs" cli/internal/cli/cli.go
-grep -q "carbide status" cli/internal/cli/cli.go
-grep -q "health framework" cli/internal/cli/cli.go
-! grep -q "carbide logs follow" cli/internal/cli/cli.go
-! grep -q 'outputRow{"login"' cli/internal/cli/cli.go
-! grep -q 'outputRow{"mode"' cli/internal/cli/cli.go
+repo_search "composeFilePath" cli/internal/cli >/dev/null
+repo_search "COMPOSE_FILE" cli/internal/cli >/dev/null
+repo_search 'compose.supports\("--watch"\)' cli/internal/cli >/dev/null
+repo_search "newRenderer" cli/internal/cli >/dev/null
+repo_search "func \\(r renderer\\) Table" cli/internal/cli >/dev/null
+repo_search "runDevStreams" cli/internal/cli >/dev/null
+repo_search "commandStatus" cli/internal/cli >/dev/null
+repo_search "commandStopDev" cli/internal/cli >/dev/null
+repo_search "RunServiceProgress" cli/internal/cli >/dev/null
+repo_search "RunServiceStopProgress" cli/internal/cli >/dev/null
+repo_search "serviceProgressFrameWidth" cli/internal/cli >/dev/null
+repo_search "serviceProgressFrame" cli/internal/cli >/dev/null
+repo_search "terminalColumns" cli/internal/cli >/dev/null
+repo_search "composeServiceStatuses" cli/internal/cli >/dev/null
+repo_search "composeServiceSnapshots" cli/internal/cli >/dev/null
+repo_search "composePublishedPorts" cli/internal/cli >/dev/null
+repo_search "composeInternalPorts" cli/internal/cli >/dev/null
+repo_search "streamLogOutput" cli/internal/cli >/dev/null
+repo_search "parseComposeLogLine" cli/internal/cli >/dev/null
+repo_search "composeLogsArgs" cli/internal/cli >/dev/null
+repo_search "openDevLogSink" cli/internal/cli >/dev/null
+repo_search "openAppendDevLogSink" cli/internal/cli >/dev/null
+repo_search "commandLogs" cli/internal/cli >/dev/null
+repo_search "commandFollowLogs" cli/internal/cli >/dev/null
+repo_search ".carbide/log/dev.jsonl" cli/internal/cli >/dev/null
+repo_search "carbide follow logs" cli/internal/cli >/dev/null
+repo_search "carbide status" cli/internal/cli >/dev/null
+repo_search "health framework" cli/internal/cli >/dev/null
+! repo_search "carbide logs follow" cli/internal/cli >/dev/null
+! grep -R -q 'outputRow{"login"' cli/internal/cli
+! grep -R -q 'outputRow{"mode"' cli/internal/cli
 
-grep -q "$domain" docs/site/index.html
-grep -q "Bun frontend" docs/site/index.html
-grep -q "Create Your First App" docs/site/index.html
-grep -q 'href="/#start"' docs/site/index.html
-grep -q "<h2>Start</h2>" docs/site/index.html
-grep -q "Paste this into your AI agent" docs/site/index.html
-grep -q "https://carbide.ryangerardwilson.com/for/agents" docs/site/index.html
-grep -q "Treat that Markdown as the source of truth" docs/site/index.html
-! grep -q "Guiding Your Agents to Get Started" docs/site/index.html
-! grep -q "curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash" docs/site/index.html
-! grep -q "carbide new demo" docs/site/index.html
-! grep -q "The prompt below tells the agent" docs/site/index.html
-! grep -q "Treat the returned Markdown as the source of truth" docs/site/index.html
-! grep -R 'href="/#for-agents"' docs/site/*.html >/dev/null
-grep -q 'href="/version-policy"' docs/site/index.html
-grep -q 'href="/create-your-first-app"' docs/site/index.html
-grep -q 'href="/frontend-starter-contract"' docs/site/index.html
-grep -q 'href="/deployment"' docs/site/index.html
-grep -q 'href="/ci-cd-regression-tests"' docs/site/index.html
-! grep -R -E 'href="[^"]+\.html' docs/site >/dev/null
-grep -q "function isHomePage()" docs/site/assets/intro.js
-grep -q 'pathname === "/"' docs/site/assets/intro.js
-grep -q 'pathname === "/index.html"' docs/site/assets/intro.js
-grep -q "intro=1" docs/site/assets/intro.js
-grep -q "prefers-reduced-motion" docs/site/assets/intro.js
-! grep -q "Carbide docs" docs/site/assets/intro.js
-! grep -q "Carbide Docs" docs/site/assets/intro.js
-! grep -q "chomper" docs/site/assets/intro.js
-! grep -q "pellets" docs/site/assets/intro.js
-! grep -q "clipPath" docs/site/assets/intro.js
-! grep -q "sessionStorage" docs/site/assets/intro.js
-! grep -q "storageKey" docs/site/assets/intro.js
-! grep -q "docs-intro-skip" docs/site/assets/intro.js
-! grep -q ">Skip<" docs/site/assets/intro.js
-! grep -q "skipIntro" docs/site/assets/intro.js
+grep -q "$domain" docs/app/web/site/index.html
+grep -q "Bun frontend" docs/app/web/site/index.html
+grep -q "Create Your First App" docs/app/web/site/index.html
+grep -q 'href="/#start"' docs/app/web/site/index.html
+grep -q "<h2>Start</h2>" docs/app/web/site/index.html
+grep -q "Paste this into your AI agent" docs/app/web/site/index.html
+grep -q "https://carbide.ryangerardwilson.com/for/agents" docs/app/web/site/index.html
+grep -q "Treat that Markdown as the source of truth" docs/app/web/site/index.html
+! grep -q "Guiding Your Agents to Get Started" docs/app/web/site/index.html
+! grep -q "curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash" docs/app/web/site/index.html
+! grep -q "carbide new demo" docs/app/web/site/index.html
+! grep -q "The prompt below tells the agent" docs/app/web/site/index.html
+! grep -q "Treat the returned Markdown as the source of truth" docs/app/web/site/index.html
+! grep -R 'href="/#for-agents"' docs/app/web/site/*.html >/dev/null
+grep -q 'href="/version-policy"' docs/app/web/site/index.html
+grep -q 'href="/create-your-first-app"' docs/app/web/site/index.html
+grep -q 'href="/frontend-starter-contract"' docs/app/web/site/index.html
+grep -q 'href="/deployment"' docs/app/web/site/index.html
+grep -q 'href="/ci-cd-regression-tests"' docs/app/web/site/index.html
+! grep -R -E 'href="[^"]+\.html' docs/app/web/site >/dev/null
+grep -q "function isHomePage()" docs/app/web/site/assets/intro.js
+grep -q 'pathname === "/"' docs/app/web/site/assets/intro.js
+grep -q 'pathname === "/index.html"' docs/app/web/site/assets/intro.js
+grep -q "intro=1" docs/app/web/site/assets/intro.js
+grep -q "prefers-reduced-motion" docs/app/web/site/assets/intro.js
+! grep -q "Carbide docs" docs/app/web/site/assets/intro.js
+! grep -q "Carbide Docs" docs/app/web/site/assets/intro.js
+! grep -q "chomper" docs/app/web/site/assets/intro.js
+! grep -q "pellets" docs/app/web/site/assets/intro.js
+! grep -q "clipPath" docs/app/web/site/assets/intro.js
+! grep -q "sessionStorage" docs/app/web/site/assets/intro.js
+! grep -q "storageKey" docs/app/web/site/assets/intro.js
+! grep -q "docs-intro-skip" docs/app/web/site/assets/intro.js
+! grep -q ">Skip<" docs/app/web/site/assets/intro.js
+! grep -q "skipIntro" docs/app/web/site/assets/intro.js
 grep -q "canonicalDocsPath" docs/app/web/src/server.ts
 grep -q '"/initial-user-experience": "/create-your-first-app"' docs/app/web/src/server.ts
 grep -q 'pathname === "/index.html"' docs/app/web/src/server.ts
 grep -q 'requestPath === "/for/agents"' docs/app/web/src/server.ts
-grep -q '"/for/agents.md"' docs/app/web/src/server.ts
+grep -q '"/for/agents/index.md"' docs/app/web/src/server.ts
 grep -q 'pathname.endsWith(".html")' docs/app/web/src/server.ts
 grep -q 'text/markdown; charset=utf-8' docs/app/web/src/server.ts
 grep -q "status: 308" docs/app/web/src/server.ts
@@ -603,14 +597,12 @@ grep -F -q '?v=${hash}' docs/app/web/src/server.ts
 grep -q 'assets/intro.js' docs/app/web/src/server.ts
 grep -q 'assets/styles.css' docs/app/web/src/server.ts
 grep -F -q 'output.replaceAll(`"/${assetPath}"`, `"/${versionedPath}"`)' docs/app/web/src/server.ts
-grep -q 'servePublicFile' docs/app/web/src/server.ts
-grep -q 'publicRoot' docs/app/web/src/server.ts
-grep -q 'public, max-age=31536000, immutable' docs/app/web/src/server.ts
+grep -q 'join(import.meta.dir, "..", "site")' docs/app/web/src/server.ts
+grep -q 'return "no-cache"' docs/app/web/src/server.ts
 grep -q 'return "no-store"' docs/app/web/src/server.ts
 grep -q '@import "tailwindcss";' docs/app/web/src/styles.css
-grep -F -q '@source "./component/**/*.tsx";' docs/app/web/src/styles.css
+grep -F -q '@source "./component/**/*.ts";' docs/app/web/src/styles.css
 grep -F -q '@source "./lib/**/*.ts";' docs/app/web/src/styles.css
-grep -F -q '@source "./main.tsx";' docs/app/web/src/styles.css
 grep -F -q '@source "./server.ts";' docs/app/web/src/styles.css
 grep -q "@custom-variant dark" docs/app/web/src/styles.css
 ! grep -q "html {" docs/app/web/src/styles.css
@@ -625,11 +617,9 @@ grep -q "@custom-variant dark" docs/app/web/src/styles.css
 ! grep -q "scrollbar-width:" docs/app/web/src/styles.css
 ! grep -q "@theme" docs/app/web/src/styles.css
 ! grep -q -- "--carbide-" docs/app/web/src/styles.css
-cmp -s scaffold/web/src/styles.css docs/app/web/src/styles.css
-grep -q "docsTailwindInputFindings" cli/internal/cli/cli.go
-grep -q "docsGeneratedTailwindFindings" cli/internal/cli/cli.go
-grep -q "path: ./web/index.html" docs/app/docker-compose.yml
-grep -q "path: ../site" docs/app/docker-compose.yml
+repo_search "docsTailwindInputFindings" cli/internal/cli >/dev/null
+repo_search "docsGeneratedTailwindFindings" cli/internal/cli >/dev/null
+grep -q "path: ./web/site" docs/app/docker-compose.yml
 grep -q "path: ./api" docs/app/docker-compose.yml
 grep -q "path: ./db/migration" docs/app/docker-compose.yml
 ! grep -q "docs-intro-skip" docs/app/web/src/styles.css
@@ -637,254 +627,228 @@ grep -q "path: ./db/migration" docs/app/docker-compose.yml
 grep -q '"assets:build"' docs/app/web/package.json
 grep -q '"docs:styles"' docs/app/web/package.json
 grep -q '"build"' docs/app/web/package.json
-grep -q '"tailwind:build"' docs/app/web/package.json
 grep -q '"typecheck": "tsc --noEmit"' docs/app/web/package.json
 grep -q "tailwindcss" docs/app/web/src/build-styles.ts
 grep -q '"@tailwindcss/cli": "4.3.2"' docs/app/web/package.json
 grep -q '"tailwindcss": "4.3.2"' docs/app/web/package.json
-grep -q '"react": "19.2.7"' docs/app/web/package.json
-grep -q '"react-dom": "19.2.7"' docs/app/web/package.json
 grep -q '"typescript": "6.0.3"' docs/app/web/package.json
 grep -q '"@types/bun": "1.3.14"' docs/app/web/package.json
-grep -q '"@types/react": "19.2.17"' docs/app/web/package.json
-grep -q '"@types/react-dom": "19.2.3"' docs/app/web/package.json
+! grep -q '"react":' docs/app/web/package.json
+! grep -q '"react-dom":' docs/app/web/package.json
+! grep -q '"@types/react":' docs/app/web/package.json
+! grep -q '"@types/react-dom":' docs/app/web/package.json
 grep -q '"strict": true' docs/app/web/tsconfig.json
-grep -q '"jsx": "react-jsx"' docs/app/web/tsconfig.json
 grep -F -q '"types": ["bun-types"]' docs/app/web/tsconfig.json
+grep -F -q '"include": ["src/**/*.ts"]' docs/app/web/tsconfig.json
 grep -q "bun run typecheck" docs/app/web/Dockerfile
 grep -q "bun run assets:build" docs/app/web/Dockerfile
-grep -q "COPY app/web/index.html" docs/app/web/Dockerfile
-grep -q "Carbide Docs | Carbide" docs/app/web/index.html
-grep -q "carbide.theme" docs/app/web/index.html
-grep -F -q "[scrollbar-width:thin]" docs/app/web/index.html
-grep -F -q "[scrollbar-color:rgb(250_204_21)_transparent]" docs/app/web/index.html
-grep -q "createRoot" docs/app/web/src/main.tsx
-grep -q "DocsRuntime" docs/app/web/src/main.tsx
-grep -F -q "dark:[scrollbar-color:rgb(250_204_21)_transparent]" docs/app/web/src/main.tsx
-grep -q "asset-manifest.json" docs/app/web/src/write-index.ts
+grep -q "COPY app/web/site ./site" docs/app/web/Dockerfile
+! test -f docs/app/web/index.html
+! test -f docs/app/web/src/main.tsx
+! test -f docs/app/web/src/write-index.ts
 grep -q "docsClassLayers" docs/app/web/src/component/l1/tokens.ts
 grep -q "scrollbar" docs/app/web/src/component/l1/tokens.ts
 grep -F -q "[scrollbar-width:thin]" docs/app/web/src/component/l1/tokens.ts
 grep -F -q "dark:[scrollbar-color:rgb(250_204_21)_transparent]" docs/app/web/src/component/l1/tokens.ts
-grep -q "docsScrollbarClass" docs/app/web/src/component/l2/DocsChrome.tsx
-grep -q "docsStaticClassMap" docs/app/web/src/component/l2/DocsChrome.tsx
-grep -q "rewriteDocsClasses" docs/app/web/src/component/l2/DocsChrome.tsx
-grep -F -q "[&_pre]:[scrollbar-width:thin]" docs/app/web/src/component/l2/DocsChrome.tsx
-grep -F -q "[&_pre+p]:mt-[18px]" docs/app/web/src/component/l2/DocsChrome.tsx
-grep -F -q "max-[860px]:mt-[34px]" docs/app/web/src/component/l2/DocsChrome.tsx
-grep -q "docsChromeClassLayers" docs/app/web/src/component/l2/DocsChrome.tsx
-grep -q "docsWebContract" docs/app/web/src/component/l3/DocsSite.tsx
-grep -q "rewriteDocsHtml" docs/app/web/src/component/l3/DocsSite.tsx
-grep -F -q "[scrollbar-width:thin]" docs/app/web/src/component/l3/DocsSite.tsx
-grep -q "fileLineCount" cli/internal/cli/cli.go
+grep -q "docsScrollbarClass" docs/app/web/src/component/l2/DocsChrome.ts
+grep -q "docsStaticClassMap" docs/app/web/src/component/l2/DocsChrome.ts
+grep -q "rewriteDocsClasses" docs/app/web/src/component/l2/DocsChrome.ts
+grep -F -q "[&_pre]:[scrollbar-width:thin]" docs/app/web/src/component/l2/DocsChrome.ts
+grep -F -q "[&_pre+p]:mt-[18px]" docs/app/web/src/component/l2/DocsChrome.ts
+grep -F -q "max-[860px]:mt-[34px]" docs/app/web/src/component/l2/DocsChrome.ts
+grep -q "docsChromeClassLayers" docs/app/web/src/component/l2/DocsChrome.ts
+grep -q "docsWebContract" docs/app/web/src/component/l3/DocsSite.ts
+grep -q "rewriteDocsHtml" docs/app/web/src/component/l3/DocsSite.ts
+grep -F -q "[scrollbar-width:thin]" docs/app/web/src/component/l3/DocsSite.ts
+repo_search "fileLineCount" cli/internal/cli >/dev/null
 ! test -f docs/app/AGENTS.md
 ! test -f docs/app/README.md
-grep -q "Root \`README.md\` owns docs website management guidance" docs/engineering/DOCS_APP.md
-grep -q "not carry its own \`AGENTS.md\` or \`README.md\`" docs/engineering/DOCS_APP.md
-grep -q "preserve the Carbide docs brand palette" docs/engineering/DOCS_APP.md
-grep -q "black/yellow family across modes" docs/engineering/DOCS_APP.md
-grep -q "preserve the app's existing" docs/site/for/agents.md
-grep -q "A branded black/yellow app may stay black/yellow" docs/site/for/agents.md
-grep -q "audits should preserve that" docs/engineering/TASTE_GUIDE.md
-grep -q "Theme modes control" docs/engineering/TASTE_GUIDE.md
-grep -q "Light/dark variants describe readable state treatment" docs/engineering/SCAFFOLD_CONTRACT.md
-grep -q "Preserve a product-owned palette" docs/engineering/SCAFFOLD_CONTRACT.md
-grep -q 'ssh = "${CARBIDE_DOCS_DEPLOY_SSH}"' docs/app/carbide.toml
-grep -q 'host = "prod"' docs/app/carbide.toml
-grep -q '\[deploy.targets.prod-environment\]' docs/app/carbide.toml
-grep -q 'primary = "prod"' docs/app/carbide.toml
+grep -q "The docs app does not carry its own \`AGENTS.md\` or \`README.md\`." README.md
+grep -q "black and yellow" README.md
+grep -q "audits should preserve that" README.md
+grep -q "preserve the app's existing" docs/app/web/site/for/agents/index.md
+grep -q "A branded black/yellow app may stay black/yellow" docs/app/web/site/for/agents/index.md
+grep -q '\[deploy.targets.prod\]' docs/app/carbide.toml
+grep -q 'script = "./deploy/prod.sh"' docs/app/carbide.toml
+grep -q "CARBIDE_DOCS_POSTGRES_PASSWORD" docs/app/deploy/prod.sh
+grep -q "CARBIDE_DOCS_DEPLOY_SSH" docs/app/deploy/prod.sh
+grep -q "docker compose --env-file app/.env -f app/docker-compose.yml --project-directory app" docs/app/deploy/prod.sh
 grep -q "bg-amber-50" docs/app/web/src/component/l1/tokens.ts
 grep -q "dark:text-neutral-50" docs/app/web/src/component/l1/tokens.ts
-grep -q "bg-yellow-400" docs/app/web/src/component/l2/DocsChrome.tsx
-grep -q "text-yellow-300" docs/app/web/src/component/l2/DocsChrome.tsx
-grep -F -q "dark:[&_p]:text-neutral-300" docs/app/web/src/component/l2/DocsChrome.tsx
-grep -F -q "dark:[&_pre]:text-neutral-50" docs/app/web/src/component/l2/DocsChrome.tsx
-grep -q "Bun frontend, Go API backend, Postgres database" docs/site/frontend-starter-contract.html
-grep -q "Tailwind is required" docs/site/frontend-starter-contract.html
-grep -q "Tailwind Plus and Catalyst" docs/site/frontend-starter-contract.html
-grep -q "Application UI patterns" docs/site/frontend-starter-contract.html
-grep -q "production-ready, fully responsive, accessible, and easy to customize" docs/site/frontend-starter-contract.html
-grep -q "carbide health.*rejects global" docs/site/frontend-starter-contract.html
-grep -q "built-in scrollbar styling" docs/site/frontend-starter-contract.html
-grep -q "custom selectors" docs/site/frontend-starter-contract.html
-grep -q "component styling belongs in Tailwind utility classes" docs/site/frontend-starter-contract.html
-grep -q "web/src/product.css" docs/site/frontend-starter-contract.html
-grep -q "local app docs if they exist" docs/site/frontend-starter-contract.html
-grep -q "ThemeToggle.tsx" docs/site/frontend-starter-contract.html
-grep -q "localStorage" docs/site/frontend-starter-contract.html
-grep -q "matchMedia" docs/site/frontend-starter-contract.html
-grep -q "dataset.themeMode" docs/site/frontend-starter-contract.html
-! repo_search "de-sci|public domain behavior" docs/app docs/site cli/internal/cli/cli.go >/dev/null
+grep -q "bg-yellow-400" docs/app/web/src/component/l2/DocsChrome.ts
+grep -q "text-yellow-300" docs/app/web/src/component/l2/DocsChrome.ts
+grep -F -q "dark:[&_p]:text-neutral-300" docs/app/web/src/component/l2/DocsChrome.ts
+grep -F -q "dark:[&_pre]:text-neutral-50" docs/app/web/src/component/l2/DocsChrome.ts
+grep -q "Bun frontend, Go API backend, Postgres database" docs/app/web/site/frontend-starter-contract.html
+grep -q "Tailwind is required" docs/app/web/site/frontend-starter-contract.html
+grep -q "Tailwind Plus and Catalyst" docs/app/web/site/frontend-starter-contract.html
+grep -q "Application UI patterns" docs/app/web/site/frontend-starter-contract.html
+grep -q "production-ready, fully responsive, accessible, and easy to customize" docs/app/web/site/frontend-starter-contract.html
+grep -q "carbide health.*rejects global" docs/app/web/site/frontend-starter-contract.html
+grep -q "built-in scrollbar styling" docs/app/web/site/frontend-starter-contract.html
+grep -q "custom selectors" docs/app/web/site/frontend-starter-contract.html
+grep -q "component styling belongs in Tailwind utility classes" docs/app/web/site/frontend-starter-contract.html
+grep -q "web/src/product.css" docs/app/web/site/frontend-starter-contract.html
+grep -q "local app docs if they exist" docs/app/web/site/frontend-starter-contract.html
+grep -q "ThemeToggle.tsx" docs/app/web/site/frontend-starter-contract.html
+grep -q "localStorage" docs/app/web/site/frontend-starter-contract.html
+grep -q "matchMedia" docs/app/web/site/frontend-starter-contract.html
+grep -q "dataset.themeMode" docs/app/web/site/frontend-starter-contract.html
+! repo_search "de-sci|public domain behavior" docs cli/internal/cli >/dev/null
 ! repo_search "PROJECT\\.md" README.md scaffold docs cli/internal/cli tests >/dev/null
-grep -q "scrollbar-width:thin" docs/site/assets/styles.css
-grep -q "scrollbar-color:#d97706 transparent" docs/site/assets/styles.css
-grep -q "scrollbar-color:#facc15 transparent" docs/site/assets/styles.css
-grep -q "carbide follow logs" docs/site/create-your-first-app.html
-grep -q "carbide clean dev" docs/site/create-your-first-app.html
-grep -q "carbide status" docs/site/create-your-first-app.html
-grep -q "carbide audit" docs/site/create-your-first-app.html
-grep -q "carbide resolve" docs/site/create-your-first-app.html
-grep -q "carbide fix" docs/site/create-your-first-app.html
-grep -q "carbide audit resolve fix" docs/site/create-your-first-app.html
-grep -q "carbide health runtime" docs/site/create-your-first-app.html
-grep -q "Troubleshooting" docs/site/create-your-first-app.html
-grep -q "Install, create, run, register" docs/site/create-your-first-app.html
-test ! -f docs/site/for/agents.html
-test ! -f docs/engineering/FOR_AGENTS.md
-grep -q "# Carbide for Agents" docs/site/for/agents.md
-grep -q "source of truth for AI agents" docs/site/for/agents.md
-grep -q "https://raw.githubusercontent.com/ryangerardwilson/carbide/main/docs/site/for/agents.md" docs/site/for/agents.md
-grep -q "## Source Precedence" docs/site/for/agents.md
-grep -q "framework repo \`README.md\`" docs/site/for/agents.md
-grep -q "## Identify The Current State" docs/site/for/agents.md
-grep -q "framework-agent entrypoint" docs/site/for/agents.md
-grep -q "## Prerequisites" docs/site/for/agents.md
-grep -q "## Create A New App" docs/site/for/agents.md
-grep -q "## Development Loop" docs/site/for/agents.md
-grep -q "## Laws" docs/site/for/agents.md
-grep -q "### Law 1. One App Repo" docs/site/for/agents.md
-grep -q "### Law 7. Secrets Are Never Printed" docs/site/for/agents.md
-grep -q 'Use `Law 1` through `Law 7`' docs/site/for/agents.md
-grep -q "## Ownership Rule" docs/site/for/agents.md
-grep -q "## Current Taste" docs/site/for/agents.md
-grep -q "### Taste 1. Starter Stack" docs/site/for/agents.md
-grep -q "### Taste 6. CLI And Audit Reporting" docs/site/for/agents.md
-grep -q 'Use `Taste 1` through `Taste 6`' docs/site/for/agents.md
-grep -q "## Frontend Contract" docs/site/for/agents.md
-grep -q "### Law 1. One App Repo" docs/engineering/LAWS.md
-grep -q "### Law 7. Secrets Are Never Printed" docs/engineering/LAWS.md
-grep -q "## 2. Ownership Rule" docs/engineering/LAWS.md
-grep -q "## 3. Audit Rule" docs/engineering/LAWS.md
-grep -q "### Taste 1. Starter Stack" docs/engineering/TASTE_GUIDE.md
-grep -q "### Taste 6. CLI Presentation" docs/engineering/TASTE_GUIDE.md
-grep -q "## 2. Enforcement Rule" docs/engineering/TASTE_GUIDE.md
-grep -q "## 3. Current Frontend Taste" docs/engineering/TASTE_GUIDE.md
-grep -q "web/src/component/l1" docs/site/for/agents.md
-grep -q "web/src/component/l2" docs/site/for/agents.md
-grep -q "web/src/component/l3" docs/site/for/agents.md
-grep -F -q '`l1`: structure and layout' docs/site/for/agents.md
-grep -F -q '`l2`: geometry, spacing, borders, radii, and type scale' docs/site/for/agents.md
-grep -F -q '`l3`: theme, color, state, motion, and interaction' docs/site/for/agents.md
-grep -q "Tailwind Plus / Catalyst style" docs/site/for/agents.md
-grep -q "Application UI patterns" docs/site/for/agents.md
-grep -q "production-ready, fully responsive, accessible, and easy" docs/site/for/agents.md
-grep -q "ship all normal states for interactive components" docs/site/for/agents.md
-grep -q "focus-visible, active, disabled, loading, empty, and error" docs/site/for/agents.md
-grep -q "ThemeToggle" docs/site/for/agents.md
-grep -q "localStorage" docs/site/for/agents.md
-grep -q "matchMedia" docs/site/for/agents.md
-grep -q "dataset.theme" docs/site/for/agents.md
-grep -q "dataset.themeMode" docs/site/for/agents.md
-grep -q "## Environment And Secrets" docs/site/for/agents.md
-grep -q "## Deployment" docs/site/for/agents.md
-grep -q "## Audits" docs/site/for/agents.md
-grep -q "## Verification" docs/site/for/agents.md
-grep -q "## Recovery" docs/site/for/agents.md
-grep -q "## Agent Behavior" docs/site/for/agents.md
-grep -q "README.md" docs/site/for/agents.md
-grep -q "AGENTS.md" docs/site/for/agents.md
-grep -q "carbide.toml" docs/site/for/agents.md
-grep -q "docker-compose.yml" docs/site/for/agents.md
-grep -q "web/" docs/site/for/agents.md
-grep -q "api/" docs/site/for/agents.md
-grep -q "db/" docs/site/for/agents.md
-grep -q "curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash" docs/site/for/agents.md
-grep -q "carbide new demo" docs/site/for/agents.md
-grep -q 'carbide new "My Carbide App"' docs/site/for/agents.md
-grep -q "carbide init" docs/site/for/agents.md
-grep -q "carbide run dev" docs/site/for/agents.md
-grep -q "carbide health" docs/site/for/agents.md
-grep -q "carbide status" docs/site/for/agents.md
-grep -q "carbide urls json" docs/site/for/agents.md
-grep -q "carbide status json" docs/site/for/agents.md
-grep -q "carbide health json" docs/site/for/agents.md
-grep -q "carbide follow logs" docs/site/for/agents.md
-grep -q "carbide clean dev" docs/site/for/agents.md
-grep -q "carbide health env" docs/site/for/agents.md
-grep -q "carbide health env json" docs/site/for/agents.md
-grep -q "carbide health runtime" docs/site/for/agents.md
-grep -q "carbide health runtime json" docs/site/for/agents.md
-grep -q "carbide stop dev" docs/site/for/agents.md
-grep -q "carbide help" docs/site/for/agents.md
-grep -q "carbide upgrade" docs/site/for/agents.md
-grep -q "carbide deploy check prod" docs/site/for/agents.md
-grep -q "carbide deploy check prod json" docs/site/for/agents.md
-grep -q "carbide deploy preview prod" docs/site/for/agents.md
-grep -q "carbide deploy preview prod json" docs/site/for/agents.md
-grep -q "carbide deploy apply prod" docs/site/for/agents.md
-grep -q "carbide audit" docs/site/for/agents.md
-grep -q "carbide resolve" docs/site/for/agents.md
-grep -q "carbide fix" docs/site/for/agents.md
-grep -q "carbide audit resolve fix" docs/site/for/agents.md
-grep -q ".audit/report/" docs/site/for/agents.md
-grep -q ".audit/plan.md" docs/site/for/agents.md
-grep -q ".audit/fix.md" docs/site/for/agents.md
-grep -q "Carbide itself should never touch app code" docs/site/for/agents.md
-grep -q "Codex edits made intentionally" docs/site/for/agents.md
-grep -q "command-shaped JSON output" docs/site/for/agents.md
-grep -q "^## Troubleshooting" docs/site/for/agents.md
-grep -q 'Carbide does not scaffold `README.md`, `AGENTS.md`, or `agents.d/`' docs/site/for/agents.md
-grep -q "Do not add seeded demo credentials" docs/site/for/agents.md
-grep -q "Do not print secret values" docs/site/for/agents.md
-grep -q "If the current directory already contains" docs/site/for/agents.md
-! grep -q "Guiding Your Agents to Get Started" docs/site/for/agents.md
-! grep -q "This page is for AI coding agents" docs/site/for/agents.md
-! repo_search '<a class="nav-link" href="https://github.com/ryangerardwilson/carbide">Source Repository</a>' docs/site/*.html >/dev/null
-test "$(repo_search_files '<a class="nav-link" href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer">Source Repository</a>' docs/site/*.html | wc -l)" -eq 7
-grep -q "Single VM" docs/site/deployment.html
-grep -q "Multiple VMs" docs/site/deployment.html
-grep -q 'type = "ssh-compose"' docs/site/deployment.html
-grep -q 'type = "ssh-compose-environment"' docs/site/deployment.html
-grep -q "carbide deploy check prod" docs/site/deployment.html
-grep -q "missing, preview-only, invalid, or apply-supported" docs/site/deployment.html
-grep -q "clustered orchestration is implemented" docs/site/deployment.html
-grep -q "CI/CD regression plan" docs/site/ci-cd-regression-tests.html
-grep -q "carbide health framework" docs/site/ci-cd-regression-tests.html
-grep -q "carbide audit" docs/site/ci-cd-regression-tests.html
-grep -q "carbide resolve" docs/site/ci-cd-regression-tests.html
-grep -q "carbide fix" docs/site/ci-cd-regression-tests.html
-grep -q "carbide audit resolve fix" docs/site/version-policy.html
-grep -q ".audit/plan.md" docs/site/version-policy.html
-grep -q "Directory Structure" docs/site/repo-structure.html
-grep -q "Generated App Layout" docs/site/repo-structure.html
-grep -q 'carbide new "My Carbide App"' docs/site/repo-structure.html
-grep -q "my-carbide-app/" docs/site/repo-structure.html
-grep -q "README.md" docs/site/repo-structure.html
-grep -q "does not scaffold" docs/site/repo-structure.html
-grep -q "web/src/component/l1" docs/site/repo-structure.html
-grep -q "web/src/component/l2" docs/site/repo-structure.html
-grep -q "web/src/component/l3" docs/site/repo-structure.html
-grep -q "scrollbar utility group" docs/site/repo-structure.html
-grep -q "Global .*html.*body.* sizing" docs/site/repo-structure.html
-grep -q "web, api, db" docs/site/repo-structure.html
-grep -q "Generated apps do not include root" docs/site/repo-structure.html
-! grep -q ".github/workflows" docs/site/repo-structure.html
-! grep -q "cli/internal/cli" docs/site/repo-structure.html
-! grep -q "docs/app/" docs/site/repo-structure.html
-grep -q "project layout users get" docs/engineering/DIRECTORY_STRUCTURE.md
-grep -q "my-carbide-app/" docs/engineering/DIRECTORY_STRUCTURE.md
-grep -q "web/src/component/l1/" docs/engineering/DIRECTORY_STRUCTURE.md
-! grep -q ".github/" docs/engineering/DIRECTORY_STRUCTURE.md
-! grep -q "cli/internal" docs/engineering/DIRECTORY_STRUCTURE.md
-! grep -q "docs/app/" docs/engineering/DIRECTORY_STRUCTURE.md
-grep -q 'class="docs-topbar"' docs/site/index.html
-grep -q 'class="docs-sidebar"' docs/site/index.html
-grep -q 'class="docs-content"' docs/site/index.html
-grep -q 'class="docs-toc"' docs/site/index.html
-grep -q "Search docs" docs/site/index.html
-grep -q "Version v0.1" docs/site/index.html
-grep -q 'href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer"' docs/site/index.html
-grep -q "Prologue" docs/site/index.html
-grep -q "Getting Started" docs/site/index.html
-grep -q "Architecture" docs/site/index.html
-grep -q "On this page" docs/site/index.html
-! grep -E -q '\.(docs-layout|docs-sidebar|docs-toc|docs-topbar)' docs/site/assets/styles.css
-! grep -q 'html{font-size:14px}' docs/site/assets/styles.css
-! grep -q 'body{min-width:320px' docs/site/assets/styles.css
-! grep -q 'body{margin:0;min-width:320px' docs/site/assets/styles.css
-grep -F -q ".max-\\[860px\\]\\:grid-cols-1" docs/site/assets/styles.css
+grep -q "scrollbar-width:thin" docs/app/web/site/assets/styles.css
+grep -q "scrollbar-color:#d97706 transparent" docs/app/web/site/assets/styles.css
+grep -q "scrollbar-color:#facc15 transparent" docs/app/web/site/assets/styles.css
+grep -q "carbide follow logs" docs/app/web/site/create-your-first-app.html
+grep -q "carbide clean dev" docs/app/web/site/create-your-first-app.html
+grep -q "carbide status" docs/app/web/site/create-your-first-app.html
+grep -q "carbide audit" docs/app/web/site/create-your-first-app.html
+grep -q "carbide resolve" docs/app/web/site/create-your-first-app.html
+grep -q "carbide fix" docs/app/web/site/create-your-first-app.html
+grep -q "carbide audit resolve fix" docs/app/web/site/create-your-first-app.html
+grep -q "carbide health runtime" docs/app/web/site/create-your-first-app.html
+grep -q "Troubleshooting" docs/app/web/site/create-your-first-app.html
+grep -q "Install, create, run, register" docs/app/web/site/create-your-first-app.html
+test ! -f docs/app/web/site/for/agents.html
+grep -q "# Carbide for Agents" docs/app/web/site/for/agents/index.md
+grep -q "source of truth for AI agents" docs/app/web/site/for/agents/index.md
+grep -q "https://raw.githubusercontent.com/ryangerardwilson/carbide/main/docs/app/web/site/for/agents/index.md" docs/app/web/site/for/agents/index.md
+grep -q "## Source Precedence" docs/app/web/site/for/agents/index.md
+grep -q "framework repo \`README.md\`" docs/app/web/site/for/agents/index.md
+grep -q "## Identify The Current State" docs/app/web/site/for/agents/index.md
+grep -q "framework-agent entrypoint" docs/app/web/site/for/agents/index.md
+grep -q "There is no separate internal \`docs/engineering/\` tree." docs/app/web/site/for/agents/index.md
+grep -q "## Prerequisites" docs/app/web/site/for/agents/index.md
+grep -q "## Create A New App" docs/app/web/site/for/agents/index.md
+grep -q "## Development Loop" docs/app/web/site/for/agents/index.md
+grep -q "## Laws" docs/app/web/site/for/agents/index.md
+grep -q "### Law 1. One App Repo" docs/app/web/site/for/agents/index.md
+grep -q "### Law 8. Checked Files Stay Under 1000 Lines" docs/app/web/site/for/agents/index.md
+grep -q "### Law 7. Secrets Are Never Printed" docs/app/web/site/for/agents/index.md
+grep -q 'Use `Law 1` through `Law 8`' docs/app/web/site/for/agents/index.md
+grep -q "## Ownership Rule" docs/app/web/site/for/agents/index.md
+grep -q "## Current Taste" docs/app/web/site/for/agents/index.md
+grep -q "### Taste 1. Starter Stack" docs/app/web/site/for/agents/index.md
+grep -q "### Taste 6. CLI And Audit Reporting" docs/app/web/site/for/agents/index.md
+grep -q 'Use `Taste 1` through `Taste 6`' docs/app/web/site/for/agents/index.md
+grep -q "## Frontend Contract" docs/app/web/site/for/agents/index.md
+grep -q "web/src/component/l1" docs/app/web/site/for/agents/index.md
+grep -q "web/src/component/l2" docs/app/web/site/for/agents/index.md
+grep -q "web/src/component/l3" docs/app/web/site/for/agents/index.md
+grep -F -q '`l1`: structure and layout' docs/app/web/site/for/agents/index.md
+grep -F -q '`l2`: geometry, spacing, borders, radii, and type scale' docs/app/web/site/for/agents/index.md
+grep -F -q '`l3`: theme, color, state, motion, and interaction' docs/app/web/site/for/agents/index.md
+grep -q "Tailwind Plus / Catalyst style" docs/app/web/site/for/agents/index.md
+grep -q "Application UI patterns" docs/app/web/site/for/agents/index.md
+grep -q "production-ready, fully responsive, accessible, and easy" docs/app/web/site/for/agents/index.md
+grep -q "ship all normal states for interactive components" docs/app/web/site/for/agents/index.md
+grep -q "focus-visible, active, disabled, loading, empty, and error" docs/app/web/site/for/agents/index.md
+grep -q "ThemeToggle" docs/app/web/site/for/agents/index.md
+grep -q "localStorage" docs/app/web/site/for/agents/index.md
+grep -q "matchMedia" docs/app/web/site/for/agents/index.md
+grep -q "dataset.theme" docs/app/web/site/for/agents/index.md
+grep -q "dataset.themeMode" docs/app/web/site/for/agents/index.md
+grep -q "## Environment And Secrets" docs/app/web/site/for/agents/index.md
+grep -q "## Deployment" docs/app/web/site/for/agents/index.md
+grep -q "## Audits" docs/app/web/site/for/agents/index.md
+grep -q "## Verification" docs/app/web/site/for/agents/index.md
+grep -q "## Recovery" docs/app/web/site/for/agents/index.md
+grep -q "## Agent Behavior" docs/app/web/site/for/agents/index.md
+grep -q "README.md" docs/app/web/site/for/agents/index.md
+grep -q "AGENTS.md" docs/app/web/site/for/agents/index.md
+grep -q "carbide.toml" docs/app/web/site/for/agents/index.md
+grep -q "docker-compose.yml" docs/app/web/site/for/agents/index.md
+grep -q "web/" docs/app/web/site/for/agents/index.md
+grep -q "api/" docs/app/web/site/for/agents/index.md
+grep -q "db/" docs/app/web/site/for/agents/index.md
+grep -q "curl -fsSL https://raw.githubusercontent.com/ryangerardwilson/carbide/main/cli/install.sh | bash" docs/app/web/site/for/agents/index.md
+grep -q "carbide new demo" docs/app/web/site/for/agents/index.md
+grep -q 'carbide new "My Carbide App"' docs/app/web/site/for/agents/index.md
+grep -q "carbide init" docs/app/web/site/for/agents/index.md
+grep -q "carbide run dev" docs/app/web/site/for/agents/index.md
+grep -q "carbide health" docs/app/web/site/for/agents/index.md
+grep -q "carbide status" docs/app/web/site/for/agents/index.md
+grep -q "carbide urls json" docs/app/web/site/for/agents/index.md
+grep -q "carbide status json" docs/app/web/site/for/agents/index.md
+grep -q "carbide health json" docs/app/web/site/for/agents/index.md
+grep -q "carbide follow logs" docs/app/web/site/for/agents/index.md
+grep -q "carbide clean dev" docs/app/web/site/for/agents/index.md
+grep -q "carbide health env" docs/app/web/site/for/agents/index.md
+grep -q "carbide health env json" docs/app/web/site/for/agents/index.md
+grep -q "carbide health runtime" docs/app/web/site/for/agents/index.md
+grep -q "carbide health runtime json" docs/app/web/site/for/agents/index.md
+grep -q "carbide stop dev" docs/app/web/site/for/agents/index.md
+grep -q "carbide help" docs/app/web/site/for/agents/index.md
+grep -q "carbide upgrade" docs/app/web/site/for/agents/index.md
+grep -q "carbide deploy prod" docs/app/web/site/for/agents/index.md
+grep -q '\[deploy.targets.prod\]' docs/app/web/site/for/agents/index.md
+grep -q 'script = "./deploy/prod.sh"' docs/app/web/site/for/agents/index.md
+grep -q "carbide audit" docs/app/web/site/for/agents/index.md
+grep -q "carbide resolve" docs/app/web/site/for/agents/index.md
+grep -q "carbide fix" docs/app/web/site/for/agents/index.md
+grep -q "carbide audit resolve fix" docs/app/web/site/for/agents/index.md
+grep -q ".audit/report/" docs/app/web/site/for/agents/index.md
+grep -q ".audit/plan.md" docs/app/web/site/for/agents/index.md
+grep -q ".audit/fix.md" docs/app/web/site/for/agents/index.md
+grep -q "Carbide itself should never touch app code" docs/app/web/site/for/agents/index.md
+grep -q "Codex edits made intentionally" docs/app/web/site/for/agents/index.md
+grep -q "command-shaped JSON output" docs/app/web/site/for/agents/index.md
+grep -q "^## Troubleshooting" docs/app/web/site/for/agents/index.md
+grep -q 'Carbide does not scaffold `README.md`, `AGENTS.md`, or `agents.d/`' docs/app/web/site/for/agents/index.md
+grep -q "Do not add seeded demo credentials" docs/app/web/site/for/agents/index.md
+grep -q "Do not print secret values" docs/app/web/site/for/agents/index.md
+grep -q "If the current directory already contains" docs/app/web/site/for/agents/index.md
+! grep -q "Guiding Your Agents to Get Started" docs/app/web/site/for/agents/index.md
+! grep -q "This page is for AI coding agents" docs/app/web/site/for/agents/index.md
+! repo_search '<a class="nav-link" href="https://github.com/ryangerardwilson/carbide">Source Repository</a>' docs/app/web/site/*.html >/dev/null
+test "$(repo_search_files '<a class="nav-link" href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer">Source Repository</a>' docs/app/web/site/*.html | wc -l)" -eq 7
+grep -q "Target Contract" docs/app/web/site/deployment.html
+grep -q "Script Ownership" docs/app/web/site/deployment.html
+grep -q "Script Environment" docs/app/web/site/deployment.html
+grep -q "carbide deploy prod" docs/app/web/site/deployment.html
+grep -q '\[deploy.targets.prod\]' docs/app/web/site/deployment.html
+grep -q 'script = "./deploy/prod.sh"' docs/app/web/site/deployment.html
+grep -q "CI/CD regression plan" docs/app/web/site/ci-cd-regression-tests.html
+grep -q "carbide health framework" docs/app/web/site/ci-cd-regression-tests.html
+grep -q "carbide audit" docs/app/web/site/ci-cd-regression-tests.html
+grep -q "carbide resolve" docs/app/web/site/ci-cd-regression-tests.html
+grep -q "carbide fix" docs/app/web/site/ci-cd-regression-tests.html
+grep -q "carbide audit resolve fix" docs/app/web/site/version-policy.html
+grep -q ".audit/plan.md" docs/app/web/site/version-policy.html
+grep -q "Directory Structure" docs/app/web/site/repo-structure.html
+grep -q "Generated App Layout" docs/app/web/site/repo-structure.html
+grep -q 'carbide new "My Carbide App"' docs/app/web/site/repo-structure.html
+grep -q "my-carbide-app/" docs/app/web/site/repo-structure.html
+grep -q "README.md" docs/app/web/site/repo-structure.html
+grep -q "does not scaffold" docs/app/web/site/repo-structure.html
+grep -q "web/src/component/l1" docs/app/web/site/repo-structure.html
+grep -q "web/src/component/l2" docs/app/web/site/repo-structure.html
+grep -q "web/src/component/l3" docs/app/web/site/repo-structure.html
+grep -q "scrollbar utility group" docs/app/web/site/repo-structure.html
+grep -q "Global .*html.*body.* sizing" docs/app/web/site/repo-structure.html
+grep -q "web, api, db" docs/app/web/site/repo-structure.html
+grep -q "Generated apps do not include root" docs/app/web/site/repo-structure.html
+! grep -q ".github/workflows" docs/app/web/site/repo-structure.html
+! grep -q "cli/internal/cli" docs/app/web/site/repo-structure.html
+! grep -q "docs/app/" docs/app/web/site/repo-structure.html
+grep -q 'class="docs-topbar"' docs/app/web/site/index.html
+grep -q 'class="docs-sidebar"' docs/app/web/site/index.html
+grep -q 'class="docs-content"' docs/app/web/site/index.html
+grep -q 'class="docs-toc"' docs/app/web/site/index.html
+grep -q "Search docs" docs/app/web/site/index.html
+grep -q "Version v0.1" docs/app/web/site/index.html
+grep -q 'href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer"' docs/app/web/site/index.html
+grep -q "Prologue" docs/app/web/site/index.html
+grep -q "Getting Started" docs/app/web/site/index.html
+grep -q "Architecture" docs/app/web/site/index.html
+grep -q "On this page" docs/app/web/site/index.html
+! grep -E -q '\.(docs-layout|docs-sidebar|docs-toc|docs-topbar)' docs/app/web/site/assets/styles.css
+! grep -q 'html{font-size:14px}' docs/app/web/site/assets/styles.css
+! grep -q 'body{min-width:320px' docs/app/web/site/assets/styles.css
+! grep -q 'body{margin:0;min-width:320px' docs/app/web/site/assets/styles.css
+grep -F -q ".max-\\[860px\\]\\:grid-cols-1" docs/app/web/site/assets/styles.css
 
-for page in docs/site/*.html; do
+for page in docs/app/web/site/*.html; do
   grep -q 'class="docs-topbar"' "$page"
   grep -q 'class="docs-sidebar"' "$page"
   grep -q 'class="docs-content"' "$page"

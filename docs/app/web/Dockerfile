@@ -4,10 +4,9 @@ WORKDIR /app
 COPY app/web/package.json app/web/bun.lock ./
 RUN bun install --frozen-lockfile
 
-COPY app/web/index.html ./
 COPY app/web/src ./src
+COPY app/web/site ./site
 COPY app/web/tsconfig.json ./
-COPY site ./site
 RUN bun run typecheck && bun run assets:build
 
 EXPOSE 8080

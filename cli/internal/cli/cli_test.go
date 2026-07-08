@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
 	"testing"
 )
 
@@ -248,11 +247,7 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"Available commands:",
 		"  audit",
 		"  clean dev",
-		"  deploy apply prod",
-		"  deploy check prod",
-		"  deploy check prod json",
-		"  deploy preview prod",
-		"  deploy preview prod json",
+		"  deploy prod",
 		"  fix",
 		"  health",
 		"  health json",
@@ -288,11 +283,7 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"Usage:",
 		"Available commands:",
 		"new <project-name>",
-		"deploy check prod",
-		"deploy check prod json",
-		"deploy preview prod",
-		"deploy preview prod json",
-		"deploy apply prod",
+		"deploy prod",
 		"clean dev",
 		"fix",
 		"health",
@@ -357,8 +348,10 @@ func TestHealthPrintsAppLaws(t *testing.T) {
 			`(?m)^app laws$`,
 			`(?m)^project shape\s+ok\s+web api db$`,
 			`(?m)^config\s+ok\s+carbide\.toml$`,
+			`(?m)^deploy targets\s+ok\s+0 checked-in scripts$`,
 			`(?m)^env contract\s+ok\s+0 missing, 2 secrets$`,
 			`(?m)^compose\s+ok\s+web api db$`,
+			`(?m)^line limits\s+ok\s+all checked files <= 1000 lines$`,
 			`(?m)^regressions\s+ok\s+no legacy markers$`,
 			`(?m)^runtime\s+skip\s+run carbide health runtime$`,
 		}
@@ -636,9 +629,10 @@ secret = true
 	})
 }
 
-func TestDeployPreviewAndApplyAreGuarded(t *testing.T) {
+func TestDeployRequiresCheckedInScript(t *testing.T) {
 	withWorkingDir(t, t.TempDir(), func() {
-		config := `name = "demo"
+		config := `name = "Demo"
+slug = "demo"
 
 [env]
 contract_version = 1
@@ -653,114 +647,15 @@ local_default = "development"
 
 		var out bytes.Buffer
 		a := app{stdout: &out}
-		if err := a.run([]string{"deploy", "preview", "prod"}); err != nil {
-			t.Fatalf("preview returned %v", err)
-		}
-		got := out.String()
-		for _, want := range []string{
-			"Carbide deploy",
-			"preview prod",
-			"target   prod",
-			"state    missing-target",
-			"mutates  no",
-			"plan     add a checked-in deploy target to carbide.toml",
-			"single-VM ssh-compose targets can apply",
-		} {
-			if !strings.Contains(got, want) {
-				t.Fatalf("deploy preview output = %q, missing %q", got, want)
-			}
-		}
-
-		out.Reset()
-		if err := a.run([]string{"deploy", "check", "prod", "json"}); err != nil {
-			t.Fatalf("deploy check json returned %v", err)
-		}
-		got = out.String()
-		for _, want := range []string{
-			`"command": "deploy check"`,
-			`"classification": "missing-target"`,
-			`"preview_supported": true`,
-			`"apply_supported": false`,
-		} {
-			if !strings.Contains(got, want) {
-				t.Fatalf("deploy check json = %q, missing %q", got, want)
-			}
-		}
-
-		out.Reset()
-		err := a.run([]string{"deploy", "apply", "prod"})
+		err := a.run([]string{"deploy", "prod"})
 		if err == nil {
-			t.Fatalf("deploy apply should be disabled")
+			t.Fatalf("deploy should fail without a checked-in target")
 		}
-		if !strings.Contains(err.Error(), "disabled until a checked-in deploy target exists") {
-			t.Fatalf("deploy apply error = %v", err)
+		if !strings.Contains(err.Error(), "no checked-in deploy target named prod") {
+			t.Fatalf("deploy error = %v", err)
 		}
-		if !strings.Contains(out.String(), "status   disabled") {
-			t.Fatalf("deploy apply output = %q", out.String())
-		}
-		if !strings.Contains(out.String(), "no checked-in deploy target exists") {
-			t.Fatalf("deploy apply output = %q", out.String())
-		}
-	})
-}
-
-func TestDeployPreviewReadsSSHComposeTarget(t *testing.T) {
-	withWorkingDir(t, t.TempDir(), func() {
-		config := `name = "Carbide Docs"
-slug = "carbide-docs"
-
-[env]
-contract_version = 1
-
-[env.variables.APP_ENV]
-required = false
-local_default = "production"
-
-[deploy.hosts.prod]
-ssh = "${CARBIDE_DOCS_DEPLOY_SSH}"
-
-[deploy.targets.prod]
-type = "ssh-compose"
-host = "prod"
-domain = "carbide.ryangerardwilson.com"
-remote_path = "/opt/carbide/docs"
-source_path = ".."
-compose_file = "app/docker-compose.yml"
-project_directory = "app"
-public_port = 18081
-health_path = "/health"
-nginx = true
-nginx_site = "carbide"
-`
-		if err := os.WriteFile("carbide.toml", []byte(config), 0644); err != nil {
-			t.Fatalf("WriteFile carbide.toml returned %v", err)
-		}
-
-		var out bytes.Buffer
-		a := app{stdout: &out}
-		if err := a.run([]string{"deploy", "preview", "prod"}); err != nil {
-			t.Fatalf("preview returned %v", err)
-		}
-		got := out.String()
-		for _, want := range []string{
-			"Carbide deploy",
-			"preview prod",
-			"target   prod",
-			"type     ssh-compose",
-			"host     prod",
-			"domain   carbide.ryangerardwilson.com",
-			"remote   /opt/carbide/docs",
-			"compose  app/docker-compose.yml",
-			"port     18081",
-			"mutates  no",
-			"apply    carbide deploy apply prod",
-		} {
-			if !strings.Contains(got, want) {
-				t.Fatalf("deploy preview output = %q, missing %q", got, want)
-			}
-		}
-		if strings.Contains(got, "refuse apply until target is implemented") {
-			t.Fatalf("deploy preview output still shows disabled stub: %q", got)
+		if out.Len() != 0 {
+			t.Fatalf("deploy output should stay empty when target is missing: %q", out.String())
 		}
 	})
 }
@@ -787,167 +682,77 @@ func TestUpgradeBinaryNeedsRebuild(t *testing.T) {
 	}
 }
 
-func TestDeploySSHDestinationResolvesHostTableEnv(t *testing.T) {
-	t.Setenv("CARBIDE_DOCS_DEPLOY_SSH", "deploy@example-host")
-	target := deployTarget{
-		Host: "prod",
-		Hosts: map[string]deployHost{
-			"prod": {
-				Name: "prod",
-				SSH:  "${CARBIDE_DOCS_DEPLOY_SSH}",
-			},
-		},
-	}
-	got, err := deploySSHDestination(target)
-	if err != nil {
-		t.Fatalf("deploySSHDestination returned %v", err)
-	}
-	if got != "deploy@example-host" {
-		t.Fatalf("deploySSHDestination = %q", got)
-	}
-}
-
-func TestDeployEnvContentUsesProjectMetadata(t *testing.T) {
+func TestDeployRunsCheckedInScript(t *testing.T) {
 	withWorkingDir(t, t.TempDir(), func() {
 		config := `name = "My Carbide App"
 slug = "my-carbide-app"
-`
-		if err := os.WriteFile("carbide.toml", []byte(config), 0644); err != nil {
-			t.Fatalf("WriteFile carbide.toml returned %v", err)
-		}
-
-		got, err := deployEnvContent(deployTarget{
-			Name:       "prod",
-			Domain:     "app.example.com",
-			PublicPort: 18080,
-			Nginx:      true,
-		})
-		if err != nil {
-			t.Fatalf("deployEnvContent returned %v", err)
-		}
-		for _, want := range []string{
-			"COMPOSE_PROJECT_NAME=my-carbide-app",
-			"PUBLIC_APP_NAME=My Carbide App",
-			"PUBLIC_URL=https://app.example.com",
-			"CARBIDE_HTTP_PORT=18080",
-		} {
-			if !strings.Contains(got, want) {
-				t.Fatalf("deploy env = %q, missing %q", got, want)
-			}
-		}
-		if strings.Contains(got, "carbide-docs") || strings.Contains(got, "Carbide Docs") {
-			t.Fatalf("deploy env still contains docs app defaults: %q", got)
-		}
-	})
-}
-
-func TestDeployPreviewReadsSSHComposeEnvironmentTarget(t *testing.T) {
-	withWorkingDir(t, t.TempDir(), func() {
-		config := `name = "Carbide Docs"
-slug = "carbide-docs"
-
-[env]
-contract_version = 1
-
-[env.variables.APP_ENV]
-required = false
-local_default = "production"
-
-[deploy.hosts.web-1]
-ssh = "web-1"
-
-[deploy.hosts.api-1]
-ssh = "api-1"
-
-[deploy.hosts.db-1]
-ssh = "db-1"
 
 [deploy.targets.prod]
-type = "ssh-compose-environment"
-domain = "carbide.example.com"
-remote_path = "/opt/carbide/app"
-source_path = "."
-compose_file = "docker-compose.yml"
-project_directory = "."
-health_path = "/health"
-strategy = "preview-only"
-
-[deploy.targets.prod.roles.web]
-hosts = ["web-1"]
-public_port = 8080
-nginx = true
-
-[deploy.targets.prod.roles.api]
-hosts = ["api-1"]
-
-[deploy.targets.prod.roles.db]
-hosts = ["db-1"]
-primary = "db-1"
-migration = "once"
+script = "./deploy/prod.sh"
+description = "Ship the current app."
 `
 		if err := os.WriteFile("carbide.toml", []byte(config), 0644); err != nil {
 			t.Fatalf("WriteFile carbide.toml returned %v", err)
+		}
+		if err := os.MkdirAll("deploy", 0755); err != nil {
+			t.Fatalf("MkdirAll deploy returned %v", err)
+		}
+		script := `#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n%s\n%s\n%s\n' "$CARBIDE_DEPLOY_TARGET" "$CARBIDE_PROJECT_ROOT" "$CARBIDE_PROJECT_NAME" "$CARBIDE_PROJECT_SLUG" > deploy.out
+printf 'deploy ok\n'
+`
+		if err := os.WriteFile(filepath.Join("deploy", "prod.sh"), []byte(script), 0644); err != nil {
+			t.Fatalf("WriteFile deploy script returned %v", err)
 		}
 
 		var out bytes.Buffer
 		a := app{stdout: &out}
-		if err := a.run([]string{"deploy", "preview", "prod"}); err != nil {
-			t.Fatalf("preview returned %v", err)
+		err := a.run([]string{"deploy", "prod"})
+		if err != nil {
+			t.Fatalf("deploy returned %v", err)
 		}
+
 		got := out.String()
 		for _, want := range []string{
 			"Carbide deploy",
-			"preview prod",
-			"target   prod",
-			"type     ssh-compose-environment",
-			"domain   carbide.example.com",
-			"mutates  no",
-			"hosts    api-1 -> api-1",
-			"         db-1 -> db-1",
-			"         web-1 -> web-1",
-			"roles    api: api-1",
-			"         db: db-1 primary db-1 migrate once",
-			"         web: web-1 port 8080 nginx",
-			"apply    disabled until clustered orchestration is implemented",
+			"prod",
+			"script  ./deploy/prod.sh",
+			"about  Ship the current app.",
+			"deploy ok",
 		} {
 			if !strings.Contains(got, want) {
-				t.Fatalf("deploy preview output = %q, missing %q", got, want)
+				t.Fatalf("deploy output = %q, missing %q", got, want)
 			}
+		}
+
+		content, err := os.ReadFile("deploy.out")
+		if err != nil {
+			t.Fatalf("ReadFile deploy.out returned %v", err)
+		}
+		lines := strings.Split(strings.TrimSpace(string(content)), "\n")
+		if len(lines) != 4 {
+			t.Fatalf("deploy env lines = %q", lines)
+		}
+		if lines[0] != "prod" {
+			t.Fatalf("deploy target env = %q, want prod", lines[0])
+		}
+		if lines[2] != "My Carbide App" {
+			t.Fatalf("deploy project name env = %q", lines[2])
+		}
+		if lines[3] != "my-carbide-app" {
+			t.Fatalf("deploy project slug env = %q", lines[3])
 		}
 	})
 }
 
-func TestDeployApplyGuardsSSHComposeEnvironmentTarget(t *testing.T) {
+func TestDeployRejectsScriptOutsideProject(t *testing.T) {
 	withWorkingDir(t, t.TempDir(), func() {
-		config := `name = "Carbide Docs"
-slug = "carbide-docs"
-
-[env]
-contract_version = 1
-
-[env.variables.APP_ENV]
-required = false
-local_default = "production"
-
-[deploy.hosts.prod]
-ssh = "${CARBIDE_DOCS_DEPLOY_SSH}"
+		config := `name = "Demo"
+slug = "demo"
 
 [deploy.targets.prod]
-type = "ssh-compose-environment"
-domain = "carbide.example.com"
-
-[deploy.targets.prod.roles.web]
-hosts = ["prod"]
-public_port = 8080
-nginx = true
-
-[deploy.targets.prod.roles.api]
-hosts = ["prod"]
-
-[deploy.targets.prod.roles.db]
-hosts = ["prod"]
-primary = "prod"
-migration = "once"
+script = "../prod.sh"
 `
 		if err := os.WriteFile("carbide.toml", []byte(config), 0644); err != nil {
 			t.Fatalf("WriteFile carbide.toml returned %v", err)
@@ -955,23 +760,15 @@ migration = "once"
 
 		var out bytes.Buffer
 		a := app{stdout: &out}
-		err := a.run([]string{"deploy", "apply", "prod"})
+		err := a.run([]string{"deploy", "prod"})
 		if err == nil {
-			t.Fatalf("deploy apply should guard environment targets")
+			t.Fatalf("deploy should reject scripts outside the project")
 		}
-		if !strings.Contains(err.Error(), "clustered orchestration is implemented") {
-			t.Fatalf("deploy apply error = %v", err)
+		if !strings.Contains(err.Error(), "script must stay inside the project") {
+			t.Fatalf("deploy error = %v", err)
 		}
-		got := out.String()
-		for _, want := range []string{
-			"target   prod",
-			"type     ssh-compose-environment",
-			"status   guarded",
-			"reason   clustered apply needs explicit orchestration",
-		} {
-			if !strings.Contains(got, want) {
-				t.Fatalf("deploy apply output = %q, missing %q", got, want)
-			}
+		if out.Len() != 0 {
+			t.Fatalf("deploy output should stay empty for invalid script paths: %q", out.String())
 		}
 	})
 }
@@ -996,17 +793,6 @@ func TestHealthPrintsDocsProjectContract(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(target, "..", "..", "README.md"), rootReadme, 0644); err != nil {
 		t.Fatalf("WriteFile README.md returned %v", err)
 	}
-	docsContractPath := filepath.Join(target, "..", "..", "docs", "engineering", "DOCS_APP.md")
-	if err := os.MkdirAll(filepath.Dir(docsContractPath), 0755); err != nil {
-		t.Fatalf("MkdirAll docs engineering returned %v", err)
-	}
-	rootDocsContract, err := os.ReadFile(filepath.Join(repoRoot, "docs", "engineering", "DOCS_APP.md"))
-	if err != nil {
-		t.Fatalf("ReadFile DOCS_APP.md returned %v", err)
-	}
-	if err := os.WriteFile(docsContractPath, rootDocsContract, 0644); err != nil {
-		t.Fatalf("WriteFile DOCS_APP.md returned %v", err)
-	}
 
 	withWorkingDir(t, target, func() {
 		var out bytes.Buffer
@@ -1022,12 +808,14 @@ func TestHealthPrintsDocsProjectContract(t *testing.T) {
 			"project shape     ok",
 			"config            ok",
 			"runtime baseline  ok",
+			"deploy targets    ok      1 checked-in script: prod",
 			"env contract      ok",
 			"compose           ok      docs web api db",
-			"web               ok      Bun React Tailwind TypeScript docs",
+			"web               ok      Bun Tailwind TypeScript docs",
 			"api               ok      docs health API",
-			"database          ok      Postgres deploy checks",
+			"database          ok      Postgres docs checks",
 			"agents            ok      root README docs ops guidance /for/agents",
+			"line limits       ok      all checked files <= 1000 lines",
 			"runtime           skip    run carbide health runtime",
 		} {
 			if !strings.Contains(got, want) {
@@ -1125,427 +913,5 @@ func assertOutputOrder(t *testing.T, output string, values []string) {
 			t.Fatalf("output missing %q after byte %d:\n%s", value, offset, output)
 		}
 		offset += index + len(value)
-	}
-}
-
-func TestRendererStyledLogoUsesGlyphColors(t *testing.T) {
-	r := renderer{styled: true}
-
-	got := r.formatLogoLine(0, "_o0Ox")
-	want := "\033[2;38;5;245m_\033[0m\033[38;5;220mo0O\033[0mx"
-	if got != want {
-		t.Fatalf("styled logo line = %q, want %q", got, want)
-	}
-	if plain := stripANSI(got); plain != "_o0Ox" {
-		t.Fatalf("styled logo line strips to %q, want %q", plain, "_o0Ox")
-	}
-}
-
-func TestRendererPlainOutput(t *testing.T) {
-	var out bytes.Buffer
-	newRenderer(&out).Message(
-		"Carbide",
-		"project created",
-		outputRow{"path", "/tmp/demo"},
-		outputRow{"next", "cd demo"},
-		outputRow{"", "carbide run dev"},
-	)
-
-	want := "Carbide\nproject created\n\npath  /tmp/demo\nnext  cd demo\n      carbide run dev\n"
-	if out.String() != want {
-		t.Fatalf("renderer output = %q, want %q", out.String(), want)
-	}
-}
-
-func TestRendererIndentsMultilineValues(t *testing.T) {
-	var out bytes.Buffer
-	newRenderer(&out).Rows(outputRow{"error", "first line\nsecond line"})
-
-	want := "error  first line\n       second line\n"
-	if out.String() != want {
-		t.Fatalf("renderer output = %q, want %q", out.String(), want)
-	}
-}
-
-func TestRendererTable(t *testing.T) {
-	var out bytes.Buffer
-	newRenderer(&out).Table(
-		[]string{"service", "container", "ports"},
-		[]tableRow{
-			{"web", "demo-web-1", "localhost:8082"},
-			{"api", "demo-api-1", "-"},
-		},
-	)
-
-	got := out.String()
-	for _, want := range []string{
-		"service  container   ports",
-		"web      demo-web-1  localhost:8082",
-		"api      demo-api-1  -",
-	} {
-		if !strings.Contains(got, want) {
-			t.Fatalf("table output = %q, missing %q", got, want)
-		}
-	}
-}
-
-func TestServiceProgressFrame(t *testing.T) {
-	tests := []struct {
-		state string
-		step  int
-		want  string
-	}{
-		{"starting", 0, "[C o  o  o ]"},
-		{"starting", 1, "[-c o  o  o]"},
-		{"stopping", 0, "[ o  o  o D]"},
-		{"stopping", 1, "[o  o  o d-]"},
-		{"ready", 0, "[##########]"},
-		{"stopped", 0, "[          ]"},
-		{"failed", 0, "[!!!!!!!!!!]"},
-	}
-	for _, test := range tests {
-		if got := serviceProgressFrame(10, test.step, test.state); got != test.want {
-			t.Fatalf("serviceProgressFrame(10, %d, %q) = %q, want %q", test.step, test.state, got, test.want)
-		}
-	}
-}
-
-func TestRendererLogoPacmanLine(t *testing.T) {
-	r := renderer{}
-	tests := []struct {
-		position int
-		step     int
-		want     string
-	}{
-		{-1, 0, " o  "},
-		{1, 0, "_C o"},
-		{1, 1, "_c o"},
-		{4, 0, "_o0_"},
-	}
-	for _, test := range tests {
-		got := r.formatLogoPacmanLine("_o0_", test.position, test.step)
-		if got != test.want {
-			t.Fatalf("formatLogoPacmanLine(position=%d, step=%d) = %q, want %q", test.position, test.step, got, test.want)
-		}
-	}
-}
-
-func TestRendererStyledLogoPacmanLine(t *testing.T) {
-	r := renderer{styled: true}
-
-	got := r.formatLogoPacmanLine("_o0_", 1, 0)
-	for _, want := range []string{
-		"\033[2;38;5;245m_\033[0m",
-		"\033[1;38;5;226mC\033[0m",
-		"\033[2;38;5;220mo\033[0m",
-	} {
-		if !strings.Contains(got, want) {
-			t.Fatalf("styled pacman logo line = %q, missing %q", got, want)
-		}
-	}
-	if plain := stripANSI(got); plain != "_C o" {
-		t.Fatalf("styled pacman logo line strips to %q, want %q", plain, "_C o")
-	}
-}
-
-func TestServiceProgressState(t *testing.T) {
-	tests := []struct {
-		status composeServiceStatus
-		want   string
-	}{
-		{composeServiceStatus{state: "running"}, "ready"},
-		{composeServiceStatus{state: "running", health: "healthy"}, "ready"},
-		{composeServiceStatus{state: "running", health: "starting"}, "starting"},
-		{composeServiceStatus{state: "exited"}, "failed"},
-		{composeServiceStatus{}, "starting"},
-	}
-	for _, test := range tests {
-		if got := serviceProgressState(test.status); got != test.want {
-			t.Fatalf("serviceProgressState(%#v) = %q, want %q", test.status, got, test.want)
-		}
-	}
-}
-
-func TestServiceStopProgressState(t *testing.T) {
-	tests := []struct {
-		status composeServiceStatus
-		want   string
-	}{
-		{composeServiceStatus{state: "running"}, "stopping"},
-		{composeServiceStatus{state: "exited"}, "stopping"},
-		{composeServiceStatus{state: "stopped"}, "stopped"},
-		{composeServiceStatus{state: "failed"}, "failed"},
-		{composeServiceStatus{}, "stopping"},
-	}
-	for _, test := range tests {
-		if got := serviceStopProgressState(test.status); got != test.want {
-			t.Fatalf("serviceStopProgressState(%#v) = %q, want %q", test.status, got, test.want)
-		}
-	}
-}
-
-func TestServiceProgressRunsWithoutColor(t *testing.T) {
-	var out bytes.Buffer
-	r := renderer{out: &out, interactive: true, termWidth: 52}
-
-	err := r.RunServiceProgress(
-		[]string{"api"},
-		func() map[string]composeServiceStatus {
-			return nil
-		},
-		func() error {
-			return nil
-		},
-	)
-	if err != nil {
-		t.Fatalf("RunServiceProgress returned %v", err)
-	}
-
-	got := out.String()
-	lines := visibleTerminalLines(got)
-	starting := terminalLineContaining(t, lines, "starting")
-	ready := terminalLineContaining(t, lines, "ready")
-	wantFrameWidth := 52 - len("api") - progressStateColumnWidth - 5
-
-	wantStarting := "api  " + serviceProgressFrame(wantFrameWidth, 0, "starting") + " " + padRight("starting", progressStateColumnWidth)
-	if starting != wantStarting {
-		t.Fatalf("starting progress line = %q, want %q", starting, wantStarting)
-	}
-	if len(starting) != 52 {
-		t.Fatalf("starting progress line width = %d, want 52: %q", len(starting), starting)
-	}
-
-	wantReady := "api  " + serviceProgressFrame(wantFrameWidth, 0, "ready") + " " + padRight("ready", progressStateColumnWidth)
-	if ready != wantReady {
-		t.Fatalf("ready progress line = %q, want %q", ready, wantReady)
-	}
-	if len(ready) != 52 {
-		t.Fatalf("ready progress line width = %d, want 52: %q", len(ready), ready)
-	}
-}
-
-func TestServiceStopProgressRunsWithoutColor(t *testing.T) {
-	var out bytes.Buffer
-	r := renderer{out: &out, interactive: true, termWidth: 52}
-
-	err := r.RunServiceStopProgress(
-		[]string{"api"},
-		func() map[string]composeServiceStatus {
-			return nil
-		},
-		func() error {
-			return nil
-		},
-	)
-	if err != nil {
-		t.Fatalf("RunServiceStopProgress returned %v", err)
-	}
-
-	got := out.String()
-	lines := visibleTerminalLines(got)
-	stopping := terminalLineContaining(t, lines, "stopping")
-	stopped := terminalLineContaining(t, lines, "stopped")
-	wantFrameWidth := 52 - len("api") - progressStateColumnWidth - 5
-
-	wantStopping := "api  " + serviceProgressFrame(wantFrameWidth, 0, "stopping") + " " + padRight("stopping", progressStateColumnWidth)
-	if stopping != wantStopping {
-		t.Fatalf("stopping progress line = %q, want %q", stopping, wantStopping)
-	}
-	if len(stopping) != 52 {
-		t.Fatalf("stopping progress line width = %d, want 52: %q", len(stopping), stopping)
-	}
-
-	wantStopped := "api  " + serviceProgressFrame(wantFrameWidth, 0, "stopped") + " " + padRight("stopped", progressStateColumnWidth)
-	if stopped != wantStopped {
-		t.Fatalf("stopped progress line = %q, want %q", stopped, wantStopped)
-	}
-	if len(stopped) != 52 {
-		t.Fatalf("stopped progress line width = %d, want 52: %q", len(stopped), stopped)
-	}
-}
-
-func TestServiceProgressFrameWidthUsesTerminalWidth(t *testing.T) {
-	r := renderer{termWidth: 80}
-	if got := r.serviceProgressFrameWidth(len("web")); got != 64 {
-		t.Fatalf("serviceProgressFrameWidth = %d, want 64", got)
-	}
-
-	r = renderer{termWidth: 20}
-	if got := r.serviceProgressFrameWidth(len("web")); got != minimumProgressFrameWidth {
-		t.Fatalf("narrow serviceProgressFrameWidth = %d, want %d", got, minimumProgressFrameWidth)
-	}
-}
-
-func visibleTerminalLines(output string) []string {
-	plain := stripANSI(output)
-	var lines []string
-	for _, line := range strings.Split(plain, "\n") {
-		if line == "" {
-			continue
-		}
-		lines = append(lines, strings.TrimLeft(line, "\r"))
-	}
-	return lines
-}
-
-func terminalLineContaining(t *testing.T, lines []string, value string) string {
-	t.Helper()
-	for _, line := range lines {
-		if strings.Contains(line, value) {
-			return line
-		}
-	}
-	t.Fatalf("terminal output missing %q in %#v", value, lines)
-	return ""
-}
-
-func TestStreamWatchOutputFiltersNoise(t *testing.T) {
-	var out bytes.Buffer
-	var wg sync.WaitGroup
-	wg.Add(1)
-	streamWatchOutput(strings.NewReader("Watch enabled\n\nrebuilt api\n"), newRenderer(&out), nil, "stdout", &wg)
-	wg.Wait()
-
-	got := out.String()
-	if !strings.Contains(got, "watch      rebuilt api\n") {
-		t.Fatalf("watch output = %q", got)
-	}
-	if len(strings.Fields(got)[0]) != len("15:04:05") {
-		t.Fatalf("watch output missing timestamp: %q", got)
-	}
-}
-
-func TestStreamLogOutputParsesComposeServices(t *testing.T) {
-	var out bytes.Buffer
-	var wg sync.WaitGroup
-	wg.Add(1)
-	streamLogOutput(
-		strings.NewReader("api-1  | GET /health\nweb-1 | listening\ndemo-db-1 | ready\n"),
-		newRenderer(&out),
-		nil,
-		"stdout",
-		&wg,
-	)
-	wg.Wait()
-
-	got := out.String()
-	for _, want := range []string{
-		"api        GET /health",
-		"web        listening",
-		"db         ready",
-	} {
-		if !strings.Contains(got, want) {
-			t.Fatalf("log output = %q, missing %q", got, want)
-		}
-	}
-}
-
-func TestStreamLogOutputWritesStructuredJSON(t *testing.T) {
-	logPath := filepath.Join(t.TempDir(), "dev.jsonl")
-	sink, err := openDevLogSink(logPath)
-	if err != nil {
-		t.Fatalf("openDevLogSink returned %v", err)
-	}
-
-	var out bytes.Buffer
-	var wg sync.WaitGroup
-	wg.Add(1)
-	streamLogOutput(strings.NewReader("api-1 | GET /health\n"), newRenderer(&out), sink, "stdout", &wg)
-	wg.Wait()
-	if err := sink.Close(); err != nil {
-		t.Fatalf("Close returned %v", err)
-	}
-
-	data, err := os.ReadFile(logPath)
-	if err != nil {
-		t.Fatalf("ReadFile returned %v", err)
-	}
-	text := string(data)
-	for _, want := range []string{
-		`"source":"compose-log"`,
-		`"stream":"stdout"`,
-		`"service":"api"`,
-		`"message":"GET /health"`,
-	} {
-		if !strings.Contains(text, want) {
-			t.Fatalf("structured log %q missing %s", text, want)
-		}
-	}
-}
-
-func TestParseLogQuery(t *testing.T) {
-	query, err := parseLogQuery([]string{"service", "api", "containing", "health", "limit", "5", "json"})
-	if err != nil {
-		t.Fatalf("parseLogQuery returned %v", err)
-	}
-	if query.service != "api" || query.contains != "health" || query.limit != 5 || !query.json {
-		t.Fatalf("query = %#v", query)
-	}
-
-	if _, err = parseLogQuery([]string{"follow", "service", "web"}); err == nil {
-		t.Fatalf("parseLogQuery should reject follow as a logs option")
-	}
-}
-
-func TestParseComposeServiceStatuses(t *testing.T) {
-	statuses, err := parseComposeServiceStatuses(`[
-{"Service":"web","Name":"demo-web-1","State":"running","Health":"","Publishers":[{"URL":"0.0.0.0","TargetPort":8080,"PublishedPort":8082,"Protocol":"tcp"},{"URL":"::","TargetPort":8080,"PublishedPort":8082,"Protocol":"tcp"}]},
-{"Service":"api","Name":"demo-api-1","State":"running","Health":"healthy","Publishers":[{"URL":"","TargetPort":8080,"PublishedPort":0,"Protocol":"tcp"}]},
-{"Service":"db","Name":"demo-db-1","State":"created","Health":"starting","Publishers":[{"URL":"","TargetPort":5432,"PublishedPort":0,"Protocol":"tcp"}]}
-]`)
-	if err != nil {
-		t.Fatalf("parseComposeServiceStatuses returned %v", err)
-	}
-	if serviceProgressState(statuses["web"]) != "ready" {
-		t.Fatalf("web status = %#v", statuses["web"])
-	}
-	if serviceProgressState(statuses["api"]) != "ready" {
-		t.Fatalf("api status = %#v", statuses["api"])
-	}
-	if serviceProgressState(statuses["db"]) != "starting" {
-		t.Fatalf("db status = %#v", statuses["db"])
-	}
-
-	snapshots, err := parseComposeServiceSnapshots(`[
-{"Service":"web","Name":"demo-web-1","State":"running","Health":"","Publishers":[{"URL":"0.0.0.0","TargetPort":8080,"PublishedPort":8082,"Protocol":"tcp"},{"URL":"::","TargetPort":8080,"PublishedPort":8082,"Protocol":"tcp"}]},
-{"Service":"api","Name":"demo-api-1","State":"running","Health":"healthy","Publishers":[{"URL":"","TargetPort":8080,"PublishedPort":0,"Protocol":"tcp"}]}
-]`)
-	if err != nil {
-		t.Fatalf("parseComposeServiceSnapshots returned %v", err)
-	}
-	if got := composePublishedPorts(snapshots["web"]); got != "localhost:8082" {
-		t.Fatalf("web published ports = %q", got)
-	}
-	if got := composeInternalPorts(snapshots["api"]); got != "8080/tcp" {
-		t.Fatalf("api internal ports = %q", got)
-	}
-	if got := composeServiceStatusText(snapshots["api"]); got != "running (healthy)" {
-		t.Fatalf("api status text = %q", got)
-	}
-
-	statuses, err = parseComposeServiceStatuses(`{"Service":"api","State":"exited","Health":""}`)
-	if err != nil {
-		t.Fatalf("parseComposeServiceStatuses line mode returned %v", err)
-	}
-	if serviceProgressState(statuses["api"]) != "failed" {
-		t.Fatalf("api status = %#v", statuses["api"])
-	}
-}
-
-func TestFilterAndLimitLogEntries(t *testing.T) {
-	entries := []structuredLogEntry{
-		{Service: "web", Message: "listening"},
-		{Service: "api", Message: "GET /health"},
-		{Service: "api", Message: "POST /api/login"},
-	}
-
-	filtered := filterLogEntries(entries, logQuery{service: "api", contains: "api"})
-	if len(filtered) != 1 || filtered[0].Message != "POST /api/login" {
-		t.Fatalf("filtered = %#v", filtered)
-	}
-
-	limited := limitLogEntries(entries, 2)
-	if len(limited) != 2 || limited[0].Message != "GET /health" {
-		t.Fatalf("limited = %#v", limited)
 	}
 }

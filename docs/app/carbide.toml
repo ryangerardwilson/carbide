@@ -67,45 +67,6 @@ framework_owned = true
 local_default = "carbide"
 description = "Postgres password used by the db container."
 
-[deploy]
-preview_before_apply = true
-
-[deploy.hosts.prod]
-ssh = "${CARBIDE_DOCS_DEPLOY_SSH}"
-description = "Host used for the public Carbide documentation app."
-
 [deploy.targets.prod]
-type = "ssh-compose"
-host = "prod"
-domain = "carbide.ryangerardwilson.com"
-remote_path = "/opt/carbide/docs"
-source_path = ".."
-compose_file = "app/docker-compose.yml"
-project_directory = "app"
-public_port = 18081
-health_path = "/health"
-nginx = true
-nginx_site = "carbide"
-
-[deploy.targets.prod-environment]
-type = "ssh-compose-environment"
-domain = "carbide.ryangerardwilson.com"
-remote_path = "/opt/carbide/docs"
-source_path = ".."
-compose_file = "app/docker-compose.yml"
-project_directory = "app"
-health_path = "/health"
-strategy = "preview-only"
-
-[deploy.targets.prod-environment.roles.web]
-hosts = ["prod"]
-public_port = 18081
-nginx = true
-
-[deploy.targets.prod-environment.roles.api]
-hosts = ["prod"]
-
-[deploy.targets.prod-environment.roles.db]
-hosts = ["prod"]
-primary = "prod"
-migration = "once"
+script = "./deploy/prod.sh"
+description = "Sync docs to the configured host and restart the remote stack."
