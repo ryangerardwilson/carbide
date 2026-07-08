@@ -33,6 +33,8 @@ domain="${CARBIDE_DOCS_DOMAIN:-carbide.ryangerardwilson.com}"
 nginx_site="${CARBIDE_DOCS_NGINX_SITE:-carbide}"
 manage_nginx="${CARBIDE_DOCS_MANAGE_NGINX:-1}"
 ssh_target="${CARBIDE_DOCS_DEPLOY_SSH}"
+compose_project_name="${CARBIDE_DOCS_COMPOSE_PROJECT_NAME:-carbide-docs}"
+legacy_project_name="${CARBIDE_DOCS_LEGACY_PROJECT_NAME:-app}"
 
 printf 'syncing docs to %s\n' "$ssh_target"
 
@@ -54,7 +56,9 @@ ssh "$ssh_target" bash -s -- \
   "$CARBIDE_DOCS_POSTGRES_PASSWORD" \
   "$domain" \
   "$nginx_site" \
-  "$manage_nginx" <<'EOF'
+  "$manage_nginx" \
+  "$compose_project_name" \
+  "$legacy_project_name" <<'EOF'
 set -euo pipefail
 
 remote_root="$1"
@@ -65,6 +69,9 @@ postgres_password="$5"
 domain="$6"
 nginx_site="$7"
 manage_nginx="$8"
+compose_project_name="$9"
+legacy_project_name="${10}"
+export COMPOSE_PROJECT_NAME="$compose_project_name"
 compose_cmd="docker compose --env-file app/.env -f app/docker-compose.yml --project-directory app"
 
 cat > "$remote_root/app/.env" <<ENV
@@ -79,6 +86,12 @@ ENV
 cd "$remote_root"
 $compose_cmd config >/dev/null
 $compose_cmd up -d --build --remove-orphans
+
+if [ "$legacy_project_name" != "$compose_project_name" ]; then
+  COMPOSE_PROJECT_NAME="$legacy_project_name" \
+    docker compose --env-file app/.env -f app/docker-compose.yml --project-directory app \
+    down --remove-orphans >/dev/null 2>&1 || true
+fi
 
 if [ "$manage_nginx" = "1" ]; then
   sudo -n true
