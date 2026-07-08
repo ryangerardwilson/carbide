@@ -672,7 +672,10 @@ grep -q '\[deploy.targets.prod\]' docs/app/carbide.toml
 grep -q 'script = "./deploy/prod.sh"' docs/app/carbide.toml
 grep -q "CARBIDE_DOCS_POSTGRES_PASSWORD" docs/app/deploy/prod.sh
 grep -q "CARBIDE_DOCS_DEPLOY_SSH" docs/app/deploy/prod.sh
-grep -q "docker compose --env-file app/.env -f app/docker-compose.yml --project-directory app" docs/app/deploy/prod.sh
+grep -q 'compose_project_name="${CARBIDE_DOCS_COMPOSE_PROJECT_NAME:-carbide-docs}"' docs/app/deploy/prod.sh
+grep -q 'legacy_project_names="${CARBIDE_DOCS_LEGACY_PROJECT_NAMES:-app 1}"' docs/app/deploy/prod.sh
+grep -q 'compose_cmd() {' docs/app/deploy/prod.sh
+grep -q -- '--project-directory app' docs/app/deploy/prod.sh
 grep -q "bg-amber-50" docs/app/web/src/component/l1/tokens.ts
 grep -q "dark:text-neutral-50" docs/app/web/src/component/l1/tokens.ts
 grep -q "bg-yellow-400" docs/app/web/src/component/l2/DocsChrome.ts
@@ -836,7 +839,7 @@ grep -q 'class="docs-sidebar"' docs/app/web/site/index.html
 grep -q 'class="docs-content"' docs/app/web/site/index.html
 grep -q 'class="docs-toc"' docs/app/web/site/index.html
 grep -q "Search docs" docs/app/web/site/index.html
-grep -q "Version v0.1" docs/app/web/site/index.html
+grep -q "Version v0.2.0" docs/app/web/site/index.html
 grep -q 'href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer"' docs/app/web/site/index.html
 grep -q "Prologue" docs/app/web/site/index.html
 grep -q "Getting Started" docs/app/web/site/index.html
@@ -854,7 +857,7 @@ for page in docs/app/web/site/*.html; do
   grep -q 'class="docs-content"' "$page"
   grep -q 'class="docs-toc"' "$page"
   grep -q "Search docs" "$page"
-  grep -q "Version v0.1" "$page"
+  grep -q "Version v0.2.0" "$page"
   grep -q 'href="https://github.com/ryangerardwilson/carbide" target="_blank" rel="noopener noreferrer"' "$page"
   grep -q "On this page" "$page"
 done
