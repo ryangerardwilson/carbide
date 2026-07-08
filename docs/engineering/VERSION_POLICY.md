@@ -54,9 +54,10 @@ The audit script reports drift whether it is run locally or from your CI
 runner. It does not edit files, run package upgrades, or mutate generated
 projects.
 
-After installing a newer CLI, run `carbide audit` inside an existing app when
-you want to compare the app against Carbide's current starter taste. The
-command creates a reference workspace and an audit brief and, in an
-interactive terminal with `codex` installed, launches the audit in the Codex
-CLI. Carbide does not rewrite app code; an agent such as Codex may apply
+After installing a newer CLI, run `carbide audit resolve fix` inside an
+existing app when you want to compare the app against Carbide's current
+starter taste and apply deliberate updates. `carbide audit` creates the
+`.audit/report/*.md` evidence set and `.audit/starter-reference/`;
+`carbide resolve` turns that into `.audit/plan.md`; `carbide fix` implements
+the ready plan. Carbide does not rewrite app code by itself; Codex applies
 intentional app changes while proving the result with `carbide health`.

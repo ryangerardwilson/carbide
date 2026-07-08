@@ -51,8 +51,9 @@ files later, they are app-owned context.
 
 ## 3. Audit Rule
 
-`carbide audit` may create local comparison material under `.carbide/`, but it
-does not rewrite app code.
+`carbide audit` may create local comparison material under `.audit/`,
+`carbide resolve` may turn that into `.audit/plan.md`, and `carbide fix` may
+apply that plan through Codex, but Carbide itself does not rewrite app code.
 
 If app code changes during an audit, those changes are Codex edits applied
 intentionally inside the app because the user wants them.

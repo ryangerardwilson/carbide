@@ -12,25 +12,30 @@ starts as one coherent repository with clear runtime containers:
 
 ## README Boundary
 
-The README must answer human questions:
+The root README is the framework-agent entrypoint. It should speak directly to
+agents and maintainers updating Carbide itself.
 
-- What is Carbide?
-- Why would I use it?
-- What do I get after `carbide new`?
-- What do I need installed?
-- What commands do I run?
-- Where are the docs?
+The README should answer:
+
+- Am I working on the framework repo or a generated app?
+- Where should generated-app agents go? (`https://carbide.ryangerardwilson.com/for/agents`)
+- Where is the checked-in source for that public app-agent contract?
+- What are Carbide's goals and non-goals?
+- Which engineering files own the framework contract?
+- Which verification loop proves a framework change?
+- Where is the docs website managed and deployed?
 
 The README must not become:
 
 - a phase roadmap,
 - a detailed implementation backlog,
-- a regression checklist,
-- an agent instruction file,
+- a duplicate of all engineering docs,
+- a generated-app operating guide,
 - a long-form architecture spec.
 
-Move that material into `docs/engineering/`. Agent startup guidance belongs in
-`docs/site/for/agents.md` and is served at `/for/agents`.
+App-agent startup guidance belongs in `docs/site/for/agents.md` and is served
+publicly at `https://carbide.ryangerardwilson.com/for/agents`. Framework
+implementation detail belongs in `docs/engineering/`.
 
 ## Product Tone
 

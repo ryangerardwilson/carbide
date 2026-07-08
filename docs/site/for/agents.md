@@ -7,6 +7,19 @@ If a user asks you to build or modify a Carbide app, follow this page before
 making local framework choices. If the current directory already contains a
 Carbide app, do not create another one inside it.
 
+When someone says "follow `/for/agents`", that means this public URL:
+
+```text
+https://carbide.ryangerardwilson.com/for/agents
+```
+
+The checked-in source that defines that contract lives here in the framework
+repo:
+
+```text
+docs/site/for/agents.md
+```
+
 Fallback raw source if this route is unavailable:
 
 ```text
@@ -23,8 +36,8 @@ When instructions conflict, use this order:
 4. Local `carbide.toml` and `docker-compose.yml` for runtime and deploy truth.
 5. This `/for/agents` guide.
 6. Public Carbide documentation pages.
-7. Carbide framework repo engineering docs, only when working on Carbide
-   itself.
+7. The Carbide framework repo `README.md`, then the smallest relevant file in
+   `docs/engineering/`, only when working on Carbide itself.
 
 ## Identify The Current State
 
@@ -47,6 +60,16 @@ Read local `AGENTS.md` and `README.md` when those prose files exist.
 Otherwise read `carbide.toml`, `docker-compose.yml`, and the files directly
 related to the user's task. Do not run `carbide new` or `carbide init` inside
 an existing app.
+
+The Carbide framework repo itself has a different shape:
+
+- `README.md`
+- `cli/`
+- `docs/`
+- `scaffold/`
+- `tests/`
+
+When you are in that repo, use the root `README.md` as the framework-agent entrypoint, then load the smallest relevant file from `docs/engineering/`.
 
 ## Prerequisites
 
@@ -109,6 +132,8 @@ carbide health
 carbide health env
 carbide health runtime
 carbide audit
+carbide resolve
+carbide fix
 carbide stop dev
 ```
 
@@ -319,17 +344,28 @@ Use:
 
 ```shell
 carbide audit
+carbide resolve
+carbide fix
 ```
 
-`carbide audit` starts a Codex audit session for Carbide contract compliance.
-To do that it creates:
+For the one-shot path, use:
 
-- `.carbide/audit/<timestamp>/starter-reference/`: the current Carbide starter
-  rendered with the app name and slug.
-- `.carbide/audit/<timestamp>/AUDIT.md`: the audit brief and comparison loop.
+```shell
+carbide audit resolve fix
+```
 
-In an interactive terminal with `codex` installed, `carbide audit` launches
-that audit directly in the Codex CLI from the current app root.
+`carbide audit` clears any previous `.audit/`, creates a fresh `.audit/`
+workspace, renders the current starter into `.audit/starter-reference/`, and
+creates one markdown report per law and taste slice under `.audit/report/`.
+In an interactive terminal with `codex` installed, Carbide spawns those report
+audits in parallel through the Codex CLI.
+
+`carbide resolve` reads `.audit/report/*.md`, synthesizes them into
+`.audit/plan.md`, and asks the user for clarification only when the reports
+surface a real product or operational ambiguity.
+
+`carbide fix` implements the ready `.audit/plan.md` through the Codex CLI and
+writes a short `.audit/fix.md` summary.
 
 This is a comparison aid. It is not a framework-owned rewrite path.
 
@@ -340,9 +376,11 @@ because the user wants them.
 Use this rule:
 
 1. Run `carbide health` first and fix law failures.
-2. Compare the current app to `starter-reference/`.
-3. Propose intentional changes based on current Carbide taste.
-4. Edit app code only when the user wants those changes.
+2. Let `carbide audit` create `.audit/report/*.md` and
+   `.audit/starter-reference/`.
+3. Let `carbide resolve` turn those reports into `.audit/plan.md`.
+4. Let `carbide fix` implement the plan only when the user wants those
+   changes.
 5. Finish with `carbide health`, `carbide health runtime` when relevant, and
    the app-specific build/tests.
 
@@ -362,8 +400,10 @@ Use the smallest command that classifies the failure before editing code.
   The remote user needs non-interactive sudo for Carbide-managed nginx, or the
   deploy target should set `nginx = false` and use user-managed ingress.
 - Starter drift or taste refresh:
-  Run `carbide audit`. `carbide health framework` is for the Carbide source
-  repo itself, not for generated apps.
+  Run `carbide audit resolve fix` for the one-shot path, or run
+  `carbide audit`, `carbide resolve`, and `carbide fix` separately when the
+  user wants to review the intermediate reports and plan. `carbide health
+  framework` is for the Carbide source repo itself, not for generated apps.
 
 ## Verification
 
@@ -396,7 +436,8 @@ carbide run dev
 ```
 
 If the user wants to compare the app to current Carbide taste, run
-`carbide audit` before making deliberate app changes.
+`carbide audit resolve fix` before making deliberate app changes, or stop
+after `carbide audit` / `carbide resolve` when the user wants handholding.
 
 ## Agent Behavior
 

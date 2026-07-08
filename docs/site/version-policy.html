@@ -107,8 +107,8 @@
         <section id="upgrade-stance">
           <h2>Upgrade Stance</h2>
           <p>Framework-owned upgrades should be explicit product decisions. A dependency bump must preserve the generated app contract, update the baseline, and pass health checks, scaffold, smoke, and docs regression checks.</p>
-          <p>After installing a newer CLI, run <code>carbide audit</code> inside an existing app when you want to compare it against Carbide's current starter taste; interactive terminals hand that audit to the Codex CLI automatically when <code>codex</code> is installed.</p>
-          <p>The command creates a starter reference and an audit brief. Carbide does not rewrite app code; an agent such as Codex may apply intentional app changes while preserving local product docs such as <code>README.md</code> or <code>AGENTS.md</code> when they exist, along with product behavior, data, deploy targets, and secrets unless the user asks otherwise.</p>
+          <p>After installing a newer CLI, run <code>carbide audit resolve fix</code> inside an existing app when you want to compare it against Carbide's current starter taste and apply deliberate updates.</p>
+          <p><code>carbide audit</code> creates <code>.audit/report/*.md</code> and <code>.audit/starter-reference/</code>; <code>carbide resolve</code> turns that into <code>.audit/plan.md</code>; <code>carbide fix</code> implements the ready plan through the Codex CLI. Carbide does not rewrite app code by itself; Codex may apply intentional app changes while preserving local product docs when they exist, along with product behavior, data, deploy targets, and secrets unless the user asks otherwise.</p>
         </section>
       </main>
 

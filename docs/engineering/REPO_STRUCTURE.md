@@ -4,7 +4,6 @@ The Carbide framework repo root is intentionally small:
 
 ```text
 .
-|-- AGENTS.md
 |-- cli/
 |-- docs/
 |-- scaffold/
@@ -23,11 +22,13 @@ The Carbide framework repo root is intentionally small:
 - `tests/contract/`: repository shape and contract checks.
 - `tests/scaffold/`: CLI-generated app checks.
 - `tests/smoke/`: Docker-backed generated app smoke flow.
+- `README.md`: framework-agent entrypoint and root operational guide.
 
 ## Root Rules
 
 - No root `go.mod`; CLI Go module lives in `cli/`.
 - No root `src`, `examples`, `infra`, `include`, or `templates`.
+- No root `AGENTS.md`; framework-agent guidance lives in `README.md`.
 - No root `agents.d`; `/for/agents` is the central agent startup surface.
 - No generated-app source at root. Generated app shape lives in `scaffold/`.
 - Do not duplicate scripts and tests with overlapping mandates. Contract

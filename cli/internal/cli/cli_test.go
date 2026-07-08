@@ -195,7 +195,7 @@ func TestBareCommandPrintsCommandList(t *testing.T) {
 	for _, want := range []string{
 		"_____________________________________________________",
 		"________________________oo_______oo_______oo_________",
-		"Carbide 0.1.0",
+		"Carbide 0.2.0",
 		"Usage:",
 		"carbide <command> [arguments]",
 		"Commands:",
@@ -253,6 +253,7 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"  deploy check prod json",
 		"  deploy preview prod",
 		"  deploy preview prod json",
+		"  fix",
 		"  health",
 		"  health json",
 		"  health env",
@@ -265,6 +266,8 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"  init",
 		"  logs",
 		"  new <project-name>",
+		"  resolve",
+		"  resolve fix",
 		"  status",
 		"  status json",
 		"  upgrade",
@@ -291,6 +294,7 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"deploy preview prod json",
 		"deploy apply prod",
 		"clean dev",
+		"fix",
 		"health",
 		"health json",
 		"health env",
@@ -300,6 +304,8 @@ func TestHelpPrintsRuntimeReference(t *testing.T) {
 		"health framework",
 		"health framework json",
 		"audit",
+		"resolve",
+		"resolve fix",
 		"run dev",
 		"status json",
 		"stop dev",
@@ -385,7 +391,8 @@ func TestHealthRejectsLegacyRootDirectory(t *testing.T) {
 	})
 }
 
-func TestAuditCreatesAgentWorkspace(t *testing.T) {
+func TestAuditCreatesReportWorkspace(t *testing.T) {
+	t.Setenv("CARBIDE_AUDIT_AUTOMATION", "0")
 	repoRoot, err := filepath.Abs(filepath.Join("..", "..", ".."))
 	if err != nil {
 		t.Fatalf("Abs repo root returned %v", err)
@@ -398,23 +405,16 @@ func TestAuditCreatesAgentWorkspace(t *testing.T) {
 			t.Fatalf("audit returned %v\n%s", err, out.String())
 		}
 
-		matches, err := filepath.Glob(filepath.Join(dir, ".carbide", "audit", "*"))
-		if err != nil {
-			t.Fatalf("Glob returned %v", err)
-		}
-		if len(matches) != 1 {
-			t.Fatalf("audit dirs = %v, want one", matches)
-		}
-		root := matches[0]
-		brief := filepath.Join(root, "AUDIT.md")
+		root := filepath.Join(dir, ".audit")
+		reportDir := filepath.Join(root, "report")
 		latest := filepath.Join(root, "starter-reference")
 		for _, path := range []string{
-			brief,
+			reportDir,
 			filepath.Join(latest, "carbide.toml"),
 			filepath.Join(latest, "web", "src", "styles.css"),
 			filepath.Join(latest, "web", "src", "main.tsx"),
 		} {
-			if !isFile(path) {
+			if !isDir(path) && !isFile(path) {
 				t.Fatalf("missing audit artifact %s", path)
 			}
 		}
@@ -423,49 +423,130 @@ func TestAuditCreatesAgentWorkspace(t *testing.T) {
 			isFile(filepath.Join(latest, "web", "src", "tailwind.css")) {
 			t.Fatalf("audit scaffold copied generated web output")
 		}
-		content, err := os.ReadFile(brief)
-		if err != nil {
-			t.Fatalf("ReadFile brief returned %v", err)
+		specs := auditSpecs()
+		for _, spec := range specs {
+			reportPath := filepath.Join(reportDir, spec.fileName)
+			if !isFile(reportPath) {
+				t.Fatalf("missing report %s", reportPath)
+			}
+			content, err := os.ReadFile(reportPath)
+			if err != nil {
+				t.Fatalf("ReadFile report returned %v", err)
+			}
+			got := string(content)
+			for _, want := range []string{
+				"status: pending",
+				spec.ref,
+				spec.title,
+				"Run `carbide audit` in an interactive terminal with `codex` installed.",
+			} {
+				if !strings.Contains(got, want) {
+					t.Fatalf("report %s = %q, missing %q", spec.fileName, got, want)
+				}
+			}
 		}
-		got := string(content)
+
 		for _, want := range []string{
-			"Carbide Audit",
-			"### Law 1. One App Repo",
-			"### Taste 1. Starter Stack",
+			"Carbide audit",
+			"workspace prepared",
+			".audit",
 			"starter-reference",
-			"What This Command Created",
-			"carbide health",
-			"Law N",
-			"Taste N",
-			"Carbide does not rewrite app code",
-			"Codex may edit app code intentionally",
+			"pending files",
+			"carbide resolve",
 		} {
-			if !strings.Contains(got, want) {
-				t.Fatalf("brief = %q, missing %q", got, want)
+			if !strings.Contains(out.String(), want) {
+				t.Fatalf("audit output = %q, missing %q", out.String(), want)
 			}
 		}
 	})
 }
 
-func TestAuditCodexPromptIncludesAuditLoop(t *testing.T) {
-	got := auditCodexPrompt(
-		".carbide/audit/20260707T000000Z",
-		".carbide/audit/20260707T000000Z/AUDIT.md",
-		".carbide/audit/20260707T000000Z/starter-reference",
-	)
+func TestResolveCreatesPendingPlanWithoutCodex(t *testing.T) {
+	t.Setenv("CARBIDE_AUDIT_AUTOMATION", "0")
+	repoRoot, err := filepath.Abs(filepath.Join("..", "..", ".."))
+	if err != nil {
+		t.Fatalf("Abs repo root returned %v", err)
+	}
 
+	withGeneratedScaffold(t, func(dir string) {
+		var out bytes.Buffer
+		a := app{home: repoRoot, stdout: &out}
+		if err := a.run([]string{"audit"}); err != nil {
+			t.Fatalf("audit returned %v\n%s", err, out.String())
+		}
+		out.Reset()
+		if err := a.run([]string{"resolve"}); err != nil {
+			t.Fatalf("resolve returned %v\n%s", err, out.String())
+		}
+
+		planPath := filepath.Join(dir, ".audit", "plan.md")
+		content, err := os.ReadFile(planPath)
+		if err != nil {
+			t.Fatalf("ReadFile plan returned %v", err)
+		}
+		got := string(content)
+		for _, want := range []string{
+			"status: pending",
+			"Carbide Resolve Plan",
+			"codex is required to resolve pending audit reports automatically",
+			"Run `carbide resolve` in an interactive terminal with `codex` installed.",
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("plan = %q, missing %q", got, want)
+			}
+		}
+		for _, want := range []string{
+			"Carbide resolve",
+			"plan stub created",
+			".audit/plan.md",
+		} {
+			if !strings.Contains(out.String(), want) {
+				t.Fatalf("resolve output = %q, missing %q", out.String(), want)
+			}
+		}
+	})
+}
+
+func TestAuditPromptsUseNewStages(t *testing.T) {
+	spec := auditSpecs()[0]
+	report := auditReportPrompt(".audit", spec)
 	for _, want := range []string{
-		"Audit this Carbide app against current Carbide taste.",
-		".carbide/audit/20260707T000000Z/AUDIT.md",
-		".carbide/audit/20260707T000000Z/starter-reference",
-		"Run `carbide health` first.",
-		"Report findings with `Law N` and `Taste N` references",
-		"Preserve local product docs such as `README.md` or `AGENTS.md` when they exist",
-		"Finish with `carbide health`, `carbide health runtime`",
-		"not as framework-managed truth",
+		"Audit one Carbide contract slice",
+		spec.ref,
+		spec.title,
+		".audit/report/" + spec.fileName,
+		"status: complete",
+		"## Recommended Changes",
 	} {
-		if !strings.Contains(got, want) {
-			t.Fatalf("audit prompt = %q, missing %q", got, want)
+		if !strings.Contains(report, want) {
+			t.Fatalf("audit report prompt = %q, missing %q", report, want)
+		}
+	}
+
+	resolve := resolveCodexPrompt(".audit", []auditClarification{{question: "Keep custom auth copy?", answer: "Yes"}})
+	for _, want := range []string{
+		"Resolve the Carbide audit reports into one implementation plan.",
+		".audit/report",
+		".audit/starter-reference",
+		"status: ready | needs-clarification",
+		"## Implementation Steps",
+		"Keep custom auth copy? => Yes",
+	} {
+		if !strings.Contains(resolve, want) {
+			t.Fatalf("resolve prompt = %q, missing %q", resolve, want)
+		}
+	}
+
+	fix := fixCodexPrompt(".audit")
+	for _, want := range []string{
+		"Implement the latest Carbide resolve plan.",
+		".audit/plan.md",
+		"run `carbide health` at the end",
+		"run `carbide health runtime` when runtime behavior or containers changed",
+		"files changed",
+	} {
+		if !strings.Contains(fix, want) {
+			t.Fatalf("fix prompt = %q, missing %q", fix, want)
 		}
 	}
 }
@@ -908,13 +989,6 @@ func TestHealthPrintsDocsProjectContract(t *testing.T) {
 	if err := copyScaffoldPart(source, target, "Carbide Docs", "carbide-docs"); err != nil {
 		t.Fatalf("copyScaffoldPart returned %v", err)
 	}
-	rootAgents, err := os.ReadFile(filepath.Join(repoRoot, "AGENTS.md"))
-	if err != nil {
-		t.Fatalf("ReadFile AGENTS.md returned %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(target, "..", "..", "AGENTS.md"), rootAgents, 0644); err != nil {
-		t.Fatalf("WriteFile AGENTS.md returned %v", err)
-	}
 	rootReadme, err := os.ReadFile(filepath.Join(repoRoot, "README.md"))
 	if err != nil {
 		t.Fatalf("ReadFile README.md returned %v", err)
@@ -953,7 +1027,7 @@ func TestHealthPrintsDocsProjectContract(t *testing.T) {
 			"web               ok      Bun React Tailwind TypeScript docs",
 			"api               ok      docs health API",
 			"database          ok      Postgres deploy checks",
-			"agents            ok      root docs ops guidance /for/agents",
+			"agents            ok      root README docs ops guidance /for/agents",
 			"runtime           skip    run carbide health runtime",
 		} {
 			if !strings.Contains(got, want) {

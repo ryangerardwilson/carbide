@@ -9,7 +9,7 @@ export CARBIDE_HOME="$repo_root"
 
 "$repo_root/cli/bin/carbide" > "$tmp_dir/no-args.out"
 grep -q "________________________oo_______oo_______oo_________" "$tmp_dir/no-args.out"
-grep -q "Carbide 0.1.0" "$tmp_dir/no-args.out"
+grep -q "Carbide 0.2.0" "$tmp_dir/no-args.out"
 grep -q "Usage:" "$tmp_dir/no-args.out"
 grep -q "Commands:" "$tmp_dir/no-args.out"
 grep -q "carbide <command> \\[arguments\\]" "$tmp_dir/no-args.out"

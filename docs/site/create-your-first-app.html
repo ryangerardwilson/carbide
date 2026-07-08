@@ -125,7 +125,9 @@ carbide stop dev</code></pre>
           <ul>
             <li><code>carbide help</code> prints the command reference.</li>
             <li><code>carbide upgrade</code> upgrades the installed CLI.</li>
-            <li><code>carbide audit</code> starts a Codex audit session for Carbide contract compliance, creates an audit workspace under <code>.carbide/audit/</code>, writes <code>starter-reference/</code> and <code>AUDIT.md</code>, and in an interactive terminal with <code>codex</code> installed launches the audit directly in the Codex CLI without Carbide rewriting app code.</li>
+            <li><code>carbide audit</code> clears any previous <code>.audit/</code>, renders the current starter into <code>.audit/starter-reference/</code>, creates one markdown report per law and taste slice under <code>.audit/report/</code>, and in an interactive terminal with <code>codex</code> installed spawns those report audits through the Codex CLI.</li>
+            <li><code>carbide resolve</code> reads <code>.audit/report/*.md</code>, writes <code>.audit/plan.md</code>, and asks for clarification only when the reports surface a real ambiguity.</li>
+            <li><code>carbide fix</code> implements the ready <code>.audit/plan.md</code> through the Codex CLI and writes <code>.audit/fix.md</code>.</li>
             <li><code>carbide new &lt;project-name&gt;</code> creates a new project directory. Human names are accepted: <code>carbide new "My Carbide App"</code> creates <code>my-carbide-app</code>, stores <code>name = "My Carbide App"</code>, and stores <code>slug = "my-carbide-app"</code>.</li>
             <li><code>carbide init</code> initializes the current empty directory.</li>
             <li><code>carbide run dev</code> starts the Docker Compose dev stack, prints the app URL and API URL, then streams logs until <code>Ctrl+C</code> detaches.</li>
@@ -145,7 +147,7 @@ carbide stop dev</code></pre>
             <li>If <code>carbide health</code> fails, fix the named contract before changing runtime behavior. Use <code>carbide health json</code> or <code>carbide health env json</code> when an agent needs structured output.</li>
             <li>If container state is unclear after <code>Ctrl+C</code>, run <code>carbide clean dev</code>, then <code>carbide run dev</code>.</li>
             <li>If deploy fails around nginx or sudo, the remote user needs non-interactive sudo for Carbide-managed nginx, or the deploy target should set <code>nginx = false</code> and use user-managed ingress.</li>
-            <li>If the user wants to compare an app to current Carbide taste, run <code>carbide audit</code>. <code>carbide health framework</code> is for the Carbide source repo itself, not for generated apps.</li>
+            <li>If the user wants the one-shot path, run <code>carbide audit resolve fix</code>. Run <code>carbide audit</code>, <code>carbide resolve</code>, and <code>carbide fix</code> separately when the user wants to review the intermediate report and plan. <code>carbide health framework</code> is for the Carbide source repo itself, not for generated apps.</li>
           </ul>
         </section>
       </main>

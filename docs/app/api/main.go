@@ -80,7 +80,7 @@ func (s server) health(w http.ResponseWriter, r *http.Request) {
 func (s server) version(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"name":    "Carbide Docs",
-		"version": "0.1.0",
+		"version": "0.2.0",
 	})
 }
 

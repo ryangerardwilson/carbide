@@ -13,7 +13,7 @@ version unless the repo is intentionally between releases.
 Current product version:
 
 ```text
-0.1.0
+0.2.0
 ```
 
 When changing the version:
@@ -32,6 +32,8 @@ Use subject/action/object style where possible:
 - `carbide stop dev`
 - `carbide follow logs`
 - `carbide audit`
+- `carbide resolve`
+- `carbide fix`
 
 Do not add user-facing dash-flag aliases for core actions. `help`, `version`,
 and `upgrade` are commands, not options.

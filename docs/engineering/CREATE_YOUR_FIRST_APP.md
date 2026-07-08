@@ -108,12 +108,22 @@ Upgrades the installed CLI.
 
 ### `carbide audit`
 
-Starts a Codex audit session for Carbide contract compliance. The command
-creates an audit workspace under `.carbide/audit/`, writes
-`starter-reference/` with the current Carbide starter rendered for the current
-app, and writes `AUDIT.md` with the audit brief. In an interactive terminal
-with `codex` installed, the command launches the audit directly in the Codex
-CLI.
+Starts the staged Carbide audit flow. The command clears any previous
+`.audit/`, renders the current Carbide starter into
+`.audit/starter-reference/`, and creates one markdown report per law and taste
+slice under `.audit/report/`. In an interactive terminal with `codex`
+installed, the command spawns those report audits in parallel through the
+Codex CLI.
+
+### `carbide resolve`
+
+Reads `.audit/report/*.md`, writes `.audit/plan.md`, and asks the user for
+clarification only when the reports surface a real ambiguity.
+
+### `carbide fix`
+
+Implements the ready `.audit/plan.md` through the Codex CLI and writes a short
+`.audit/fix.md` summary.
 
 Carbide itself does not rewrite app code. Agents still need to compare the
 current app to the starter reference and make intentional edits only when the
@@ -187,7 +197,9 @@ state.
   sudo for Carbide-managed nginx, or the deploy target should set
   `nginx = false` and use user-managed ingress.
 - If the user wants to compare an app to current Carbide taste, run
-  `carbide audit`. `carbide health framework` is for the
+  `carbide audit resolve fix`. Run `carbide audit`, `carbide resolve`, and
+  `carbide fix` separately when the user wants the intermediate report and
+  plan. `carbide health framework` is for the
   Carbide source repo itself, not for generated apps.
 
 ## Product Principle

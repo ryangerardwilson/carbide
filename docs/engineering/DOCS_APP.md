@@ -41,8 +41,8 @@ docs/site/for/agents.md
   mode may lighten surfaces and dark mode may deepen them, but audits should
   not treat a brand palette as disposable unless the user explicitly asks for
   a rebrand.
-- Root `AGENTS.md` and root `README.md` own docs website management guidance.
-  `docs/app/` should not carry its own `AGENTS.md` or `README.md`.
+- Root `README.md` owns docs website management guidance. `docs/app/` should
+  not carry its own `AGENTS.md` or `README.md`.
 - `docs/app/web/src/styles.css` must match `scaffold/web/src/styles.css` at
   the Tailwind input-contract layer. Product palette and docs-specific tokens
   belong in component Tailwind classes, not in `styles.css`.

@@ -201,10 +201,15 @@ Future checks:
   `carbide health env json`, `carbide health runtime json`,
   `carbide health framework json`, and deploy JSON subcommands emit valid,
   ANSI-free machine-readable state;
-- `carbide audit` starts a Codex audit session, creates an audit workspace
-  with a starter-reference snapshot and an audit brief, auto-launches Codex
-  only in interactive terminals, and does not copy generated local artifacts
-  or rewrite app code;
+- `carbide audit` clears `.audit/`, creates `.audit/report/*.md` and
+  `.audit/starter-reference/`, auto-launches parallel Codex report agents only
+  in interactive terminals, and does not copy generated local artifacts or
+  rewrite app code;
+- `carbide resolve` turns audit reports into `.audit/plan.md`, creating a
+  pending stub when Codex automation is unavailable and asking for user
+  clarification only when the synthesized plan genuinely needs it;
+- `carbide fix` requires a ready `.audit/plan.md`, implements it through Codex,
+  and writes `.audit/fix.md`;
 - `carbide health` prints a stable table of app-law checks;
 - `carbide health env` validates the generated environment contract without
   printing secret values;
