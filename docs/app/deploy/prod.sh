@@ -104,7 +104,45 @@ if [ "$manage_nginx" = "1" ]; then
   sudo -n true
   config_path="/etc/nginx/sites-available/$nginx_site"
   enabled_path="/etc/nginx/sites-enabled/$nginx_site"
-  cat <<NGINX | sudo tee "$config_path" >/dev/null
+  cert_dir="/etc/letsencrypt/live/$domain"
+  fullchain_path="$cert_dir/fullchain.pem"
+  privkey_path="$cert_dir/privkey.pem"
+  options_path="/etc/letsencrypt/options-ssl-nginx.conf"
+  dhparams_path="/etc/letsencrypt/ssl-dhparams.pem"
+  if [ -f "$fullchain_path" ] && [ -f "$privkey_path" ] && [ -f "$options_path" ] && [ -f "$dhparams_path" ]; then
+    cat <<NGINX | sudo tee "$config_path" >/dev/null
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $domain;
+
+    location / {
+        return 301 https://\$host\$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name $domain;
+
+    ssl_certificate $fullchain_path;
+    ssl_certificate_key $privkey_path;
+    include $options_path;
+    ssl_dhparam $dhparams_path;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_pass http://127.0.0.1:$http_port;
+    }
+}
+NGINX
+  else
+    cat <<NGINX | sudo tee "$config_path" >/dev/null
 server {
     listen 80;
     listen [::]:80;
@@ -120,6 +158,7 @@ server {
     }
 }
 NGINX
+  fi
   sudo ln -sfn "$config_path" "$enabled_path"
   sudo nginx -t
   sudo systemctl reload nginx
