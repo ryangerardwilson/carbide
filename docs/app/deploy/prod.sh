@@ -109,7 +109,7 @@ if [ "$manage_nginx" = "1" ]; then
   privkey_path="$cert_dir/privkey.pem"
   options_path="/etc/letsencrypt/options-ssl-nginx.conf"
   dhparams_path="/etc/letsencrypt/ssl-dhparams.pem"
-  if [ -f "$fullchain_path" ] && [ -f "$privkey_path" ] && [ -f "$options_path" ] && [ -f "$dhparams_path" ]; then
+  if sudo test -f "$fullchain_path" && sudo test -f "$privkey_path" && sudo test -f "$options_path" && sudo test -f "$dhparams_path"; then
     cat <<NGINX | sudo tee "$config_path" >/dev/null
 server {
     listen 80;
