@@ -34,7 +34,7 @@ nginx_site="${CARBIDE_DOCS_NGINX_SITE:-carbide}"
 manage_nginx="${CARBIDE_DOCS_MANAGE_NGINX:-1}"
 ssh_target="${CARBIDE_DOCS_DEPLOY_SSH}"
 compose_project_name="${CARBIDE_DOCS_COMPOSE_PROJECT_NAME:-carbide-docs}"
-legacy_project_name="${CARBIDE_DOCS_LEGACY_PROJECT_NAME:-app}"
+legacy_project_names="${CARBIDE_DOCS_LEGACY_PROJECT_NAMES:-app 1}"
 
 printf 'syncing docs to %s\n' "$ssh_target"
 
@@ -58,7 +58,7 @@ ssh "$ssh_target" bash -s -- \
   "$nginx_site" \
   "$manage_nginx" \
   "$compose_project_name" \
-  "$legacy_project_name" <<'EOF'
+  "$legacy_project_names" <<'EOF'
 set -euo pipefail
 
 remote_root="$1"
@@ -70,9 +70,26 @@ domain="$6"
 nginx_site="$7"
 manage_nginx="$8"
 compose_project_name="$9"
-legacy_project_name="${10}"
-export COMPOSE_PROJECT_NAME="$compose_project_name"
-compose_cmd="docker compose --env-file app/.env -f app/docker-compose.yml --project-directory app"
+legacy_project_names="${10}"
+
+compose_cmd() {
+  docker compose \
+    -p "$compose_project_name" \
+    --env-file app/.env \
+    -f app/docker-compose.yml \
+    --project-directory app \
+    "$@"
+}
+
+legacy_compose_down() {
+  local project_name="$1"
+  docker compose \
+    -p "$project_name" \
+    --env-file app/.env \
+    -f app/docker-compose.yml \
+    --project-directory app \
+    down --remove-orphans
+}
 
 cat > "$remote_root/app/.env" <<ENV
 APP_ENV=production
@@ -84,14 +101,14 @@ DATABASE_URL=postgres://carbide:$postgres_password@db:5432/carbide?sslmode=disab
 ENV
 
 cd "$remote_root"
-$compose_cmd config >/dev/null
-$compose_cmd up -d --build --remove-orphans
+compose_cmd config >/dev/null
+compose_cmd up -d --build --remove-orphans
 
-if [ "$legacy_project_name" != "$compose_project_name" ]; then
-  COMPOSE_PROJECT_NAME="$legacy_project_name" \
-    docker compose --env-file app/.env -f app/docker-compose.yml --project-directory app \
-    down --remove-orphans >/dev/null 2>&1 || true
-fi
+for legacy_project_name in $legacy_project_names; do
+  if [ -n "$legacy_project_name" ] && [ "$legacy_project_name" != "$compose_project_name" ]; then
+    legacy_compose_down "$legacy_project_name" >/dev/null 2>&1 || true
+  fi
+done
 
 if [ "$manage_nginx" = "1" ]; then
   sudo -n true
