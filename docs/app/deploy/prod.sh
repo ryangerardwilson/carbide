@@ -48,29 +48,19 @@ rsync -az --delete \
   --exclude app/web/public \
   "$docs_root"/ "$ssh_target:$remote_root/"
 
-ssh "$ssh_target" bash -s -- \
-  "$remote_root" \
-  "$http_port" \
-  "$public_url" \
-  "$public_app_name" \
-  "$CARBIDE_DOCS_POSTGRES_PASSWORD" \
-  "$domain" \
-  "$nginx_site" \
-  "$manage_nginx" \
-  "$compose_project_name" \
-  "$legacy_project_names" <<'EOF'
-set -euo pipefail
+printf -v remote_root_q '%q' "$remote_root"
+printf -v http_port_q '%q' "$http_port"
+printf -v public_url_q '%q' "$public_url"
+printf -v public_app_name_q '%q' "$public_app_name"
+printf -v postgres_password_q '%q' "$CARBIDE_DOCS_POSTGRES_PASSWORD"
+printf -v domain_q '%q' "$domain"
+printf -v nginx_site_q '%q' "$nginx_site"
+printf -v manage_nginx_q '%q' "$manage_nginx"
+printf -v compose_project_name_q '%q' "$compose_project_name"
+printf -v legacy_project_names_q '%q' "$legacy_project_names"
 
-remote_root="$1"
-http_port="$2"
-public_url="$3"
-public_app_name="$4"
-postgres_password="$5"
-domain="$6"
-nginx_site="$7"
-manage_nginx="$8"
-compose_project_name="$9"
-legacy_project_names="${10}"
+remote_script="$(cat <<'EOF'
+set -euo pipefail
 
 compose_cmd() {
   docker compose \
@@ -143,6 +133,21 @@ for _ in $(seq 1 40); do
 done
 
 curl -fsS --max-time 10 "http://127.0.0.1:$http_port/health" >/dev/null
+EOF
+)"
+
+ssh "$ssh_target" "bash -s" <<EOF
+remote_root=$remote_root_q
+http_port=$http_port_q
+public_url=$public_url_q
+public_app_name=$public_app_name_q
+postgres_password=$postgres_password_q
+domain=$domain_q
+nginx_site=$nginx_site_q
+manage_nginx=$manage_nginx_q
+compose_project_name=$compose_project_name_q
+legacy_project_names=$legacy_project_names_q
+$remote_script
 EOF
 
 printf 'deployed %s\n' "$public_url"
